@@ -16,7 +16,7 @@ TABLES = {
     "ref.product_group": ("Danh mục", "Nhóm sản phẩm — cấp giữa Nghiệp vụ và Sản phẩm, đúng 8 nhóm của đề bài", "1 dòng / nhóm SP", "Phạm vi đề bài POC"),
     "ref.product": ("Danh mục", "Sản phẩm bảo hiểm (phạm vi POC)", "1 dòng / sản phẩm", f"{ND67}; Luật GTGT 48/2024; {TT67} Điều 51"),
     "ref.channel": ("Danh mục", "Kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm", "1 dòng / kênh", f"{LAW} Điều 87 khoản 4; {TT67} Mẫu 3-PNT"),
-    "ref.partner": ("Danh mục", "Đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, OTA, ví điện tử...", "1 dòng / đối tác", "Loại đối tác theo thực tế thị trường; tên ẩn danh"),
+    "ref.partner": ("Danh mục", "Đối tác phân phối — ngân hàng, đăng kiểm, OTA, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với PVI: Green SM, ATADI, Fuse", "1 dòng / đối tác", "Loại đối tác theo thực tế thị trường; đối tác truyền thống ẩn danh, đối tác bảo hiểm vi mô theo nguồn công khai (sources/market_data.md mục 10)"),
     "ref.customer_segment": ("Danh mục", "Phân khúc khách hàng", "1 dòng / phân khúc", "Phân loại phổ biến (cá nhân / hộ gia đình / doanh nghiệp / cơ quan NN / cơ sở giáo dục)"),
     "ref.customer": ("Danh mục", "Khách hàng — bên mua bảo hiểm (dữ liệu giả)", "1 dòng / khách hàng", "Dữ liệu sinh ngẫu nhiên"),
     "ref.currency": ("Danh mục", "Tiền tệ", "1 dòng / loại tiền", "ISO 4217"),
@@ -79,7 +79,7 @@ COLUMNS = {
     ("ref.channel", "legal_basis"): ("Căn cứ pháp lý của kênh", ""),
     ("ref.channel", "sort_order"): ("Thứ tự hiển thị", ""),
     ("ref.partner", "partner_code"): ("Mã đối tác", ""),
-    ("ref.partner", "partner_name"): ("Tên đối tác (ẩn danh: Ngân hàng TMCP A, Ví điện tử B …)", ""),
+    ("ref.partner", "partner_name"): ("Tên đối tác (ẩn danh: Ngân hàng TMCP A, Ví điện tử B …; tên thật cho Green SM, ATADI, Fuse)", ""),
     ("ref.partner", "partner_type"): ("Loại đối tác: NGAN_HANG, CTY_TAI_CHINH, DANG_KIEM, SHOWROOM_OTO, GARAGE, OTA_DU_LICH, CTY_LU_HANH, CTY_MOI_GIOI, VI_DIEN_TU, SAN_TMDT, HANG_HANG_KHONG, VIEN_THONG", ""),
     ("ref.partner", "channel_code"): ("Kênh của đối tác → ref.channel", ""),
     # ---------------- customer

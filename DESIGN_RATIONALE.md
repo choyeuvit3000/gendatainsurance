@@ -14,7 +14,7 @@ Chi tiết nguồn nằm trong [sources/](sources/).
 
 1. **Khung nghiệp vụ lấy từ quy định.** Danh mục nghiệp vụ, kênh phân phối, cách ghi nhận doanh thu, đồng bảo hiểm, hoàn/giảm phí, biểu phí bắt buộc, thuế GTGT và trần hoa hồng đều lấy từ văn bản pháp luật hiện hành.
 2. **Con số lấy từ số liệu công bố.** Quy mô và cơ cấu nghiệp vụ theo BCTC kiểm toán công khai của Bảo hiểm PVI; mùa vụ, kênh, mức phí, tỷ giá theo công bố của PVI, IAV, Bộ Tài chính, KBNN. Không dùng số liệu nội bộ của bất kỳ doanh nghiệp nào.
-3. **Tổ chức và đối tác được ẩn danh.** Doanh nghiệp giả lập tên "Tổng công ty Bảo hiểm DEMO", tên công ty thành viên theo địa bàn. Đối tác và DN đồng bảo hiểm ghi dạng "A, B, C".
+3. **Tổ chức lấy theo thông tin công khai; đối tác phần lớn ẩn danh.** Doanh nghiệp là **Tổng Công ty Bảo hiểm PVI** với các đơn vị thật trên trang mạng lưới pvi.com.vn (không còn doanh nghiệp giả lập "DEMO"). Trọng số khai thác của từng đơn vị là **ước tính**, vì PVI không công bố doanh thu từng đơn vị. Đối tác cũ và DN đồng bảo hiểm vẫn ghi dạng "A, B, C"; riêng 3 đối tác số có công bố hợp tác với PVI (Green SM, ATADI, Fuse) mang tên thật. Mọi giao dịch, khách hàng vẫn là giả lập.
 4. **Ánh xạ được về hệ thống thật.** Mỗi khái niệm trong mô hình đều có chỗ tương ứng trong một hệ thống lõi bảo hiểm thực tế. Bản ánh xạ cho giai đoạn ETL nằm ở `docs/Mapping_v2_PIAS.html` (tài liệu nội bộ dự án).
 
 ## 2. Kiến trúc
@@ -62,9 +62,10 @@ erDiagram
 | `ref.line_of_business` | Luật KDBH 2022 Điều 7 khoản 1 (3 loại hình: nhân thọ, sức khỏe, phi nhân thọ); NĐ 46/2023 Điều 4 (11 nghiệp vụ phi nhân thọ) và Điều 5 (nghiệp vụ sức khỏe) |
 | `ref.regulatory_line` | TT 67/2023 Phụ lục VI, Mẫu 1-PNT/2-PNT. Ví dụ: A.1 Sức khỏe, thân thể; A.2 Chi phí y tế; B.4a TNDS bắt buộc (mô tô / ô tô); B.4b Vật chất xe; B.5a Cháy nổ bắt buộc; B.5b Cháy nổ khác |
 | `ref.product_group` | Đúng 8 nhóm sản phẩm trong đề bài, gắn với nghiệp vụ theo luật |
-| `ref.product` | Tên sản phẩm theo cách gọi phổ biến trên website các DNBH. Có 3 cột căn cứ: `is_compulsory` (NĐ 67/2023), `vat_rate` (Luật GTGT 48/2024 Điều 5 khoản 8), `max_commission_pct` (TT 67/2023 Điều 51) |
+| `ref.product` | Tên sản phẩm theo cách gọi phổ biến trên website các DNBH. Có 3 cột căn cứ: `is_compulsory` (NĐ 67/2023), `vat_rate` (Luật GTGT 48/2024 Điều 5 khoản 8), `max_commission_pct` (TT 67/2023 Điều 51). Thêm 4 sản phẩm bảo hiểm vi mô của PVI có công bố công khai (`MV_*`: Green SM Care, Food Care, DelayCare, thiết bị điện tử trên sàn TMĐT), xếp vào nhóm sẵn có; xem [calibration/README.md](calibration/README.md) |
+| `ref.company` | Tổng Công ty Bảo hiểm PVI (công ty con 100% của CTCP PVI — BCTN 2024, trang PDF 12); Trụ sở chính – các Ban kinh doanh, Bảo hiểm PVI Digital ([online.pvi.com.vn/lien-he](https://online.pvi.com.vn/lien-he)) và 46 đơn vị theo [trang mạng lưới](https://www.pvi.com.vn/vi/network); tỉnh = địa chỉ trụ sở. Hanoi Re (nhận tái bảo hiểm) và PVIAM (quản lý quỹ) không cấp hợp đồng gốc nên không có trong bảng |
 | `ref.channel` | Luật KDBH 2022 Điều 87 khoản 4 (trực tiếp / qua đại lý, môi giới / đấu thầu / giao dịch điện tử). Bancassurance: Điều 125 khoản 2, NĐ 46 Điều 62, TT 67 Điều 53. Cột `report_channel_group` lấy 3 nhóm kênh của **Mẫu 3-PNT** |
-| `ref.partner` | Loại đối tác theo thực tế thị trường: ngân hàng, công ty tài chính, đăng kiểm, đại lý ô tô, OTA, ví điện tử, sàn TMĐT, hãng bay, nhà mạng. PVI Annual Report 2024 nêu kênh API với hãng bay, nhà mạng, sàn TMĐT. Tên được ẩn danh |
+| `ref.partner` | Loại đối tác theo thực tế thị trường: ngân hàng, công ty tài chính, đăng kiểm, đại lý ô tô, OTA, ví điện tử, sàn TMĐT, hãng bay, nhà mạng. PVI Annual Report 2024 nêu kênh API với hãng bay, nhà mạng, sàn TMĐT. Tên đối tác cũ được ẩn danh. 3 đối tác số mới mang tên thật vì có công bố hợp tác với PVI: Green SM ([greensm.com](https://www.greensm.com/vn-vi/bao-hiem-khach-hang)), ATADI ([pvi.com.vn](https://www.pvi.com.vn/vi/news/bao-hiem-pvi-ra-mat-delaycare-giai-phap-bao-hiem-tre-chuyen-bay-danh-cho-hanh-khach)), Fuse ([help.shopee.vn](https://help.shopee.vn/portal/4/article/79225)) |
 | `ref.province`, `ref.region` | NQ 202/2025/QH15: 34 tỉnh/thành từ 01/7/2025. Chia Bắc/Trung/Nam là **đề xuất của dự án**, vì không có văn bản pháp lý nào chia 3 miền |
 | `ref.fx_rate` | Tỷ giá hạch toán hằng tháng của Kho bạc Nhà nước năm 2025. Năm 2024 là ước tính |
 | `ref.transaction_type` | NĐ 46/2023 Điều 49 khoản 3 (hoàn phí, giảm phí là khoản giảm thu); TT 232/2012 (TK 5111, 5311, 5321) |
@@ -105,6 +106,9 @@ Chi tiết từng bước nằm ở [GENERATION_LOGIC.md](GENERATION_LOGIC.md). 
 | Sức khỏe cá nhân | từ 1,45 triệu đ | Phí niêm yết trên website các DNBH |
 | Du lịch | từ 17 nghìn đ (trong nước); 4–45 USD (quốc tế) | Phí niêm yết trên website các DNBH |
 | Hoa hồng | ≤ trần theo nghiệp vụ; bằng 0 với bán trực tiếp và đấu thầu | TT 67/2023 Điều 51 |
+| Đơn vị | Trụ sở chính, PVI Digital và 46 đơn vị thật; trọng số khai thác theo quy mô kinh tế địa bàn, ×1,5 cho Phía Nam, Thủ Đô, Duyên Hải, Thăng Long, Sài Gòn | Danh sách: [pvi.com.vn/vi/network](https://www.pvi.com.vn/vi/network). Trọng số: **Ước tính** (PVI không công bố doanh thu từng đơn vị; ×1,5 theo các bài vinh danh của PVI và [pvisg.net](https://pvisg.net)) |
+| Bảo hiểm vi mô (bộ khối lượng lớn) | Green SM Care 1.000 / 2.000 đ/chuyến; Food Care 1.000 đ/đơn; DelayCare 35.000 đ/người; thiết bị điện tử 1,5–3,5% giá máy. ≈ 51.700 GCN/ngày | Phí Green SM: [greensm.com](https://www.greensm.com/vn-vi/bao-hiem-khach-hang), [greensm.com](https://www.greensm.com/vn-vi/bao-hiem-giao-do-an). Phí DelayCare, thiết bị điện tử và số GCN/ngày: **Ước tính** (căn cứ ở [calibration/README.md](calibration/README.md)) |
+| Quy mô bộ khối lượng lớn (tháng 8–9/2026) | Đúng quy mô PVI: phí gốc khai thác 1.600,6 tỷ trên DB, ngân sách ≈ 1.602 tỷ; không còn hệ số nhân k | Mục tiêu năm ở dòng đầu × tỷ trọng tháng 8, 9 của Bộ Tài chính (13.594 / 88.054) |
 
 ## 6. Hỏi đáp "Tại sao…"
 
@@ -120,7 +124,7 @@ Mọi DNBH phi nhân thọ tại Việt Nam đều phải đáp ứng cùng mộ
 
 Các chuẩn mô hình dữ liệu ngành (IBM IIW, ACORD, Kimball) cũng dùng đúng cấu trúc hợp đồng → giao dịch → coverage. Vì vậy hệ thống của các DNBH thường giống nhau về bản chất.
 
-Dữ liệu dummy **không** chứa số liệu, khách hàng, đối tác hay mã nội bộ của Quý công ty.
+Dữ liệu dummy **không** chứa số liệu, khách hàng hay mã nội bộ của Quý công ty. Tên doanh nghiệp, đơn vị và 3 đối tác số chỉ lấy từ thông tin công khai; doanh thu theo đơn vị, theo đối tác là số giả lập.
 
 **Mô hình có theo chuẩn quốc tế không?**
 
@@ -144,8 +148,8 @@ Với đơn đồng bảo hiểm, công ty chỉ ghi nhận phần tỷ lệ c�
 
 Doanh thu được gán theo **đơn vị được phân bổ** chứ không theo đơn vị cấp đơn. Có 3 trường hợp:
 - hợp tác khai thác giữa các đơn vị;
-- Khối Trụ sở khai thác rủi ro lớn cùng công ty thành viên;
-- Trung tâm Kinh doanh số chuyển doanh thu về công ty quản lý khách hàng.
+- Trụ sở chính khai thác rủi ro lớn cùng đơn vị thành viên;
+- Bảo hiểm PVI Digital chuyển doanh thu về đơn vị quản lý khách hàng.
 
 Tỷ lệ phân bổ nằm ở `core.revenue_allocation`, loại phân bổ ở `allocation_type_code`.
 
@@ -153,7 +157,27 @@ Tỷ lệ phân bổ nằm ở `core.revenue_allocation`, loại phân bổ ở 
 
 **Quy ước chuẩn:** doanh thu Tổng công ty = tổng doanh thu hợp nhất của mọi đơn vị. Đây là cấp nằm giữa "Tổng doanh thu" và "Công ty" trong đề bài.
 
-Khối Trụ sở (`company_type = HEAD_OFFICE`, gồm các trung tâm trực thuộc) được tính là **một đơn vị ngang cấp Công ty**. Doanh thu do trụ sở trực tiếp khai thác vẫn xem riêng được qua đơn vị này.
+Trụ sở chính – các Ban kinh doanh (`HO`, `company_type = HEAD_OFFICE`) được tính là **một đơn vị ngang cấp Công ty**, tương tự Bảo hiểm PVI Digital (`DGT`, `company_type = DIGITAL`). Doanh thu do trụ sở trực tiếp khai thác vẫn xem riêng được qua đơn vị này.
+
+**Tại sao dùng tên PVI thật mà không dùng doanh nghiệp giả lập?**
+
+Quy mô và cơ cấu doanh thu vốn đã lấy từ BCTC công khai của Bảo hiểm PVI, nên gọi đúng tên giúp người xem đối chiếu được. Tên đơn vị lấy từ [trang mạng lưới](https://www.pvi.com.vn/vi/network); tỉnh của đơn vị là địa chỉ trụ sở. PVI **không** công bố doanh thu từng đơn vị (đã tìm và không thấy), nên trọng số khai thác là **ước tính**: theo quy mô kinh tế địa bàn, ×1,5 cho Phía Nam (xuất sắc nhất 2024), Thủ Đô (6 tháng 2025), Duyên Hải (xuất sắc nhất 2025), Thăng Long (hoàn thành sớm kế hoạch 2025) và Sài Gòn (tự công bố doanh thu đứng đầu hệ thống bán lẻ). Doanh thu theo đơn vị trên dashboard vì vậy **không** phải số của PVI.
+
+**So với cả PVI thì sao? Tại sao không có Hanoi Re, PVIAM?**
+
+Bảo hiểm PVI là công ty con 100% của CTCP PVI (PVI Holdings). Năm 2025: doanh thu hợp nhất Holdings 28.923 tỷ; Bảo hiểm PVI 27.258 tỷ (94,2%), trong đó phí bảo hiểm gốc 14.908 tỷ; Hanoi Re (tên cũ PVI Re, Holdings sở hữu 81,09%) 3.690 tỷ; PVIAM (61,96%) 76,4 tỷ (BCTN 2025, trang PDF 29, 32, 33, 34). Hanoi Re nhận tái bảo hiểm, PVIAM quản lý quỹ; cả hai không cấp hợp đồng bảo hiểm gốc nên nằm ngoài phạm vi doanh thu phí gốc và không có trong `ref.company`. POC chỉ gồm 4 nghiệp vụ của Bảo hiểm PVI (10.378 tỷ năm 2025).
+
+**Tại sao > 50.000 giao dịch/ngày mà doanh thu vẫn đúng quy mô PVI?**
+
+Khối lượng đến từ **bảo hiểm vi mô** theo chuyến / theo đơn (≈ 51.700 GCN/ngày, phí 1.000–2.000 đ với chuyến xe và đồ ăn). Doanh thu vi mô nằm trong ngân sách nhóm và được coi là dòng cố định khi hiệu chỉnh, nên tổng doanh thu và cơ cấu nhóm không đổi. Trên DB, GCN vi mô chiếm 77,3% số hợp đồng nhưng chỉ 1,3% doanh thu. Bản trước (16–18/10/2026) nhân mọi ngân sách với một hệ số quy mô, nên doanh thu ≈ 4 lần PVI; cách đó đã bỏ.
+
+**Tại sao đối tác chuyến xe là Green SM mà không phải Grab?**
+
+Bảo hiểm chuyến đi của Grab (Ride Cover) do **Chubb** cung cấp, của Be do **OPES** ([tinnhanhchungkhoan.vn](https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html)). Hợp tác Grab × PVI năm 2026 là BHXH/BHYT tự nguyện cho tài xế ([grab.com](https://www.grab.com/vn/blog/driver/bhxh-bhyt-pvi/)), không phải bảo hiểm theo cuốc. Green SM Care thì có PVI Digital là một trong 5 nhà bảo hiểm ([greensm.com](https://www.greensm.com/vn-vi/bao-hiem-khach-hang)).
+
+**Các nguồn về đơn vị và bảo hiểm vi mô được tìm thế nào?**
+
+Nghiên cứu chéo bằng hai công cụ với cùng một đề bài: codex CLI (gpt-6.1-sol) và agy CLI (gemini-3.8-flash-high). Kết quả hai bên được đối chiếu; mọi link được kiểm lại bằng curl ngày 19/10/2026. Thông tin chỉ một bên đưa ra mà không kiểm chứng được thì loại (ví dụ danh sách "7 đơn vị về đích sớm"). Danh sách nguồn đầy đủ: [sources/market_data.md](sources/market_data.md) mục 9, 10 và bảng nguồn trong [calibration/README.md](calibration/README.md).
 
 **Tại sao cháy nổ xếp vào "Tài sản"?**
 
@@ -212,6 +236,8 @@ Những điểm không có số công bố hoặc nguồn không nói rõ đư�
 | Tỷ giá USD năm 2024 | Nội suy theo tỷ giá trung tâm NHNN | Năm 2025 dùng số công bố của KBNN |
 | Chia trong nhóm Con người | Sức khỏe 75 / sinh mạng–tai nạn 15 / du lịch 5 / học sinh 5% | Mảng sức khỏe PVI chủ yếu là nhóm doanh nghiệp (FPTS) |
 | Tài sản thuần trong "Tài sản & thiệt hại" | 50% | BCTC PVI gộp tài sản với kỹ thuật, năng lượng |
+| Trọng số khai thác của đơn vị | Theo quy mô kinh tế địa bàn; ×1,5 cho 5 đơn vị được vinh danh / tự công bố dẫn đầu | PVI không công bố doanh thu từng đơn vị |
+| Số GCN vi mô/ngày (bộ khối lượng lớn) | 40.000 chuyến xe · 8.000 đồ ăn · 300 DelayCare · 3.000 thiết bị điện tử | Quy ước để đạt > 50.000 giao dịch/ngày; kiểm tra độ hợp lý với quy mô Green SM (> 1 triệu chuyến/ngày) và OPES (109,3 triệu hợp đồng năm 2023) |
 | Phạm vi | Không gồm thu phí nhiều kỳ, leading fee, nhận / nhượng tái bảo hiểm | Đề bài chỉ yêu cầu doanh thu phí bảo hiểm gốc |
 | Solvency II cho tai nạn, sinh mạng, du lịch | Income protection / Medical expense | Theo bản chất rủi ro chính |
 | Vùng miền | Bắc 15 / Trung 11 / Nam 8 tỉnh | Không có văn bản pháp lý chia 3 miền sau sáp nhập |

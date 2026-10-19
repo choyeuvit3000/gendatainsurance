@@ -47,19 +47,20 @@ code.ty{white-space:nowrap}details.code{margin:8px 0}details.code summary{cursor
 @media print{nav,.tools{display:none}.wrap{display:block}section{break-inside:auto}details{border:0}body{font-size:12px}}
 @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
 </style></head><body><div class="wrap">
-<nav aria-label="Mục lục"><div class="brand">POC Doanh thu bảo hiểm — dữ liệu khối lượng lớn</div><div class="sub">Tài liệu tổng hợp · 16/10/2026</div><a href="#tong-quan">Tổng quan & cách chạy</a><a href="#can-cu-tham-so">Căn cứ tham số</a><a href="#can-cu">Căn cứ thiết kế mô hình (v2)</a><a href="#data-dictionary">Data dictionary</a><a href="#schema-change">Mô phỏng thay đổi schema</a><a href="#phap-ly">Nguồn pháp lý</a><a href="#phu-luc">Phụ lục SQL</a>
+<nav aria-label="Mục lục"><div class="brand">POC Doanh thu bảo hiểm — dữ liệu khối lượng lớn</div><div class="sub">Tài liệu tổng hợp · 19/10/2026</div><a href="#tong-quan">Tổng quan & cách chạy</a><a href="#can-cu-tham-so">Căn cứ tham số</a><a href="#can-cu">Căn cứ thiết kế mô hình (v2)</a><a href="#data-dictionary">Data dictionary</a><a href="#schema-change">Mô phỏng thay đổi schema</a><a href="#phap-ly">Nguồn pháp lý</a><a href="#phu-luc">Phụ lục SQL</a>
 <button type="button" id="theme" aria-label="Đổi giao diện sáng/tối">Sáng / Tối</button></nav>
 <main><header><h1>Dữ liệu nguồn dummy — POC Doanh thu bảo hiểm</h1>
 <p>Dữ liệu nguồn giả lập ở quy mô vận hành (&gt; 50.000 giao dịch/ngày, 01/08 – 30/09/2026) trên PostgreSQL <code>reportapi</code>, schema <code>bronze</code>, bảng <code>ins_*</code> — dùng nguyên mô hình v2; mọi tham số thời gian có nhãn căn cứ ([CHÍNH THỨC] / [DATASET] / [NGUỒN THAY THẾ] / [QUY ƯỚC] / [ƯỚC TÍNH]).</p>
-<div class="kpis"><div class="kpi"><b>6,209</b><span>Doanh thu 08–09/2026 (tỷ VND)</span></div><div class="kpi"><b>4,669,144</b><span>Hợp đồng</span></div><div class="kpi"><b>4,717,930</b><span>Giao dịch</span></div><div class="kpi"><b>4,844,773</b><span>Dòng phí theo SP</span></div><div class="kpi"><b>1,917,522</b><span>Khách hàng</span></div><div class="kpi"><b>21 / 117</b><span>Bảng / cột</span></div></div><p class="note">Số liệu tính trên bộ dữ liệu dummy (doanh nghiệp giả lập "DEMO").</p></header>
-<section id="tong-quan"><h2>Tổng quan & cách chạy</h2><p>Bộ sinh <a href="../gen_volume.py">gen_volume.py</a> dùng <strong>nguyên mô hình v2</strong> (danh mục, cột, quy tắc doanh thu: xem <a href="#can-cu">../v2/DESIGN_RATIONALE.md</a>). Điểm khác là sinh giao dịch ở <strong>quy mô vận hành</strong>:</p>
+<div class="kpis"><div class="kpi"><b>1,578</b><span>Doanh thu 08–09/2026 (tỷ VND)</span></div><div class="kpi"><b>4,082,637</b><span>Hợp đồng</span></div><div class="kpi"><b>4,098,401</b><span>Giao dịch</span></div><div class="kpi"><b>4,127,680</b><span>Dòng phí theo SP</span></div><div class="kpi"><b>1,696,375</b><span>Khách hàng</span></div><div class="kpi"><b>21 / 117</b><span>Bảng / cột</span></div></div><p class="note">Số liệu tính trên bộ dữ liệu giả lập: Tổng Công ty Bảo hiểm PVI và 47 đơn vị thật, giao dịch giả lập ở đúng quy mô doanh thu PVI.</p></header>
+<section id="tong-quan"><h2>Tổng quan & cách chạy</h2><p>Bộ sinh <a href="../gen_volume.py">gen_volume.py</a> dùng <strong>nguyên mô hình v2</strong> (danh mục, cột, quy tắc doanh thu: xem <a href="#can-cu">DESIGN_RATIONALE.md</a>). Điểm khác là sinh giao dịch ở <strong>quy mô vận hành</strong>:</p>
 <ul>
 <li>thời gian: <strong>01/08/2026 – 30/09/2026</strong> (61 ngày);</li>
-<li>mỗi ngày <strong>&gt; 50.000 giao dịch</strong> (tháng 8 khoảng 53–66 nghìn, tháng 9 khoảng 80–99 nghìn), tổng khoảng 5 triệu;</li>
-<li><strong>cơ cấu doanh thu theo BCTC PVI</strong> (cùng tỷ trọng với v2); doanh thu tuyệt đối = quy mô PVI tháng 8–9 × hệ số k ≈ 3,93 (khoảng 6.300 tỷ cho 2 tháng).</li>
+<li>mỗi ngày <strong>&gt; 50.000 giao dịch</strong> (tháng 8: 57.722–69.201, bình quân 63.923; tháng 9: 62.635–77.822, bình quân 70.559), tổng 4.098.401 giao dịch;</li>
+<li><strong>doanh thu đúng quy mô Bảo hiểm PVI</strong>, cơ cấu theo BCTC PVI (cùng tỷ trọng với v2): phí gốc khai thác tháng 8–9 là 1.600,6 tỷ so với ngân sách ≈ 1.602 tỷ. <strong>Không còn hệ số quy mô k</strong>;</li>
+<li>khối lượng &gt; 50.000 giao dịch/ngày đến từ <strong>bảo hiểm vi mô</strong> theo chuyến / theo đơn (≈ 51.700 GCN/ngày, phí 1.000–2.000 đ/GCN), gần như không làm đổi doanh thu.</li>
 </ul>
-<p>Số liệu chính xác sau mỗi lần nạp: xem phần "Kiểm tra sau khi nạp" trong log và <code>audit/run_audit.py</code>.</p>
-<p>Mọi tham số theo thời gian đều có nhãn căn cứ ([CHÍNH THỨC] / [DATASET] / [NGUỒN THAY THẾ] / [QUY ƯỚC] / [ƯỚC TÍNH]), xem <a href="#can-cu-tham-so">calibration/README.md</a>. Hiệu chỉnh lần gần nhất: 14/10/2026.</p>
+<p>Số liệu chính xác sau mỗi lần nạp: xem phần "Kiểm tra sau khi nạp" trong log, <code>audit/run_audit.py</code> và <a href="../docs/db_snapshot.json">docs/db_snapshot.json</a> (đo bằng <code>measure_db.py</code>). Mọi con số "trên DB" trong tài liệu này lấy từ file đó; tỷ lệ là số tự tính.</p>
+<p>Mọi tham số theo thời gian đều có nhãn căn cứ ([CHÍNH THỨC] / [NGUỒN] / [DATASET] / [NGUỒN THAY THẾ] / [QUY ƯỚC] / [ƯỚC TÍNH]), xem <a href="#can-cu-tham-so">calibration/README.md</a>. Hiệu chỉnh lần gần nhất: 19/10/2026.</p>
 <h3 class="h2">Tài liệu</h3>
 <div class="tw"><table>
 <thead>
@@ -78,6 +79,10 @@ code.ty{white-space:nowrap}details.code{margin:8px 0}details.code summary{cursor
 <td>Data dictionary Excel: mỗi bảng 1 sheet, có số dòng, % NULL, giá trị mẫu đo trên dữ liệu thật ở <code>reportapi</code></td>
 </tr>
 <tr>
+<td><a href="../docs/db_snapshot.json">docs/db_snapshot.json</a></td>
+<td>Số đo trên DB sau lần nạp cuối (số dòng, giao dịch/ngày, doanh thu theo nhóm / kênh / phân khúc / đơn vị / sản phẩm)</td>
+</tr>
+<tr>
 <td><a href="#can-cu-tham-so">calibration/README.md</a></td>
 <td>Căn cứ từng tham số và nguồn</td>
 </tr>
@@ -87,8 +92,8 @@ code.ty{white-space:nowrap}details.code{margin:8px 0}details.code summary{cursor
 </tr>
 </tbody>
 </table></div>
-<p>Hai file trong <code>docs/</code> được sinh từ catalog thật của <code>bronze.ins_*</code>. Mô tả cột lấy từ <code>../v2/docs/dictionary_meta.py</code>; các cột chỉ có ở bản này nằm trong <code>VOLUME_COLUMNS</code>. Sinh lại khi tunnel đang mở:</p>
-<pre><code class="language-bash">cd ../v2 &amp;&amp; DOCS_TARGET=volume PG_URI=postgresql://report:&lt;mật khẩu&gt;@127.0.0.1:15432/reportapi python docs/build_docs.py
+<p>Hai file <code>.html</code>, <code>.xlsx</code> trong <code>docs/</code> được sinh từ catalog thật của <code>bronze.ins_*</code>. Mô tả cột lấy từ <code>scripts/dictionary_meta.py</code>; các cột chỉ có ở bản này nằm trong <code>VOLUME_COLUMNS</code>. Sinh lại:</p>
+<pre><code class="language-bash">DOCS_TARGET=volume PG_URI=postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi python scripts/build_docs.py
 </code></pre>
 <h3 class="h2">Nơi nạp</h3>
 <p>PostgreSQL <code>reportapi</code> tại <code>192.168.18.101:5432</code>, schema <strong><code>bronze</code></strong>. Mọi bảng mang tiền tố <strong><code>ins_</code></strong> để không lẫn với các bảng sẵn có (<code>customer_tiering</code>, <code>transaction</code>…).</p>
@@ -112,10 +117,23 @@ code.ty{white-space:nowrap}details.code{margin:8px 0}details.code summary{cursor
 <td>(mới) view doanh thu</td>
 <td><code>bronze.v_ins_revenue_line</code>, <code>bronze.mv_ins_revenue_daily</code>, <code>bronze.mv_ins_txn_hourly</code></td>
 </tr>
+<tr>
+<td>(mới) mốc khóa đã phát hành</td>
+<td><code>bronze.poc_key_watermark</code> (xem "Khóa không lặp")</td>
+</tr>
 </tbody>
 </table></div>
 <p>Ngoài v2 có thêm 3 cột: <code>ins_customer.gender</code>, <code>ins_customer.birth_year</code>, <code>ins_policy.prev_policy_no</code>. Cột <code>prev_policy_no</code> là số hợp đồng năm trước được tái tục; hợp đồng đó nằm ngoài kỳ dữ liệu nên lưu dạng text.</p>
 <p>Muốn đổi đích thì đặt biến <code>TARGET_SCHEMA</code> và <code>TABLE_PREFIX</code>.</p>
+<h3 class="h2">Doanh nghiệp, đơn vị, đối tác</h3>
+<ul>
+<li><strong>Doanh nghiệp:</strong> Tổng Công ty Bảo hiểm PVI (<code>PVI</code>, PVI Insurance), công ty con 100% của CTCP PVI (PVI Holdings) — BCTN 2024, trang PDF 12. Không còn doanh nghiệp giả lập "DEMO".</li>
+<li><strong>Đơn vị (<code>ins_company</code>):</strong> Trụ sở chính – các Ban kinh doanh (<code>HO</code>), Bảo hiểm PVI Digital (<code>DGT</code>, TP.HCM) và 46 đơn vị thật theo trang mạng lưới (DGT + 46 = 47 đơn vị trên trang) pvi.com.vn (Đông Đô, Thăng Long, Hà Nội, …, Phía Nam). Tỉnh của đơn vị = địa chỉ trụ sở trên trang mạng lưới.</li>
+<li><strong>Trọng số khai thác của đơn vị là [ƯỚC TÍNH]:</strong> PVI không công bố doanh thu từng đơn vị, nên trọng số theo quy mô kinh tế địa bàn, ×1,5 cho 5 đơn vị được PVI vinh danh hoặc tự công bố dẫn đầu: Phía Nam (xuất sắc nhất 2024), Thủ Đô (6 tháng 2025), Duyên Hải (xuất sắc nhất 2025), Thăng Long (hoàn thành sớm kế hoạch 2025), Sài Gòn (doanh thu đứng đầu hệ thống bán lẻ, pvisg.net). Doanh thu theo đơn vị trên DB vì vậy là số giả lập, không phải số của PVI.</li>
+<li><strong>Không có trong <code>ins_company</code>:</strong> Hanoi Re (tên cũ PVI Re, nhận tái bảo hiểm) và PVIAM (quản lý quỹ) là công ty con khác của Holdings, không cấp hợp đồng bảo hiểm gốc nên ngoài phạm vi doanh thu phí gốc.</li>
+<li><strong>Đối tác:</strong> đối tác cũ vẫn ẩn danh (Ngân hàng A, OTA A…). 3 đối tác số thật mới, có công bố hợp tác với PVI: <code>GREEN_SM</code> (nền tảng di chuyển), <code>ATADI</code> (OTA vé máy bay), <code>FUSE</code> (insurtech trên Shopee / Lazada); số giao dịch qua họ là giả lập.</li>
+<li><strong>Vì sao không có Grab:</strong> bảo hiểm chuyến đi của Grab (Ride Cover) do <strong>Chubb</strong> cung cấp, của Be do <strong>OPES</strong>. Hợp tác Grab × PVI năm 2026 là BHXH/BHYT tự nguyện cho tài xế, không phải bảo hiểm theo cuốc. Vì vậy POC dùng Green SM.</li>
+</ul>
 <h3 class="h2">Quy ước NULL và tham chiếu danh mục</h3>
 <p>Lớp <code>bronze</code> mô phỏng <strong>hệ thống nguồn</strong>, nên giữ NULL đúng nghiệp vụ. Mọi mã khác NULL đều có khóa ngoại đã kiểm chứng.</p>
 <div class="tw"><table>
@@ -134,7 +152,7 @@ code.ty{white-space:nowrap}details.code{margin:8px 0}details.code summary{cursor
 </tr>
 <tr>
 <td><code>ins_policy.channel_code</code></td>
-<td>~0,5% hợp đồng nguồn không khai báo kênh</td>
+<td>~0,5% hợp đồng truyền thống nguồn không khai báo kênh (= 0,11% tổng hợp đồng). GCN vi mô cấp qua API đối tác luôn có kênh</td>
 <td>Lỗi dữ liệu có chủ đích</td>
 </tr>
 <tr>
@@ -181,8 +199,8 @@ code.ty{white-space:nowrap}details.code{margin:8px 0}details.code summary{cursor
 </tr>
 </tbody>
 </table></div>
-<p>Kiểm tra toàn bộ ràng buộc nghiệp vụ (41 quy tắc: hợp đồng, khách hàng, giao dịch, dòng phí, đồng bảo hiểm, phân bổ, tham chiếu):</p>
-<pre><code class="language-bash">PG_URI=postgresql://report:&lt;mật khẩu&gt;@127.0.0.1:15432/reportapi python audit/run_audit.py
+<p>Kiểm tra toàn bộ ràng buộc nghiệp vụ (41 quy tắc: hợp đồng, khách hàng, giao dịch, dòng phí, đồng bảo hiểm, phân bổ, tham chiếu). Lần nạp cuối: <strong>41 quy tắc, 0 vi phạm</strong> (I01 chỉ là thông tin: 0,11% kênh NULL có chủ đích).</p>
+<pre><code class="language-bash">PG_URI=postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi python audit/run_audit.py
 </code></pre>
 <p>Lịch sử sửa dữ liệu đã nạp nằm trong <code>audit/</code>:
 - <code>fix_in_place_2026-10-13.sql</code>: đối tác TNDS xe máy, SĐBS trên hợp đồng chưa duyệt, tỷ lệ phí.
@@ -229,6 +247,7 @@ JOIN bronze.ins_product p USING (product_code)
 JOIN bronze.ins_product_group pg USING (product_group_code)
 GROUP BY 1, 2 ORDER BY 1, 3 DESC;
 </code></pre>
+<p><strong>Lưu ý với bảo hiểm vi mô:</strong> GCN vi mô (<code>product_code LIKE 'MV_%'</code>) chiếm 77% số hợp đồng nhưng 1,3% doanh thu. Nên tách "số giao dịch" và "doanh thu" thành hai thước đo, và lọc riêng <code>MV_*</code> khi tính phí bình quân, phân vị phí hoặc tỷ trọng số đơn theo nhóm.</p>
 <h3 class="h2">Hình dạng dữ liệu (để biểu đồ có câu chuyện)</h3>
 <div class="tw"><table>
 <thead>
@@ -240,49 +259,184 @@ GROUP BY 1, 2 ORDER BY 1, 3 DESC;
 <tbody>
 <tr>
 <td>Thời gian</td>
-<td>Tháng 9 cao hơn tháng 8 khoảng 1,48 lần mỗi ngày, theo phí gốc phi nhân thọ của Bộ Tài chính 2025 [CHÍNH THỨC]. Trong tháng phân bố đều, <strong>không</strong> có hiệu ứng cuối tháng (không có nguồn). Kênh văn phòng giảm cuối tuần và lễ 01–02/9; kênh số chạy đều [QUY ƯỚC]</td>
+<td>Doanh thu tháng 9 cao hơn tháng 8 khoảng 1,48 lần mỗi ngày theo ngân sách, theo phí gốc phi nhân thọ của Bộ Tài chính 2025 [CHÍNH THỨC]; trên DB doanh thu ghi nhận 639,2 tỷ (tháng 8) và 938,7 tỷ (tháng 9), ≈ ×1,52 mỗi ngày (đã tính). Số <strong>giao dịch</strong>/ngày chỉ chênh ≈ ×1,10 vì phần lớn là GCN vi mô. Trong tháng phân bố đều, <strong>không</strong> có hiệu ứng cuối tháng (không có nguồn). Kênh văn phòng giảm cuối tuần và lễ 01–02/9; kênh số chạy đều [QUY ƯỚC]</td>
 </tr>
 <tr>
 <td>Mùa vụ</td>
-<td>Học sinh đỉnh quanh khai giảng 5/9 (thời điểm [QUY ƯỚC], độ lớn [ƯỚC TÍNH]). Du lịch <strong>không</strong> có mùa vụ riêng trong kỳ (không có nguồn Việt Nam)</td>
+<td>Học sinh đỉnh quanh khai giảng 5/9 (thời điểm [QUY ƯỚC], độ lớn [ƯỚC TÍNH]). Du lịch <strong>không</strong> có mùa vụ riêng trong kỳ (không có nguồn Việt Nam). Thiết bị điện tử ×3 vào 8/8, 9/9; DelayCare chỉ có từ 20/8 [ƯỚC TÍNH]</td>
 </tr>
 <tr>
 <td>Giờ</td>
-<td>Kênh điện tử đỉnh 20–22h; kênh văn phòng 9–11h và 14–16h</td>
+<td>Kênh điện tử đỉnh 20–22h; kênh văn phòng 9–11h và 14–16h. Vi mô: chuyến xe 7–8h và 17–19h; đồ ăn 11–12h và 18–19h [ƯỚC TÍNH]</td>
 </tr>
 <tr>
 <td>Kênh</td>
-<td>TNDS xe máy, du lịch, tai nạn 24/24 chủ yếu qua kênh điện tử (ví điện tử, nhà mạng, hãng bay, OTA). Người vay vốn và nhà tư nhân qua bancassurance. Rủi ro lớn qua trực tiếp và môi giới. ~0,5% thiếu kênh (dữ liệu bẩn có chủ đích)</td>
+<td>TNDS xe máy, du lịch, tai nạn 24/24 chủ yếu qua kênh điện tử (ví điện tử, nhà mạng, hãng bay, OTA). GCN vi mô 100% kênh điện tử qua Green SM, ATADI, Fuse. Người vay vốn và nhà tư nhân qua bancassurance. Rủi ro lớn qua trực tiếp và môi giới. Doanh thu: trực tiếp 30,4% · đại lý cá nhân 24,8% · môi giới 15,1% · bancassurance 12,5% · điện tử 8,0% · đại lý tổ chức 6,1% · đấu thầu 2,7% · thiếu kênh 0,4%</td>
 </tr>
 <tr>
 <td>Số đơn vs doanh thu</td>
-<td>TNDS và du lịch chiếm phần lớn <strong>số giao dịch</strong> nhưng ít <strong>doanh thu</strong>. Cháy nổ và tài sản ít đơn nhưng chiếm khoảng 40% doanh thu</td>
+<td>GCN vi mô: 77,3% số hợp đồng, 1,3% doanh thu. Cháy nổ: 0,14% số hợp đồng nhưng 33,7% doanh thu; cháy nổ + tài sản ≈ 52%. 10% hợp đồng lớn nhất chiếm 97,7% doanh thu, 1% lớn nhất chiếm 80,1%</td>
+</tr>
+<tr>
+<td>Phân khúc</td>
+<td>Doanh nghiệp trong nước 38,7% doanh thu với 0,5% số hợp đồng; cá nhân 35,5% với 97,2%; FDI 11,3%; hộ gia đình 7,0%; cơ quan nhà nước 4,3%; cơ sở giáo dục 2,2%; khách lẻ theo bảng kê 1,1%</td>
+</tr>
+<tr>
+<td>Đơn vị</td>
+<td>Doanh thu phân bổ lớn nhất: Duyên Hải 127,3 tỷ (8,1%), Trụ sở chính 101,8 (6,5%), Thống Nhất 74,9, Hà Nội 56,3, PVI Digital 55,7 tỷ — số giả lập theo trọng số [ƯỚC TÍNH]</td>
 </tr>
 <tr>
 <td>Trạng thái</td>
-<td>0,4% VOID. PENDING dồn vào 5 ngày cuối kỳ (chứng từ chưa kịp duyệt)</td>
+<td>0,40% VOID; 0,85% PENDING, dồn vào 5 ngày cuối kỳ (chứng từ chưa kịp duyệt)</td>
 </tr>
 <tr>
 <td>Ngày ghi nhận</td>
-<td>Đơn không phải du lịch hiệu lực ngay ngày cấp [QUY ƯỚC]. Du lịch hiệu lực khi bắt đầu chuyến đi; số ngày mua trước lấy theo dataset Hotel booking (trung vị khoảng 70 ngày) [NGUỒN THAY THẾ], nên doanh thu du lịch rơi một phần sang tháng 10/2026 – 2028</td>
+<td>Đơn không phải du lịch hiệu lực ngay ngày cấp [QUY ƯỚC]. Du lịch hiệu lực khi bắt đầu chuyến đi; số ngày mua trước lấy theo dataset Hotel booking (trung vị khoảng 70 ngày) [NGUỒN THAY THẾ], nên doanh thu du lịch rơi một phần sang tháng 10/2026 – 2028 (16,7 tỷ ghi nhận sau 30/9)</td>
 </tr>
 <tr>
 <td>SĐBS</td>
-<td>Tăng/giảm phí, hoàn phí, hủy; hủy chuyến du lịch trước ngày đi. Ghi nhận theo max(ngày chứng từ, ngày hiệu lực)</td>
+<td>Tăng/giảm phí, hoàn phí, hủy; hủy chuyến du lịch trước ngày đi; hủy DelayCare trước ngày bay, hủy bảo hiểm thiết bị khi trả hàng. Ghi nhận theo max(ngày chứng từ, ngày hiệu lực)</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Quy mô doanh thu (từ 16/10/2026).</strong> Cơ cấu theo BCTC kiểm toán PVI 2025 như v2: mục tiêu năm 10.377,9 tỷ × tỷ trọng tháng 8, 9 của Bộ Tài chính = khoảng 1.602 tỷ ở quy mô PVI. Để đạt &gt; 50.000 giao dịch/ngày với đơn giá niêm yết, mọi nhóm được nhân cùng hệ số k ≈ 3,93, nên doanh thu tuyệt đối khoảng 6.300 tỷ nhưng <strong>cơ cấu</strong> tài sản + cháy nổ / con người / xe vẫn ≈ 51 / 31 / 17%. Bản trước (09–15/10) có cơ cấu lệch (35–40 / 38–42 / 22–24%) và doanh thu ≈ 8 lần PVI; đã thay. Chi tiết: <a href="#can-cu-tham-so">calibration/README.md</a>.</p>
+<h3 class="h2">Quy mô và phân phối doanh thu khi có bảo hiểm vi mô</h3>
+<p><strong>Quy mô (từ 19/10/2026).</strong> Cơ cấu theo BCTC kiểm toán PVI 2025 như v2: mục tiêu năm 10.377,9 tỷ × tỷ trọng tháng 8, 9 của Bộ Tài chính (13.594 / 88.054) ≈ 1.602 tỷ. Ngân sách này dùng nguyên, không nhân hệ số. Trên DB, phí gốc khai thác (cấp mới + tái tục đã duyệt) là <strong>1.600,6 tỷ</strong>; cơ cấu tài sản + cháy nổ / con người / xe = 51,5 / 31,0 / 17,5% (đã tính). Doanh thu ghi nhận tháng 8–9 là 1.577,9 tỷ (16,7 tỷ du lịch ghi nhận sau 30/9; khoản giảm thu −5,8 tỷ).</p>
+<p>Bản 16–18/10 nhân mọi nhóm với một hệ số quy mô để đạt &gt; 50.000 giao dịch/ngày, nên doanh thu ≈ 4 lần PVI, và dùng tỷ trọng sản phẩm lệch v2 (tai nạn 24/24 0,40 thay vì 0,20…). Cả hai đã bỏ; tỷ trọng sản phẩm trong nhóm nay lấy thẳng <code>build_v2.PRODUCT_MIX</code>. Chi tiết: <a href="#can-cu-tham-so">calibration/README.md</a>.</p>
+<p><strong>Phân phối</strong> (số đo khóa <code>product</code>, <code>policies_group</code>, <code>top_share</code>; tỷ lệ, phí bình quân là số tự tính; doanh thu = ghi nhận tháng 8–9):</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Phần</th>
+<th style="text-align: right;">Số hợp đồng / GCN</th>
+<th style="text-align: right;">% số HĐ</th>
+<th style="text-align: right;">Doanh thu (tỷ)</th>
+<th style="text-align: right;">% doanh thu</th>
+<th style="text-align: right;">Phí bình quân</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MV_XSM_CARE</code> (Green SM Care)</td>
+<td style="text-align: right;">2.431.497</td>
+<td style="text-align: right;">59,6%</td>
+<td style="text-align: right;">3,36</td>
+<td style="text-align: right;">0,21%</td>
+<td style="text-align: right;">1.383 đ</td>
+</tr>
+<tr>
+<td><code>MV_FOOD_CARE</code> (Food Care)</td>
+<td style="text-align: right;">516.750</td>
+<td style="text-align: right;">12,7%</td>
+<td style="text-align: right;">0,51</td>
+<td style="text-align: right;">0,03%</td>
+<td style="text-align: right;">988 đ</td>
+</tr>
+<tr>
+<td><code>MV_TBDT_TMDT</code> (thiết bị điện tử TMĐT)</td>
+<td style="text-align: right;">194.993</td>
+<td style="text-align: right;">4,8%</td>
+<td style="text-align: right;">16,35</td>
+<td style="text-align: right;">1,04%</td>
+<td style="text-align: right;">83.837 đ</td>
+</tr>
+<tr>
+<td><code>MV_DELAYCARE</code> (từ 20/8)</td>
+<td style="text-align: right;">12.749</td>
+<td style="text-align: right;">0,3%</td>
+<td style="text-align: right;">0,62</td>
+<td style="text-align: right;">0,04%</td>
+<td style="text-align: right;">48.739 đ/GCN (1–4 người × 35.000 đ)</td>
+</tr>
+<tr>
+<td><strong>Vi mô</strong></td>
+<td style="text-align: right;"><strong>3.155.989</strong></td>
+<td style="text-align: right;"><strong>77,3%</strong></td>
+<td style="text-align: right;"><strong>20,84</strong></td>
+<td style="text-align: right;"><strong>1,32%</strong></td>
+<td style="text-align: right;"></td>
+</tr>
+<tr>
+<td><strong>Truyền thống</strong></td>
+<td style="text-align: right;"><strong>926.648</strong></td>
+<td style="text-align: right;"><strong>22,7%</strong></td>
+<td style="text-align: right;"><strong>1.557,0</strong></td>
+<td style="text-align: right;"><strong>98,68%</strong></td>
+<td style="text-align: right;">≈ 1,68 triệu đ</td>
+</tr>
+<tr>
+<td><strong>Tổng</strong></td>
+<td style="text-align: right;"><strong>4.082.637</strong></td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;"><strong>1.577,9</strong></td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table></div>
+<p>Vì sao tổng doanh thu không đổi khi thêm vi mô: doanh thu vi mô nằm <strong>trong</strong> ngân sách nhóm (sinh mạng, du lịch, tài sản). Bước hiệu chỉnh coi dòng vi mô là cố định và co giãn đơn doanh nghiệp / nhóm ở phần còn lại, nên tổng từng nhóm và cơ cấu ≈ 51 / 31 / 17% giữ nguyên. Phân phối "nhiều đơn nhỏ – ít đơn lớn" vì vậy lệch hơn v2: 10% hợp đồng lớn nhất chiếm 97,7% doanh thu, 1% lớn nhất 80,1% (v2 năm 2025: 74% / 25%). Nhóm sinh mạng có 3.298.699 hợp đồng (chủ yếu vi mô) nhưng chỉ ≈ 74 tỷ phí gốc. Đây là đặc trưng thật của bảo hiểm nhúng (OPES phát hành 109,3 triệu hợp đồng năm 2023).</p>
+<h3 class="h2">Kết quả lần nạp cuối (19/10/2026)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Chỉ số</th>
+<th>Giá trị trên DB</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Số dòng</td>
+<td><code>ins_policy</code> 4.082.637 · <code>ins_policy_transaction</code> 4.098.401 · <code>ins_transaction_coverage</code> 4.127.680 · <code>ins_coinsurance_share</code> 4.082.967 · <code>ins_revenue_allocation</code> 4.152.252 · <code>ins_customer</code> 1.696.375</td>
+</tr>
+<tr>
+<td>Dải khóa</td>
+<td><code>policy_id</code> 60.000.001–64.082.637, <code>txn_id</code> 60.000.001–64.098.401, <code>coverage_id</code> 60.000.001–64.127.680; mã khách <code>KH610000001</code>–<code>KH690000048</code></td>
+</tr>
+<tr>
+<td>Giao dịch/ngày</td>
+<td>Tháng 8: 57.722–69.201 (bình quân 63.923); tháng 9: 62.635–77.822 (bình quân 70.559)</td>
+</tr>
+<tr>
+<td>Loại giao dịch</td>
+<td>Cấp mới 3.909.726 · tái tục 172.911 · hủy 7.259 · SĐBS không đổi phí 3.427 · tăng phí 2.597 · giảm phí 1.336 · hoàn phí 1.145</td>
+</tr>
+<tr>
+<td>Trạng thái</td>
+<td>APPROVED 4.047.266 · PENDING 34.744 · VOID 16.391</td>
+</tr>
+<tr>
+<td>Phí gốc khai thác T8 + T9</td>
+<td>1.600,6 tỷ (ngân sách ≈ 1.602 tỷ)</td>
+</tr>
+<tr>
+<td>Doanh thu ghi nhận</td>
+<td>Tháng 8: 639,2 tỷ · tháng 9: 938,7 tỷ · tổng 1.577,9 tỷ</td>
+</tr>
+<tr>
+<td>Audit</td>
+<td>41 quy tắc, 0 vi phạm</td>
+</tr>
+</tbody>
+</table></div>
+<h3 class="h2">Khóa không lặp</h3>
+<p>Dữ liệu có CDC (Debezium) và Iceberg phía sau, nên khóa đã xóa <strong>không được dùng lại</strong>:
+- Với <code>--replace</code>, bộ sinh đọc khóa lớn nhất đang có <strong>trước khi xóa</strong> rồi bắt đầu sau đó (làm tròn lên): <code>policy_id</code>, <code>txn_id</code>, <code>coverage_id</code> từ bội số 10 triệu kế tiếp; số hợp đồng từ bội số 1 triệu kế tiếp theo từng đơn vị × sản phẩm; mã khách từ bội số 100 triệu kế tiếp.
+- Bảng <strong><code>bronze.poc_key_watermark</code></strong> (<code>key_name</code>, <code>max_value</code>) lưu mốc khóa lớn nhất đã phát hành, ghi sau mỗi đợt nạp và không bao giờ bị DELETE. Dù bảng fact trống hoặc lần trước nạp dở, lần sau vẫn bắt đầu sau mọi khóa cũ.
+- Lần nạp cuối: <code>policy_id</code> 60.000.001–64.082.637, <code>txn_id</code> 60.000.001–64.098.401, <code>coverage_id</code> 60.000.001–64.127.680, mã khách <code>KH610000001</code>–<code>KH690000048</code>. Các dải 30 triệu (cũ), 40 và 50 triệu (2 lần nạp trung gian ngày 19/10) đều đã xóa.
+- <code>--replace</code> <strong>đồng bộ danh mục</strong> với <code>02_data.sql</code>: upsert theo khóa chính, xóa dòng không còn dùng (DEMO, HN1…), dòng không đổi giữ nguyên để CDC không phát sự kiện thừa.</p>
 <h3 class="h2">Cách chạy</h3>
-<p>Máy local không tới thẳng được <code>192.168.18.101</code>, còn các node k8s thì tới được. Có 2 cách.</p>
-<p><strong>Cách 1 (nhanh): chạy trong cluster.</strong> Pod nằm cùng mạng LAN với DB nên nạp hết khoảng 15–20 phút. Manifest ở <a href="../../../../k8s/ins-datagen-pod.yaml">F:\Project\k8s\ins-datagen-pod.yaml</a>. Copy vào <code>/work</code> các file <code>gen_volume.py</code>, <code>v2/01_ddl.sql</code>, <code>v2/01b_column_comments.sql</code> và phần danh mục của <code>v2/02_data.sql</code>. Sau đó chạy:</p>
+<p>Kết nối mặc định là <strong>trực tiếp</strong> tới DB, không cần pod hay port-forward:</p>
+<pre><code>postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi
+</code></pre>
 <pre><code class="language-bash">pip install numpy pandas &quot;psycopg[binary]&quot;
-PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi&quot; V2_DIR=/work/v2 python gen_volume.py --reset --chunk-days 7
+# lần nạp đầu (tạo bảng)
+PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi&quot; python gen_volume.py --reset --chunk-days 7
+# các lần sau (giữ bảng + publication CDC, khóa mới không trùng khóa cũ)
+PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi&quot; python gen_volume.py --replace --chunk-days 7
+# đo lại số liệu cho tài liệu
+PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/reportapi&quot; python measure_db.py
 </code></pre>
-<p><strong>Cách 2: qua tunnel <code>kubectl port-forward</code>.</strong> Chậm, khoảng 0,4 MB/s, nên phù hợp để truy vấn hơn là nạp. Manifest ở <a href="../../../../k8s/pg-proxy-reportapi.yaml">F:\Project\k8s\pg-proxy-reportapi.yaml</a> (socat → 192.168.18.101:5432).</p>
-<pre><code class="language-bash">kubectl --kubeconfig F:/Project/k8s/kube_config.yaml -n cdc-test port-forward deploy/pg-proxy-reportapi 15432:5432
-</code></pre>
-<p>Sau đó kết nối DBeaver, Superset hoặc psql tới <code>127.0.0.1:15432</code>, db <code>reportapi</code>, user <code>report</code>.</p>
+<p>DBeaver, Superset hoặc psql cũng kết nối thẳng <code>192.168.18.101:5432</code>, db <code>reportapi</code>, user <code>report</code>.</p>
+<p>Dự phòng khi máy không tới thẳng được <code>192.168.18.101</code>: chạy trong cluster bằng <a href="../../../../k8s/ins-datagen-pod.yaml">F:\Project\k8s\ins-datagen-pod.yaml</a>, hoặc mở tunnel bằng <a href="../../../../k8s/pg-proxy-reportapi.yaml">F:\Project\k8s\pg-proxy-reportapi.yaml</a> (<code>kubectl port-forward … 15432:5432</code>, khá chậm).</p>
 <p><strong>Tùy chọn</strong></p>
 <div class="tw"><table>
 <thead>
@@ -297,6 +451,10 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>Chỉ sinh và in thống kê</td>
 </tr>
 <tr>
+<td><code>--local</code></td>
+<td>Nạp vào PostgreSQL nhúng (pgserver) để chạy thử</td>
+</tr>
+<tr>
 <td><code>--days N</code></td>
 <td>Chỉ sinh N ngày đầu</td>
 </tr>
@@ -306,11 +464,138 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 </tr>
 <tr>
 <td><code>--reset</code></td>
-<td>Xóa các đối tượng <code>ins_*</code>, <code>v_ins_*</code>, <code>mv_ins_*</code> trong schema đích rồi nạp lại. <strong>Không</strong> đụng bảng khác trong <code>bronze</code></td>
+<td>Xóa các đối tượng <code>ins_*</code>, <code>v_ins_*</code>, <code>mv_ins_*</code> trong schema đích rồi nạp lại. <strong>Không</strong> đụng bảng khác trong <code>bronze</code> (kể cả <code>poc_key_watermark</code>). Khóa bắt đầu lại từ đầu, nên chỉ dùng cho lần nạp đầu</td>
+</tr>
+<tr>
+<td><code>--replace</code></td>
+<td>Giữ bảng, publication CDC; DELETE dữ liệu fact + khách hàng, đồng bộ danh mục, nạp lại với khóa mới sau mốc trong <code>poc_key_watermark</code></td>
 </tr>
 </tbody>
 </table></div>
-<p>Seed cố định (<code>SEED</code>), nên chạy lại cho ra cùng dữ liệu.</p>
+<p>Seed cố định (<code>SEED</code>), nên chạy lại cho ra cùng dữ liệu (khác nhau ở dải khóa).</p>
+<h3 class="h2">Nguồn mới (19/10/2026): đơn vị PVI và bảo hiểm vi mô</h3>
+<p><strong>Phương pháp:</strong> nghiên cứu chéo bằng codex CLI (gpt-6.1-sol) và agy CLI (gemini-3.8-flash-high) với cùng một đề bài, đối chiếu kết quả hai bên; mọi link đã kiểm lại bằng curl ngày 19/10/2026. Mục bị loại: danh sách "7 đơn vị về đích sớm" (agy) không kiểm chứng được. Bản gốc: <a href="../sources/market_data.md">sources/market_data.md</a> mục 9, 10.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Nội dung dùng</th>
+<th>Số liệu</th>
+<th>Nhãn</th>
+<th>URL (trang)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tổng Công ty Bảo hiểm PVI là công ty con 100% của CTCP PVI (PVI Holdings)</td>
+<td>100% tại 31/12/2024</td>
+<td>[NGUỒN]</td>
+<td>BCTN PVI 2024, trang PDF 12: https://cdn.24hmoney.vn/upload/file/2025-1/2025-03-22/no-name-1742584373.pdf</td>
+</tr>
+<tr>
+<td>Các công ty con khác của Holdings; doanh thu 2024</td>
+<td>Hanoi Re 81,09%, PVIAM 61,96%; Holdings 21.824 tỷ, PVI Insurance 20.405 tỷ, Hanoi Re 3.017,3 tỷ, PVIAM 57,4 tỷ</td>
+<td>[NGUỒN]</td>
+<td>BCTN PVI 2024, trang PDF 12, 22, 29, 30, 31 (link trên)</td>
+</tr>
+<tr>
+<td>Hanoi Re là tên mới của PVI Re</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://www.hanoire.com/vi/pvi-re-chinh-thuc-doi-ten-thanh-hanoi-re</td>
+</tr>
+<tr>
+<td>Doanh thu 2025 của Holdings và các công ty con</td>
+<td>Holdings 28.923 tỷ; Bảo hiểm PVI 27.258 tỷ (phí gốc 14.908 tỷ); Hanoi Re 3.690 tỷ; PVIAM 76,4 tỷ</td>
+<td>[NGUỒN] (tỷ lệ 94,2% là số tự tính)</td>
+<td>BCTN PVI 2025, trang PDF 29, 32, 33, 34: https://www.pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/4f50f1c9-9092-4e0e-b128-1bcfc18922d2.pdf</td>
+</tr>
+<tr>
+<td>Danh sách đơn vị, địa chỉ trụ sở → tỉnh của đơn vị</td>
+<td>47 đơn vị: PVI Digital + 45 công ty thành viên + Phía Nam</td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/network</td>
+</tr>
+<tr>
+<td>Bảo hiểm PVI Digital là chi nhánh của Tổng Công ty</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://online.pvi.com.vn/lien-he</td>
+</tr>
+<tr>
+<td>PVI Sài Gòn tự công bố doanh thu đứng đầu hệ thống bán lẻ</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://pvisg.net</td>
+</tr>
+<tr>
+<td>Đơn vị được vinh danh: Phía Nam (xuất sắc nhất 2024); Thủ Đô (6 tháng 2025); Duyên Hải (2025); Thủ Đô, Thăng Long hoàn thành sớm kế hoạch 2025</td>
+<td>Hệ số ×1,5 suy ra từ đây là <strong>[ƯỚC TÍNH]</strong></td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/news/bao-hiem-pvi-mot-nam-vuot-song-chinh-phuc-nhung-cot-moc-moi-681b4f9737783 ; https://www.pvi.com.vn/en/news/bao-hiem-pvi-doi-moi-sang-tao-va-thanh-cong ; https://vnexpress.net/nhung-yeu-to-giup-doanh-thu-bao-hiem-pvi-vuot-1-ty-usd-5011267.html ; https://www.pvi.com.vn/vi/news/pvi-thu-do-va-pvi-thang-long-hai-don-vi-tiep-theo-duoc-vinh-danh-hoan-thanh-som-ke-hoach-kinh-doanh-nam-2025</td>
+</tr>
+<tr>
+<td>Green SM Care: tai nạn hành khách theo chuyến; PVI Digital là 1 trong 5 nhà bảo hiểm (PVI Digital, OPES, BIC, TCGI, MIC)</td>
+<td>1.000 đ/chuyến Bike, 2.000 đ/chuyến Taxi</td>
+<td>[NGUỒN]</td>
+<td>https://www.greensm.com/vn-vi/bao-hiem-khach-hang ; https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html</td>
+</tr>
+<tr>
+<td>Food Care: Green SM × Bảo hiểm PVI, theo đơn giao đồ ăn</td>
+<td>1.000 đ/đơn; tai nạn 150 triệu đ/đơn</td>
+<td>[NGUỒN]</td>
+<td>https://www.greensm.com/vn-vi/bao-hiem-giao-do-an</td>
+</tr>
+<tr>
+<td>DelayCare: PVI × ATADI, ra mắt 20/08/2026, đơn vị cung cấp PVI Thủ Đô</td>
+<td>Trễ ≥ 120 phút trả 500.000 đ/người; phí KHÔNG TÌM THẤY → 35.000 đ là [ƯỚC TÍNH]</td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/news/bao-hiem-pvi-ra-mat-delaycare-giai-phap-bao-hiem-tre-chuyen-bay-danh-cho-hanh-khach</td>
+</tr>
+<tr>
+<td>Bảo hiểm thiết bị điện tử khi mua trên Shopee / Lazada (PVI qua Fuse, PasarPolis)</td>
+<td>Ví dụ 38.102 đ/12 tháng (nguồn thứ cấp)</td>
+<td>[NGUỒN]</td>
+<td>https://help.shopee.vn/portal/4/article/79225 ; https://magiamgia.com/bao-hiem-thiet-bi-dien-tu-lazada/</td>
+</tr>
+<tr>
+<td>Đối tác số của PVI Digital (MoMo, Viettel Money, Shopee, Lazada, FE Credit, Home Credit, Xanh SM, Grab, Trip.com, Thế Giới Di Động, Điện Máy Xanh)</td>
+<td>"hàng triệu khách hàng"</td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/news/pvi-digital-doi-tac-bao-hiem-so-cua-cac-nen-tang-va-he-sinh-thai-so-hang-dau-viet-nam</td>
+</tr>
+<tr>
+<td>Quy mô Green SM</td>
+<td>&gt; 1 triệu chuyến/ngày (2025, nguồn thứ cấp)</td>
+<td>[NGUỒN]</td>
+<td>https://fhsc.com.vn/co-ca-tram-nghin-xe-chay-tren-duong-day-la-so-cuoc-ma-xanh-sm-nhan-moi-ngay-tai-viet-nam</td>
+</tr>
+<tr>
+<td>Tham chiếu sản lượng vi mô ở Việt Nam (OPES)</td>
+<td>109,3 triệu hợp đồng năm 2023; cao điểm &gt; 500.000 đơn/ngày</td>
+<td>[NGUỒN]</td>
+<td>https://opes.com.vn/posts/business/opes-va-hanh-trinh-chuyen-minh-nho-so-hoa-1716806154</td>
+</tr>
+<tr>
+<td>TMĐT của Bảo hiểm PVI</td>
+<td>Gần 800 tỷ năm 2024 (30 kết nối API); 2025 gần gấp đôi</td>
+<td>[NGUỒN]</td>
+<td>BCTN 2024 trang PDF 29 (link trên); https://pviholdings.com.vn/vi/news-details?id=6013</td>
+</tr>
+<tr>
+<td>Bảo hiểm chuyến đi của Grab do Chubb, của Be do OPES</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html</td>
+</tr>
+<tr>
+<td>Grab × PVI 2026 là BHXH/BHYT tự nguyện cho tài xế</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://www.grab.com/vn/blog/driver/bhxh-bhyt-pvi/</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>[ƯỚC TÍNH]</strong> (không có số công bố; căn cứ chi tiết ở <a href="#can-cu-tham-so">calibration/README.md</a>): số GCN vi mô/ngày (40.000 chuyến xe = 1 triệu chuyến × 20% mua × 20% về PVI; 8.000 đồ ăn; 300 DelayCare; 3.000 thiết bị điện tử), phí DelayCare 35.000 đ/người, phí thiết bị điện tử 1,5–3,5% giá máy, trọng số khai thác từng đơn vị.</p>
 <h3 class="h2">Lưu ý vận hành</h3>
 <p>DB có 2 replication slot Debezium <strong>đang không hoạt động</strong>: <code>dbz_customer_tiering_eks</code> và <code>dbz_transaction_eks</code>. Hai slot này giữ khoảng 7,7 GB WAL mỗi slot, và <code>max_slot_wal_keep_size = -1</code>. Việc nạp bộ dữ liệu này sinh thêm vài GB WAL, cũng sẽ bị giữ lại. Ổ đĩa còn hơn 200 GB nên chưa đáng lo. Tuy vậy, nếu không còn dùng hai slot này thì nên xóa, hoặc đặt giới hạn <code>max_slot_wal_keep_size</code>.</p></section><section id="can-cu-tham-so"><h2>Căn cứ tham số</h2><p><code>build_calibration.py</code> rút <strong>thống kê tổng hợp</strong> (phân vị, tỷ lệ) từ nguồn công khai ra file <code>calibration.json</code>. <code>gen_volume.py</code> đọc file này khi sinh dữ liệu. Thư mục này không lưu dữ liệu gốc của các dataset.</p>
 <p>Chạy lại sau khi tải 2 file CSV về thư mục tạm:</p>
@@ -330,6 +615,10 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>Số liệu cơ quan nhà nước hoặc văn bản pháp luật công bố</td>
 </tr>
 <tr>
+<td><strong>[NGUỒN]</strong></td>
+<td>Thông tin công khai của doanh nghiệp / đối tác (BCTC, báo cáo thường niên, website, báo chí), có URL kiểm lại được</td>
+</tr>
+<tr>
 <td><strong>[DATASET]</strong></td>
 <td>Dataset công khai có dữ liệu thật, đúng lĩnh vực bảo hiểm</td>
 </tr>
@@ -343,12 +632,15 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 </tr>
 <tr>
 <td><strong>[ƯỚC TÍNH]</strong></td>
-<td>Giá trị dự án tự đặt, chưa có nguồn</td>
+<td>Giá trị dự án tự đặt, chưa có nguồn; luôn ghi kèm căn cứ</td>
 </tr>
 </tbody>
 </table></div>
-<h3 class="h2">Quy mô doanh thu (hiệu chỉnh lại 16/10/2026 — cơ cấu theo BCTC PVI như v2)</h3>
-<p>Bộ volume dùng <strong>cùng cơ cấu doanh thu với v2</strong> (tỷ trọng giữa các nhóm và trong từng nhóm), thu về kỳ tháng 8–9. Yêu cầu dự án là <strong>&gt; 50.000 giao dịch/ngày</strong>; ở đúng quy mô PVI với giá niêm yết chỉ được khoảng 13–25 nghìn/ngày, nên mọi ngân sách nhóm được nhân <strong>cùng một hệ số quy mô k ≈ 3,93</strong> [QUY ƯỚC]. Cơ cấu giữ nguyên, đơn giá giữ nguyên, chỉ số hợp đồng và doanh thu tuyệt đối tăng k lần.</p>
+<h3 class="h2">Quy mô doanh thu (hiệu chỉnh lại 19/10/2026 — đúng quy mô PVI, không còn hệ số k)</h3>
+<p>Bộ volume dùng <strong>cùng cơ cấu doanh thu với v2</strong> (tỷ trọng giữa các nhóm và trong từng nhóm), thu về kỳ tháng 8–9, và <strong>đúng quy mô tuyệt đối của Bảo hiểm PVI</strong>. Yêu cầu dự án là <strong>&gt; 50.000 giao dịch/ngày</strong>; ở quy mô PVI với giá niêm yết, nghiệp vụ truyền thống chỉ được khoảng 15 nghìn hợp đồng/ngày, nên khối lượng còn lại đến từ <strong>bảo hiểm vi mô theo chuyến / theo đơn</strong> (phí 1.000–2.000 đ/GCN, xem mục "Bảo hiểm vi mô"). Mỗi GCN vi mô gần như không làm đổi doanh thu, nên không cần nhân ngân sách.</p>
+<blockquote>
+<p>Bản 16–18/10/2026 nhân mọi ngân sách nhóm với hệ số quy mô k ≈ 3,93 để đạt khối lượng, nên doanh thu ≈ 4 lần PVI. Bản đó cũng dùng tỷ trọng sản phẩm riêng, lệch v2 (tai nạn 24/24 0,40 thay vì 0,20; TNDS xe máy 0,65 thay vì 0,45; nhà tư nhân 0,20 thay vì 0,45…), khiến sinh mạng chiếm 49,9% số hợp đồng. Cả hai đã bỏ.</p>
+</blockquote>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -378,39 +670,308 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>Chưa có BCTC 2026</td>
 </tr>
 <tr>
-<td>Ngân sách tháng 8 + 9 theo quy mô PVI</td>
-<td>≈ 1.602 tỷ (tháng 8 ≈ 659, tháng 9 ≈ 943)</td>
+<td><strong>Ngân sách tháng 8 + 9</strong></td>
+<td><strong>≈ 1.602 tỷ</strong> (tháng 8 ≈ 659, tháng 9 ≈ 943) — dùng nguyên, <strong>không nhân hệ số</strong></td>
 <td>—</td>
-<td>= mục tiêu năm × tỷ trọng tháng</td>
+<td>= mục tiêu năm × tỷ trọng tháng (10.377,9 × 13.594 / 88.054)</td>
 </tr>
 <tr>
-<td><strong>Hệ số quy mô k</strong></td>
-<td><strong>≈ 3,93</strong> → ngân sách ≈ 6.300 tỷ cho 2 tháng</td>
-<td>[QUY ƯỚC]</td>
-<td>Chọn để ngày thấp nhất đạt 52.000 hợp đồng cấp mới / tái tục (yêu cầu &gt; 50.000 giao dịch/ngày). Nhân đều mọi nhóm nên cơ cấu không đổi</td>
+<td>Khối lượng &gt; 50.000 giao dịch/ngày</td>
+<td>≈ 51.700 GCN vi mô/ngày + ≈ 15.200 hợp đồng truyền thống/ngày</td>
+<td>[ƯỚC TÍNH] (số GCN vi mô)</td>
+<td>Mục "Bảo hiểm vi mô" bên dưới</td>
 </tr>
 <tr>
 <td>Tỷ trọng doanh thu của sản phẩm trong nhóm</td>
-<td>TNDS xe máy 65 / ô tô 35; VCX ô tô 80 / xe máy 20; học sinh tai nạn 60 / sức khỏe 40; du lịch nội địa 55 / quốc tế 45; sinh mạng CN 25 / người vay 35 / TN24 40; sức khỏe CN 30 / nhóm 60 / BHN 10; nhà 20 / MRR 50 / MRR CN 30; cháy nổ BB 70 / TN 30</td>
+<td><strong>Lấy thẳng <code>build_v2.PRODUCT_MIX</code></strong> (một nguồn duy nhất): TNDS ô tô 55 / xe máy 45; VCX ô tô 85 / xe máy 15; học sinh tai nạn 60 / sức khỏe 40; du lịch nội địa 55 / quốc tế 45; sinh mạng CN 35 / người vay 45 / TN24 20; sức khỏe CN 45 / nhóm 45 / BHN 10; nhà 45 / MRR 35 / MRR CN 20; cháy nổ BB 70 / TN 30</td>
 <td>[ƯỚC TÍNH]</td>
 <td>PVI không công bố</td>
 </tr>
 <tr>
 <td>Số hợp đồng</td>
-<td>= ngân sách × tỷ trọng ÷ phí bình quân của sản phẩm (đo bằng mô phỏng đơn giá)</td>
+<td>= ngân sách × tỷ trọng ÷ phí bình quân của sản phẩm (đo bằng mô phỏng đơn giá). Riêng vi mô: số GCN theo ngày (mục dưới)</td>
 <td>—</td>
 <td>Đơn giá theo biểu phí NĐ 67/2023 và giá niêm yết, như v2</td>
 </tr>
 <tr>
 <td>Hiệu chỉnh</td>
-<td>Đơn bán lẻ giữ nguyên giá; co giãn đơn doanh nghiệp / nhóm / lô để doanh thu từng nhóm khớp ngân sách mỗi đợt 7 ngày</td>
+<td>Đơn bán lẻ giữ nguyên giá; <strong>dòng vi mô coi là cố định</strong>; co giãn đơn doanh nghiệp / nhóm / lô để doanh thu từng nhóm khớp ngân sách mỗi đợt 7 ngày</td>
 <td>—</td>
 <td>Cùng thuật toán với v2</td>
 </tr>
 </tbody>
 </table></div>
-<p><strong>Hệ quả:</strong> khoảng 53–66 nghìn giao dịch/ngày tháng 8 và 80–99 nghìn/ngày tháng 9 (khoảng 5 triệu giao dịch cả kỳ). Cơ cấu doanh thu (tài sản + cháy nổ ≈ 51%, con người ≈ 31%, xe ≈ 17%) khớp BCTC PVI; doanh thu tuyệt đối ≈ 3,9 lần quy mô PVI — doanh nghiệp giả lập lớn hơn PVI, không trình bày như số liệu của PVI.</p>
-<p><strong>Khóa không dùng lại:</strong> khi nạp lại bằng <code>--replace</code>, bộ sinh đọc khóa lớn nhất đang có <strong>trước khi xóa</strong> và bắt đầu sau đó (làm tròn lên): <code>policy_id</code>, <code>txn_id</code>, <code>coverage_id</code> từ bội số 10 triệu kế tiếp; số hợp đồng từ bội số 1 triệu kế tiếp theo từng đơn vị × sản phẩm; mã khách hàng từ bội số 100 triệu kế tiếp. CDC và Iceberg vẫn giữ lịch sử các khóa cũ, nên khóa mới không trùng.</p>
+<p><strong>Hệ quả (đo trên DB, <code>docs/db_snapshot.json</code>, 19/10/2026):</strong></p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Nhóm</th>
+<th style="text-align: right;">Ngân sách T8+T9 (tỷ)</th>
+<th style="text-align: right;">Phí gốc khai thác trên DB (tỷ)</th>
+<th style="text-align: right;">Lệch</th>
+<th style="text-align: right;">Số hợp đồng</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sức khỏe</td>
+<td style="text-align: right;">372,1</td>
+<td style="text-align: right;">372,0</td>
+<td style="text-align: right;">0,0%</td>
+<td style="text-align: right;">44.924</td>
+</tr>
+<tr>
+<td>Sinh mạng – tai nạn (gồm vi mô)</td>
+<td style="text-align: right;">74,4</td>
+<td style="text-align: right;">74,4</td>
+<td style="text-align: right;">0,0%</td>
+<td style="text-align: right;">3.298.699</td>
+</tr>
+<tr>
+<td>Du lịch (gồm DelayCare)</td>
+<td style="text-align: right;">24,8</td>
+<td style="text-align: right;">24,8</td>
+<td style="text-align: right;">+0,1%</td>
+<td style="text-align: right;">134.525</td>
+</tr>
+<tr>
+<td>Học sinh</td>
+<td style="text-align: right;">24,8</td>
+<td style="text-align: right;">24,8</td>
+<td style="text-align: right;">0,0%</td>
+<td style="text-align: right;">21.751</td>
+</tr>
+<tr>
+<td>TNDS bắt buộc</td>
+<td style="text-align: right;">67,5</td>
+<td style="text-align: right;">67,5</td>
+<td style="text-align: right;">0,0%</td>
+<td style="text-align: right;">216.322</td>
+</tr>
+<tr>
+<td>Vật chất xe</td>
+<td style="text-align: right;">213,9</td>
+<td style="text-align: right;">212,3</td>
+<td style="text-align: right;">−0,7%</td>
+<td style="text-align: right;">42.346</td>
+</tr>
+<tr>
+<td>Cháy nổ</td>
+<td style="text-align: right;">532,8</td>
+<td style="text-align: right;">532,8</td>
+<td style="text-align: right;">0,0%</td>
+<td style="text-align: right;">5.542</td>
+</tr>
+<tr>
+<td>Tài sản (gồm thiết bị điện tử)</td>
+<td style="text-align: right;">291,9</td>
+<td style="text-align: right;">291,9</td>
+<td style="text-align: right;">0,0%</td>
+<td style="text-align: right;">318.528</td>
+</tr>
+<tr>
+<td><strong>Tổng</strong></td>
+<td style="text-align: right;"><strong>1.602,2</strong></td>
+<td style="text-align: right;"><strong>1.600,6</strong></td>
+<td style="text-align: right;"><strong>−0,1%</strong></td>
+<td style="text-align: right;"><strong>4.082.637</strong></td>
+</tr>
+</tbody>
+</table></div>
+<p>Phí gốc khai thác = phí cấp mới + tái tục đã duyệt, phần của công ty, theo ngày chứng từ (khóa <code>written_group</code>); ngân sách và cột "Lệch" là số tự tính. Cơ cấu tài sản + cháy nổ / con người / xe = 51,5 / 31,0 / 17,5% (đã tính), khớp BCTC PVI như v2. Giao dịch/ngày: tháng 8 57.722–69.201 (bình quân 63.923), tháng 9 62.635–77.822 (bình quân 70.559); tổng 4.098.401 giao dịch.</p>
+<h3 class="h2">Bảo hiểm vi mô (bổ sung 19/10/2026)</h3>
+<p>4 sản phẩm mới trong <code>ref.product</code>, thuộc các nhóm sẵn có, nên doanh thu của chúng nằm <strong>trong</strong> ngân sách nhóm (<code>gen_volume.MICRO</code>, <code>MICRO_ISSUER</code>, <code>MICRO_PARTNER</code>).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Mã</th>
+<th>Sản phẩm</th>
+<th>Nhóm</th>
+<th>Phí / GCN</th>
+<th style="text-align: right;">Số GCN/ngày</th>
+<th>Đơn vị cấp</th>
+<th>Đối tác</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MV_XSM_CARE</code></td>
+<td>BH tai nạn hành khách theo chuyến (Green SM Care)</td>
+<td>Sinh mạng – tai nạn</td>
+<td>1.000 đ Bike / 2.000 đ Taxi <strong>[NGUỒN]</strong> greensm.com; tỷ lệ Bike/Taxi 60/40 [ƯỚC TÍNH]</td>
+<td style="text-align: right;">40.000 <strong>[ƯỚC TÍNH]</strong>: Green SM &gt; 1 triệu chuyến/ngày × 20% chuyến mua bảo hiểm × 20% về PVI (PVI Digital là 1 trong 5 nhà bảo hiểm của chương trình)</td>
+<td>DGT (PVI Digital)</td>
+<td><code>GREEN_SM</code></td>
+</tr>
+<tr>
+<td><code>MV_FOOD_CARE</code></td>
+<td>BH đơn giao đồ ăn (Food Care)</td>
+<td>Sinh mạng – tai nạn</td>
+<td>1.000 đ/đơn <strong>[NGUỒN]</strong> greensm.com</td>
+<td style="text-align: right;">8.000 <strong>[ƯỚC TÍNH]</strong>: Green SM không công bố số đơn giao đồ ăn; giá trị quy ước của POC</td>
+<td>DGT</td>
+<td><code>GREEN_SM</code></td>
+</tr>
+<tr>
+<td><code>MV_DELAYCARE</code></td>
+<td>BH trễ chuyến bay (DelayCare), từ 20/08/2026</td>
+<td>Du lịch</td>
+<td>35.000 đ/người <strong>[ƯỚC TÍNH]</strong>: ≈ 4% xác suất trễ ≥ 2 giờ × 500.000 đ ÷ tỷ lệ bồi thường 60% (phí không công bố; mức chi trả 500.000 đ là [NGUỒN] pvi.com.vn)</td>
+<td style="text-align: right;">300 <strong>[ƯỚC TÍNH]</strong>: số GCN không công bố; giá trị quy ước của POC, chỉ từ 20/08/2026</td>
+<td>TDO (PVI Thủ Đô — nguồn ghi là đơn vị cung cấp)</td>
+<td><code>ATADI</code></td>
+</tr>
+<tr>
+<td><code>MV_TBDT_TMDT</code></td>
+<td>BH thiết bị điện tử mua trên sàn TMĐT</td>
+<td>Tài sản</td>
+<td>1,5–3,5% giá máy <strong>[ƯỚC TÍNH]</strong>, neo ví dụ 38.102 đ/12 tháng (help.shopee.vn, nguồn thứ cấp)</td>
+<td style="text-align: right;">3.000; ×3 ngày 8/8, 9/9 <strong>[ƯỚC TÍNH]</strong>: số GCN không công bố; giá trị quy ước của POC (đối chiếu độ hợp lý với kênh TMĐT PVI gần 800 tỷ năm 2024, 2025 gần gấp đôi)</td>
+<td>DGT</td>
+<td><code>FUSE</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Các số GCN/ngày là quy ước để đạt khối lượng giao dịch của POC, đã kiểm tra độ hợp lý với quy mô Green SM (&gt; 1 triệu chuyến/ngày) và OPES (109,3 triệu hợp đồng năm 2023, cao điểm &gt; 500.000 đơn/ngày).</p>
+<p>Quy tắc riêng của GCN vi mô:
+- Kênh luôn là <code>DIEN_TU</code>, đối tác như bảng (cấp tự động qua API nên <strong>không</strong> thuộc nhóm ~0,5% thiếu kênh).
+- Khách là người dùng app: kho riêng 1,5 triệu người, mã khách mang tiền tố 7 (ví dụ <code>KH67…</code> ở lần nạp này); 40% GCN đến từ nhóm 150 nghìn người dùng thường xuyên (đi làm, đặt đồ ăn hằng ngày) [ƯỚC TÍNH].
+- Phân bổ 100% cho đơn vị cấp (<code>TU_KHAI_THAC</code>), không hợp tác / chuyển giao.
+- GCN chuyến xe và đồ ăn hiệu lực trong ngày, không có SĐBS. DelayCare hủy 3% trước ngày bay; thiết bị điện tử hủy 2% khi trả hàng [ƯỚC TÍNH].
+- Giờ tạo [ƯỚC TÍNH]: chuyến xe cao điểm 7–8h và 17–19h; đồ ăn 11–12h và 18–19h. Chuyến xe ít hơn vào chủ nhật; đồ ăn nhiều hơn cuối tuần và lễ.</p>
+<p><strong>Vì sao Grab không phải đối tác:</strong> bảo hiểm chuyến đi của Grab (Ride Cover) do <strong>Chubb</strong> cung cấp, của Be do <strong>OPES</strong> — không phải PVI. Hợp tác Grab × PVI năm 2026 là chương trình BHXH/BHYT tự nguyện cho tài xế, không phải bảo hiểm theo cuốc. Vì vậy POC dùng <strong>Green SM</strong>, nơi PVI Digital có tên trong danh sách nhà bảo hiểm.</p>
+<h3 class="h2">Phân phối và quy mô doanh thu khi có bảo hiểm vi mô</h3>
+<p>Số đo trên DB (<code>docs/db_snapshot.json</code>, khóa <code>product</code>, <code>written_group</code>, <code>policies_group</code>, <code>top_share</code>); tỷ lệ và phí bình quân là số tự tính. Doanh thu = doanh thu ghi nhận tháng 8–9 theo sản phẩm (tổng 1.577,9 tỷ).</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Phần</th>
+<th style="text-align: right;">Số hợp đồng / GCN</th>
+<th style="text-align: right;">% số HĐ</th>
+<th style="text-align: right;">Doanh thu (tỷ)</th>
+<th style="text-align: right;">% doanh thu</th>
+<th style="text-align: right;">Phí bình quân</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>MV_XSM_CARE</code></td>
+<td style="text-align: right;">2.431.497</td>
+<td style="text-align: right;">59,6%</td>
+<td style="text-align: right;">3,36</td>
+<td style="text-align: right;">0,21%</td>
+<td style="text-align: right;">1.383 đ</td>
+</tr>
+<tr>
+<td><code>MV_FOOD_CARE</code></td>
+<td style="text-align: right;">516.750</td>
+<td style="text-align: right;">12,7%</td>
+<td style="text-align: right;">0,51</td>
+<td style="text-align: right;">0,03%</td>
+<td style="text-align: right;">988 đ</td>
+</tr>
+<tr>
+<td><code>MV_TBDT_TMDT</code></td>
+<td style="text-align: right;">194.993</td>
+<td style="text-align: right;">4,8%</td>
+<td style="text-align: right;">16,35</td>
+<td style="text-align: right;">1,04%</td>
+<td style="text-align: right;">83.837 đ</td>
+</tr>
+<tr>
+<td><code>MV_DELAYCARE</code> (từ 20/8)</td>
+<td style="text-align: right;">12.749</td>
+<td style="text-align: right;">0,3%</td>
+<td style="text-align: right;">0,62</td>
+<td style="text-align: right;">0,04%</td>
+<td style="text-align: right;">48.739 đ/GCN (1–4 người × 35.000 đ)</td>
+</tr>
+<tr>
+<td><strong>Vi mô</strong></td>
+<td style="text-align: right;"><strong>3.155.989</strong></td>
+<td style="text-align: right;"><strong>77,3%</strong></td>
+<td style="text-align: right;"><strong>20,84</strong></td>
+<td style="text-align: right;"><strong>1,32%</strong></td>
+<td style="text-align: right;">≈ 6.600 đ</td>
+</tr>
+<tr>
+<td><strong>Truyền thống</strong></td>
+<td style="text-align: right;"><strong>926.648</strong></td>
+<td style="text-align: right;"><strong>22,7%</strong></td>
+<td style="text-align: right;"><strong>1.557,0</strong></td>
+<td style="text-align: right;"><strong>98,68%</strong></td>
+<td style="text-align: right;">≈ 1,68 triệu đ</td>
+</tr>
+<tr>
+<td><strong>Tổng</strong></td>
+<td style="text-align: right;"><strong>4.082.637</strong></td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;"><strong>1.577,9</strong></td>
+<td style="text-align: right;">100%</td>
+<td style="text-align: right;"></td>
+</tr>
+</tbody>
+</table></div>
+<p>Số GCN vi mô/ngày trên DB (đã tính): chuyến xe ≈ 39.900, đồ ăn ≈ 8.500, thiết bị điện tử ≈ 3.200, DelayCare ≈ 300 (trên 42 ngày từ 20/8) — tổng ≈ 51.700/ngày.</p>
+<p><strong>Vì sao tổng doanh thu không đổi khi thêm vi mô.</strong> Doanh thu vi mô nằm <strong>trong</strong> ngân sách nhóm (sinh mạng, du lịch, tài sản). Bước hiệu chỉnh coi dòng vi mô là cố định và co giãn đơn doanh nghiệp / nhóm ở phần còn lại, nên tổng từng nhóm và cơ cấu tài sản + cháy nổ / con người / xe ≈ 51 / 31 / 17% giữ nguyên. Vi mô chiếm khoảng 5% doanh thu ghi nhận của nhóm sinh mạng và tài sản, 8% của nhóm du lịch (đã tính).</p>
+<p><strong>Phân phối lệch hơn.</strong> "Nhiều đơn nhỏ – ít đơn lớn" càng rõ: 10% hợp đồng lớn nhất chiếm <strong>97,7%</strong> doanh thu, 1% lớn nhất chiếm <strong>80,1%</strong> (lần nạp trước trên DB, chưa có vi mô: 93% / 74%; v2 năm 2025: 74% / 25%, xem <code>../GENERATION_LOGIC.md</code>). Nhóm sinh mạng có 3.298.699 hợp đồng (chủ yếu GCN vi mô) nhưng chỉ ≈ 74 tỷ phí gốc. Đây là đặc trưng thật của bảo hiểm nhúng (OPES phát hành 109,3 triệu hợp đồng năm 2023). Khi làm dashboard:
+- tách "số giao dịch / số hợp đồng" và "doanh thu" thành hai thước đo riêng;
+- lọc riêng sản phẩm <code>MV_*</code> khi tính phí bình quân, phân vị phí, tỷ trọng số đơn theo nhóm.</p>
+<h3 class="h2">Đơn vị và doanh nghiệp (<code>ref.company</code>)</h3>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Nội dung</th>
+<th>Giá trị</th>
+<th>Nhãn</th>
+<th>Căn cứ</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Doanh nghiệp</td>
+<td>Tổng Công ty Bảo hiểm PVI (<code>PVI</code>), công ty con 100% của CTCP PVI (PVI Holdings)</td>
+<td>[NGUỒN]</td>
+<td>BCTN 2024, trang PDF 12</td>
+</tr>
+<tr>
+<td>Đơn vị</td>
+<td>Trụ sở chính – các Ban kinh doanh (<code>HO</code>), Bảo hiểm PVI Digital (<code>DGT</code>, TP.HCM) và 46 đơn vị theo trang mạng lưới (DGT + 46 = 47 đơn vị trên trang) (Đông Đô, Thăng Long, …, Phía Nam); tỉnh = địa chỉ trụ sở</td>
+<td>[NGUỒN]</td>
+<td>pvi.com.vn/vi/network; online.pvi.com.vn/lien-he</td>
+</tr>
+<tr>
+<td>Trọng số khai thác của đơn vị</td>
+<td>Theo quy mô kinh tế địa bàn (1–4); ×1,5 cho Phía Nam, Thủ Đô, Duyên Hải, Thăng Long, Sài Gòn</td>
+<td><strong>[ƯỚC TÍNH]</strong></td>
+<td>PVI không công bố doanh thu từng đơn vị (cả hai công cụ nghiên cứu đều KHÔNG TÌM THẤY). 5 đơn vị được nhân 1,5 vì được PVI vinh danh (xuất sắc nhất 2024; 6 tháng 2025; xuất sắc 2025; hoàn thành sớm kế hoạch 2025) hoặc tự công bố dẫn đầu bán lẻ (pvisg.net)</td>
+</tr>
+<tr>
+<td>Tỉnh không có đơn vị</td>
+<td>Gán đơn vị gần nhất (ví dụ Tuyên Quang, Lạng Sơn, Cao Bằng → Thái Nguyên; Lào Cai, Lai Châu → Vĩnh Phú; Điện Biên, Sơn La → Hà Nội)</td>
+<td>[QUY ƯỚC]</td>
+<td><code>gen_volume._NO_UNIT</code></td>
+</tr>
+<tr>
+<td>Đối tác</td>
+<td>Đối tác cũ vẫn ẩn danh (Ngân hàng A, OTA A…); 3 đối tác số thật mới: <code>GREEN_SM</code>, <code>ATADI</code>, <code>FUSE</code> (giao dịch là giả lập)</td>
+<td>[NGUỒN] tên đối tác</td>
+<td>Mục 10 của <code>../sources/market_data.md</code></td>
+</tr>
+<tr>
+<td>Không có trong <code>ref.company</code></td>
+<td>Hanoi Re (tên cũ PVI Re, Holdings sở hữu 81,09%) nhận tái bảo hiểm; PVIAM (61,96%) quản lý quỹ — không cấp hợp đồng bảo hiểm gốc</td>
+<td>[NGUỒN]</td>
+<td>BCTN 2024, 2025. Ngoài phạm vi doanh thu phí bảo hiểm gốc</td>
+</tr>
+</tbody>
+</table></div>
+<p>So với cả tập đoàn: năm 2025 doanh thu hợp nhất PVI Holdings 28.923 tỷ, Bảo hiểm PVI 27.258 tỷ (94,2%, trong đó phí bảo hiểm gốc 14.908 tỷ), Hanoi Re 3.690 tỷ, PVIAM 76,4 tỷ (BCTN 2025). POC chỉ mô phỏng 4 nghiệp vụ của Bảo hiểm PVI (10.377,9 tỷ năm 2025).</p>
+<p><strong>Khóa không dùng lại</strong> (áp dụng với <code>--replace</code>):
+- Bộ sinh đọc khóa lớn nhất đang có <strong>trước khi xóa</strong> và bắt đầu sau đó (làm tròn lên): <code>policy_id</code>, <code>txn_id</code>, <code>coverage_id</code> từ bội số 10 triệu kế tiếp; số hợp đồng từ bội số 1 triệu kế tiếp theo từng đơn vị × sản phẩm; mã khách hàng từ bội số 100 triệu kế tiếp.
+- Mốc khóa lớn nhất đã phát hành được lưu lâu dài trong bảng <strong><code>bronze.poc_key_watermark</code></strong> (<code>key_name</code>, <code>max_value</code>; ghi sau mỗi đợt nạp, không bao giờ bị DELETE). Dù bảng fact đang trống hoặc lần trước nạp dở, lần sau vẫn bắt đầu sau mọi khóa cũ.
+- Lần nạp cuối (19/10/2026): <code>policy_id</code> 60.000.001–64.082.637, <code>txn_id</code> 60.000.001–64.098.401, <code>coverage_id</code> 60.000.001–64.127.680, mã khách <code>KH610000001</code>–<code>KH690000048</code>. Các dải 30 triệu (cũ), 40 và 50 triệu (2 lần nạp trung gian ngày 19/10) đều đã xóa; CDC và Iceberg vẫn giữ lịch sử các khóa cũ, nên khóa mới không trùng.
+- <code>--replace</code> đồng bộ danh mục với <code>02_data.sql</code>: upsert theo khóa chính, xóa dòng không còn dùng (DEMO, HN1…), dòng không đổi giữ nguyên để CDC không phát sự kiện thừa.</p>
 <h3 class="h2">Tham số theo thời gian</h3>
 <div class="tw"><table>
 <thead>
@@ -424,7 +985,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <tbody>
 <tr>
 <td>Doanh thu tháng 9 so với tháng 8 (mỗi ngày)</td>
-<td>×1,479 (nay là hệ quả của ngân sách tháng)</td>
+<td>×1,479 (nay là hệ quả của ngân sách tháng). Trên DB, doanh thu ghi nhận mỗi ngày tháng 9 / tháng 8 = 31,3 / 20,6 tỷ ≈ ×1,52 (đã tính). Số <strong>giao dịch</strong>/ngày chỉ ×1,10 vì phần lớn là GCN vi mô, không theo mùa vụ tháng</td>
 <td>[CHÍNH THỨC]</td>
 <td>Bộ Tài chính, bản tin thị trường bảo hiểm tháng 8, 9, 10/2025. Phí gốc phi nhân thọ lũy kế 2025: 7T 50.784 · 8T 56.376 · 9T 64.378 tỷ, suy ra tháng 8 = 5.592 tỷ, tháng 9 = 8.002 tỷ</td>
 </tr>
@@ -445,6 +1006,12 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>Như nhau mọi ngày</td>
 <td>[QUY ƯỚC]</td>
 <td>—</td>
+</tr>
+<tr>
+<td>Vi mô theo ngày</td>
+<td>Chuyến xe: CN ×0,9, T6 ×1,05, lễ ×1,1. Đồ ăn: T6 ×1,05, T7–CN ×1,15, lễ ×1,2. Thiết bị điện tử: 8/8, 9/9 ×3</td>
+<td>[ƯỚC TÍNH]</td>
+<td>Nhịp đi làm / đặt đồ ăn; ngày hội mua sắm "ngày đôi" của sàn TMĐT</td>
 </tr>
 <tr>
 <td>Nghỉ Quốc khánh</td>
@@ -519,12 +1086,18 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>[DATASET] + [CHÍNH THỨC]</td>
 <td>Travel Insurance; trần hoa hồng theo TT 67/2023 Điều 51</td>
 </tr>
+<tr>
+<td>DelayCare bay sau ngày mua</td>
+<td>1–45 ngày (phân phối hình học, trung bình ≈ 12 ngày)</td>
+<td>[ƯỚC TÍNH]</td>
+<td>Mua kèm vé máy bay</td>
+</tr>
 </tbody>
 </table></div>
 <h3 class="h2">Hệ quả cần biết</h3>
 <ul>
-<li>Doanh thu du lịch được ghi nhận khi chuyến đi bắt đầu. Với độ trễ theo dataset (trung vị khoảng 70 ngày), phần doanh thu du lịch rơi sang tháng 10/2026 – 2028. Tỷ giá USD 2027–2028 lấy bằng tháng 12/2026 [ƯỚC TÍNH].</li>
-<li>Các tham số chưa thay đổi trong lần hiệu chỉnh này vẫn giữ căn cứ cũ, xem <code>../../v2/GENERATION_LOGIC.md</code>: đơn giá theo biểu phí (NĐ 67/2023, giá niêm yết), cơ cấu sản phẩm, đồng bảo hiểm, phân bổ, sửa đổi bổ sung.</li>
+<li>Doanh thu du lịch được ghi nhận khi chuyến đi bắt đầu. Với độ trễ theo dataset (trung vị khoảng 70 ngày), phần doanh thu du lịch rơi sang tháng 10/2026 – 2028: trên DB 16,7 tỷ ghi nhận sau 30/9; khoản giảm thu (giảm phí, hoàn phí, hủy) trong tháng 8–9 là −5,8 tỷ. Vì vậy doanh thu ghi nhận tháng 8–9 (1.577,9 tỷ) thấp hơn phí gốc khai thác (1.600,6 tỷ). Tỷ giá USD 2027–2028 lấy bằng tháng 12/2026 [ƯỚC TÍNH].</li>
+<li>Các tham số chưa thay đổi trong lần hiệu chỉnh này vẫn giữ căn cứ cũ, xem <code>../GENERATION_LOGIC.md</code>: đơn giá theo biểu phí (NĐ 67/2023, giá niêm yết), cơ cấu sản phẩm, đồng bảo hiểm, phân bổ, sửa đổi bổ sung.</li>
 </ul>
 <h3 class="h2">Nguồn</h3>
 <ul>
@@ -534,7 +1107,135 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <li>Đã xem nhưng <strong>không dùng</strong>:</li>
 <li><code>insurance_claims.csv</code> (Mendeley / Kaggle): 1.000 dòng, chỉ có <code>policy_bind_date</code>, thường được coi là dữ liệu tự tạo.</li>
 <li>Các trang thống kê tổng hợp (worldmetrics, zipdo, wifitalents, dataintelo): không dẫn nguồn gốc kiểm chứng được.</li>
-</ul></section><section id="can-cu"><h2>Căn cứ thiết kế mô hình (v2)</h2><p>Tài liệu này trả lời câu hỏi "<strong>tại sao</strong> mô hình được thiết kế như vậy" cho từng bảng, từng quy tắc và từng con số trong dữ liệu dummy.</p>
+<li>Danh sách "7 đơn vị về đích sớm" (do agy CLI đưa ra): không kiểm chứng được, đã loại.</li>
+</ul>
+<h3>Nguồn mới cho đơn vị PVI và bảo hiểm vi mô (19/10/2026)</h3>
+<p><strong>Phương pháp:</strong> nghiên cứu chéo bằng codex CLI (gpt-6.1-sol) và agy CLI (gemini-3.8-flash-high) với cùng một đề bài, đối chiếu kết quả hai bên; mọi link dưới đây đã kiểm lại bằng curl ngày 19/10/2026. Bản gốc: <code>../sources/market_data.md</code> mục 9, 10.</p>
+<div class="tw"><table>
+<thead>
+<tr>
+<th>Nội dung dùng</th>
+<th>Số liệu</th>
+<th>Nhãn</th>
+<th>URL (trang)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Tổng Công ty Bảo hiểm PVI là công ty con 100% của CTCP PVI (PVI Holdings)</td>
+<td>100% tại 31/12/2024</td>
+<td>[NGUỒN]</td>
+<td>BCTN PVI 2024, trang PDF 12: https://cdn.24hmoney.vn/upload/file/2025-1/2025-03-22/no-name-1742584373.pdf</td>
+</tr>
+<tr>
+<td>Các công ty con khác của Holdings; doanh thu 2024</td>
+<td>Hanoi Re 81,09%, PVIAM 61,96%; Holdings 21.824 tỷ, PVI Insurance 20.405 tỷ, Hanoi Re 3.017,3 tỷ, PVIAM 57,4 tỷ</td>
+<td>[NGUỒN]</td>
+<td>BCTN PVI 2024, trang PDF 12, 22, 29, 30, 31 (link trên)</td>
+</tr>
+<tr>
+<td>Hanoi Re là tên mới của PVI Re</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://www.hanoire.com/vi/pvi-re-chinh-thuc-doi-ten-thanh-hanoi-re</td>
+</tr>
+<tr>
+<td>Doanh thu 2025 của Holdings và các công ty con</td>
+<td>Holdings 28.923 tỷ; Bảo hiểm PVI 27.258 tỷ (phí gốc 14.908 tỷ); Hanoi Re 3.690 tỷ; PVIAM 76,4 tỷ</td>
+<td>[NGUỒN] (94,2% là số tự tính)</td>
+<td>BCTN PVI 2025, trang PDF 29, 32, 33, 34: https://www.pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/4f50f1c9-9092-4e0e-b128-1bcfc18922d2.pdf</td>
+</tr>
+<tr>
+<td>Danh sách đơn vị, địa chỉ trụ sở → tỉnh của đơn vị</td>
+<td>47 đơn vị: PVI Digital + 45 công ty thành viên + Phía Nam</td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/network</td>
+</tr>
+<tr>
+<td>Bảo hiểm PVI Digital là chi nhánh của Tổng Công ty</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://online.pvi.com.vn/lien-he</td>
+</tr>
+<tr>
+<td>PVI Sài Gòn tự công bố doanh thu đứng đầu hệ thống bán lẻ</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://pvisg.net</td>
+</tr>
+<tr>
+<td>Đơn vị được vinh danh: Phía Nam (xuất sắc nhất 2024); Thủ Đô (6 tháng 2025); Duyên Hải (2025); Thủ Đô, Thăng Long hoàn thành sớm kế hoạch 2025</td>
+<td>→ hệ số ×1,5 là <strong>[ƯỚC TÍNH]</strong></td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/news/bao-hiem-pvi-mot-nam-vuot-song-chinh-phuc-nhung-cot-moc-moi-681b4f9737783 ; https://www.pvi.com.vn/en/news/bao-hiem-pvi-doi-moi-sang-tao-va-thanh-cong ; https://vnexpress.net/nhung-yeu-to-giup-doanh-thu-bao-hiem-pvi-vuot-1-ty-usd-5011267.html ; https://www.pvi.com.vn/vi/news/pvi-thu-do-va-pvi-thang-long-hai-don-vi-tiep-theo-duoc-vinh-danh-hoan-thanh-som-ke-hoach-kinh-doanh-nam-2025</td>
+</tr>
+<tr>
+<td>Green SM Care: tai nạn hành khách theo chuyến; PVI Digital là 1 trong 5 nhà bảo hiểm (PVI Digital, OPES, BIC, TCGI, MIC)</td>
+<td>1.000 đ/chuyến Bike, 2.000 đ/chuyến Taxi</td>
+<td>[NGUỒN]</td>
+<td>https://www.greensm.com/vn-vi/bao-hiem-khach-hang ; https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html</td>
+</tr>
+<tr>
+<td>Food Care: Green SM × Bảo hiểm PVI, theo đơn giao đồ ăn</td>
+<td>1.000 đ/đơn; tai nạn 150 triệu đ/đơn</td>
+<td>[NGUỒN]</td>
+<td>https://www.greensm.com/vn-vi/bao-hiem-giao-do-an</td>
+</tr>
+<tr>
+<td>DelayCare: PVI × ATADI, ra mắt 20/08/2026, đơn vị cung cấp PVI Thủ Đô</td>
+<td>Trễ ≥ 120 phút trả 500.000 đ/người; phí KHÔNG TÌM THẤY → 35.000 đ là [ƯỚC TÍNH]</td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/news/bao-hiem-pvi-ra-mat-delaycare-giai-phap-bao-hiem-tre-chuyen-bay-danh-cho-hanh-khach</td>
+</tr>
+<tr>
+<td>Bảo hiểm thiết bị điện tử khi mua trên Shopee / Lazada (PVI qua Fuse, PasarPolis)</td>
+<td>Ví dụ 38.102 đ/12 tháng (nguồn thứ cấp)</td>
+<td>[NGUỒN]</td>
+<td>https://help.shopee.vn/portal/4/article/79225 ; https://magiamgia.com/bao-hiem-thiet-bi-dien-tu-lazada/</td>
+</tr>
+<tr>
+<td>Đối tác số của PVI Digital: MoMo, Viettel Money, Shopee, Lazada, FE Credit, Home Credit, Xanh SM, Grab, Trip.com, Thế Giới Di Động, Điện Máy Xanh</td>
+<td>"hàng triệu khách hàng"</td>
+<td>[NGUỒN]</td>
+<td>https://www.pvi.com.vn/vi/news/pvi-digital-doi-tac-bao-hiem-so-cua-cac-nen-tang-va-he-sinh-thai-so-hang-dau-viet-nam</td>
+</tr>
+<tr>
+<td>Quy mô Green SM</td>
+<td>&gt; 1 triệu chuyến/ngày (2025, nguồn thứ cấp)</td>
+<td>[NGUỒN]</td>
+<td>https://fhsc.com.vn/co-ca-tram-nghin-xe-chay-tren-duong-day-la-so-cuoc-ma-xanh-sm-nhan-moi-ngay-tai-viet-nam</td>
+</tr>
+<tr>
+<td>Tham chiếu sản lượng vi mô ở Việt Nam (OPES)</td>
+<td>109,3 triệu hợp đồng năm 2023; cao điểm &gt; 500.000 đơn/ngày</td>
+<td>[NGUỒN]</td>
+<td>https://opes.com.vn/posts/business/opes-va-hanh-trinh-chuyen-minh-nho-so-hoa-1716806154</td>
+</tr>
+<tr>
+<td>TMĐT của Bảo hiểm PVI</td>
+<td>Gần 800 tỷ năm 2024 (30 kết nối API); 2025 gần gấp đôi</td>
+<td>[NGUỒN]</td>
+<td>BCTN 2024 trang PDF 29 (link trên); https://pviholdings.com.vn/vi/news-details?id=6013</td>
+</tr>
+<tr>
+<td>Bảo hiểm chuyến đi của Grab do Chubb, của Be do OPES (không phải PVI)</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html</td>
+</tr>
+<tr>
+<td>Grab × PVI 2026 là BHXH/BHYT tự nguyện cho tài xế</td>
+<td>—</td>
+<td>[NGUỒN]</td>
+<td>https://www.grab.com/vn/blog/driver/bhxh-bhyt-pvi/</td>
+</tr>
+</tbody>
+</table></div>
+<p><strong>KHÔNG TÌM THẤY → [ƯỚC TÍNH]</strong> (giá trị trong <code>gen_volume.py</code> / <code>build_v2.py</code>, căn cứ ở các mục trên):
+- số GCN vi mô/ngày: 40.000 chuyến xe, 8.000 đồ ăn, 300 DelayCare, 3.000 thiết bị điện tử; tỷ lệ mua 20% × 20% về PVI; Bike/Taxi 60/40;
+- phí DelayCare 35.000 đ/người; phí thiết bị điện tử 1,5–3,5% giá máy;
+- kho 1,5 triệu khách vi mô, 40% từ nhóm dùng thường xuyên; hủy DelayCare 3%, thiết bị điện tử 2%; giờ cao điểm; ×3 ngày 8/8, 9/9;
+- doanh thu / trọng số khai thác của từng đơn vị, tỷ trọng trụ sở chính so với đơn vị.</p></section><section id="can-cu"><h2>Căn cứ thiết kế mô hình (v2)</h2><p>Tài liệu này trả lời câu hỏi "<strong>tại sao</strong> mô hình được thiết kế như vậy" cho từng bảng, từng quy tắc và từng con số trong dữ liệu dummy.</p>
 <p>Mọi căn cứ đều là nguồn <strong>public</strong>:
 - luật, nghị định, thông tư (đọc trực tiếp trên vbpl.vn);
 - số liệu thị trường của IAV và Bộ Tài chính;
@@ -545,7 +1246,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <ol>
 <li><strong>Khung nghiệp vụ lấy từ quy định.</strong> Danh mục nghiệp vụ, kênh phân phối, cách ghi nhận doanh thu, đồng bảo hiểm, hoàn/giảm phí, biểu phí bắt buộc, thuế GTGT và trần hoa hồng đều lấy từ văn bản pháp luật hiện hành.</li>
 <li><strong>Con số lấy từ số liệu công bố.</strong> Quy mô và cơ cấu nghiệp vụ theo BCTC kiểm toán công khai của Bảo hiểm PVI; mùa vụ, kênh, mức phí, tỷ giá theo công bố của PVI, IAV, Bộ Tài chính, KBNN. Không dùng số liệu nội bộ của bất kỳ doanh nghiệp nào.</li>
-<li><strong>Tổ chức và đối tác được ẩn danh.</strong> Doanh nghiệp giả lập tên "Tổng công ty Bảo hiểm DEMO", tên công ty thành viên theo địa bàn. Đối tác và DN đồng bảo hiểm ghi dạng "A, B, C".</li>
+<li><strong>Tổ chức lấy theo thông tin công khai; đối tác phần lớn ẩn danh.</strong> Doanh nghiệp là <strong>Tổng Công ty Bảo hiểm PVI</strong> với các đơn vị thật trên trang mạng lưới pvi.com.vn (không còn doanh nghiệp giả lập "DEMO"). Trọng số khai thác của từng đơn vị là <strong>ước tính</strong>, vì PVI không công bố doanh thu từng đơn vị. Đối tác cũ và DN đồng bảo hiểm vẫn ghi dạng "A, B, C"; riêng 3 đối tác số có công bố hợp tác với PVI (Green SM, ATADI, Fuse) mang tên thật. Mọi giao dịch, khách hàng vẫn là giả lập.</li>
 <li><strong>Ánh xạ được về hệ thống thật.</strong> Mỗi khái niệm trong mô hình đều có chỗ tương ứng trong một hệ thống lõi bảo hiểm thực tế. Bản ánh xạ cho giai đoạn ETL nằm ở <code>docs/Mapping_v2_PIAS.html</code> (tài liệu nội bộ dự án).</li>
 </ol>
 <h3 class="h2">2. Kiến trúc</h3>
@@ -648,7 +1349,11 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 </tr>
 <tr>
 <td><code>ref.product</code></td>
-<td>Tên sản phẩm theo cách gọi phổ biến trên website các DNBH. Có 3 cột căn cứ: <code>is_compulsory</code> (NĐ 67/2023), <code>vat_rate</code> (Luật GTGT 48/2024 Điều 5 khoản 8), <code>max_commission_pct</code> (TT 67/2023 Điều 51)</td>
+<td>Tên sản phẩm theo cách gọi phổ biến trên website các DNBH. Có 3 cột căn cứ: <code>is_compulsory</code> (NĐ 67/2023), <code>vat_rate</code> (Luật GTGT 48/2024 Điều 5 khoản 8), <code>max_commission_pct</code> (TT 67/2023 Điều 51). Thêm 4 sản phẩm bảo hiểm vi mô của PVI có công bố công khai (<code>MV_*</code>: Green SM Care, Food Care, DelayCare, thiết bị điện tử trên sàn TMĐT), xếp vào nhóm sẵn có; xem <a href="#can-cu-tham-so">calibration/README.md</a></td>
+</tr>
+<tr>
+<td><code>ref.company</code></td>
+<td>Tổng Công ty Bảo hiểm PVI (công ty con 100% của CTCP PVI — BCTN 2024, trang PDF 12); Trụ sở chính – các Ban kinh doanh, Bảo hiểm PVI Digital (<a href="https://online.pvi.com.vn/lien-he" target="_blank" rel="noopener">online.pvi.com.vn/lien-he</a>) và 46 đơn vị theo <a href="https://www.pvi.com.vn/vi/network" target="_blank" rel="noopener">trang mạng lưới</a>; tỉnh = địa chỉ trụ sở. Hanoi Re (nhận tái bảo hiểm) và PVIAM (quản lý quỹ) không cấp hợp đồng gốc nên không có trong bảng</td>
 </tr>
 <tr>
 <td><code>ref.channel</code></td>
@@ -656,7 +1361,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 </tr>
 <tr>
 <td><code>ref.partner</code></td>
-<td>Loại đối tác theo thực tế thị trường: ngân hàng, công ty tài chính, đăng kiểm, đại lý ô tô, OTA, ví điện tử, sàn TMĐT, hãng bay, nhà mạng. PVI Annual Report 2024 nêu kênh API với hãng bay, nhà mạng, sàn TMĐT. Tên được ẩn danh</td>
+<td>Loại đối tác theo thực tế thị trường: ngân hàng, công ty tài chính, đăng kiểm, đại lý ô tô, OTA, ví điện tử, sàn TMĐT, hãng bay, nhà mạng. PVI Annual Report 2024 nêu kênh API với hãng bay, nhà mạng, sàn TMĐT. Tên đối tác cũ được ẩn danh. 3 đối tác số mới mang tên thật vì có công bố hợp tác với PVI: Green SM (<a href="https://www.greensm.com/vn-vi/bao-hiem-khach-hang" target="_blank" rel="noopener">greensm.com</a>), ATADI (<a href="https://www.pvi.com.vn/vi/news/bao-hiem-pvi-ra-mat-delaycare-giai-phap-bao-hiem-tre-chuyen-bay-danh-cho-hanh-khach" target="_blank" rel="noopener">pvi.com.vn</a>), Fuse (<a href="https://help.shopee.vn/portal/4/article/79225" target="_blank" rel="noopener">help.shopee.vn</a>)</td>
 </tr>
 <tr>
 <td><code>ref.province</code>, <code>ref.region</code></td>
@@ -708,7 +1413,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 </tbody>
 </table></div>
 <h3 class="h2">5. Hiệu chỉnh dữ liệu dummy</h3>
-<p>Chi tiết từng bước nằm ở <a href="../../v2/GENERATION_LOGIC.md">GENERATION_LOGIC.md</a>. Bảng dưới là tóm tắt.</p>
+<p>Chi tiết từng bước nằm ở <a href="../GENERATION_LOGIC.md">GENERATION_LOGIC.md</a>. Bảng dưới là tóm tắt.</p>
 <div class="tw"><table>
 <thead>
 <tr>
@@ -788,6 +1493,21 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>≤ trần theo nghiệp vụ; bằng 0 với bán trực tiếp và đấu thầu</td>
 <td>TT 67/2023 Điều 51</td>
 </tr>
+<tr>
+<td>Đơn vị</td>
+<td>Trụ sở chính, PVI Digital và 46 đơn vị thật; trọng số khai thác theo quy mô kinh tế địa bàn, ×1,5 cho Phía Nam, Thủ Đô, Duyên Hải, Thăng Long, Sài Gòn</td>
+<td>Danh sách: <a href="https://www.pvi.com.vn/vi/network" target="_blank" rel="noopener">pvi.com.vn/vi/network</a>. Trọng số: <strong>Ước tính</strong> (PVI không công bố doanh thu từng đơn vị; ×1,5 theo các bài vinh danh của PVI và <a href="https://pvisg.net" target="_blank" rel="noopener">pvisg.net</a>)</td>
+</tr>
+<tr>
+<td>Bảo hiểm vi mô (bộ khối lượng lớn)</td>
+<td>Green SM Care 1.000 / 2.000 đ/chuyến; Food Care 1.000 đ/đơn; DelayCare 35.000 đ/người; thiết bị điện tử 1,5–3,5% giá máy. ≈ 51.700 GCN/ngày</td>
+<td>Phí Green SM: <a href="https://www.greensm.com/vn-vi/bao-hiem-khach-hang" target="_blank" rel="noopener">greensm.com</a>, <a href="https://www.greensm.com/vn-vi/bao-hiem-giao-do-an" target="_blank" rel="noopener">greensm.com</a>. Phí DelayCare, thiết bị điện tử và số GCN/ngày: <strong>Ước tính</strong> (căn cứ ở <a href="#can-cu-tham-so">calibration/README.md</a>)</td>
+</tr>
+<tr>
+<td>Quy mô bộ khối lượng lớn (tháng 8–9/2026)</td>
+<td>Đúng quy mô PVI: phí gốc khai thác 1.600,6 tỷ trên DB, ngân sách ≈ 1.602 tỷ; không còn hệ số nhân k</td>
+<td>Mục tiêu năm ở dòng đầu × tỷ trọng tháng 8, 9 của Bộ Tài chính (13.594 / 88.054)</td>
+</tr>
 </tbody>
 </table></div>
 <h3 class="h2">6. Hỏi đáp "Tại sao…"</h3>
@@ -800,7 +1520,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 - biểu phí bắt buộc (NĐ 67);
 - mô hình Tổng công ty → công ty thành viên.</p>
 <p>Các chuẩn mô hình dữ liệu ngành (IBM IIW, ACORD, Kimball) cũng dùng đúng cấu trúc hợp đồng → giao dịch → coverage. Vì vậy hệ thống của các DNBH thường giống nhau về bản chất.</p>
-<p>Dữ liệu dummy <strong>không</strong> chứa số liệu, khách hàng, đối tác hay mã nội bộ của Quý công ty.</p>
+<p>Dữ liệu dummy <strong>không</strong> chứa số liệu, khách hàng hay mã nội bộ của Quý công ty. Tên doanh nghiệp, đơn vị và 3 đối tác số chỉ lấy từ thông tin công khai; doanh thu theo đơn vị, theo đối tác là số giả lập.</p>
 <p><strong>Mô hình có theo chuẩn quốc tế không?</strong></p>
 <p>Có. Cấu trúc hợp đồng → giao dịch → coverage → phần tham gia của DNBH trùng với nhiều chuẩn:
 - Microsoft Common Data Model P&amp;C (Policy, <strong>PolicyTransaction</strong>, Coverage, Insurer, Agency);
@@ -816,12 +1536,22 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <p><strong>Tại sao doanh thu của Công ty X khác tổng phí các đơn X cấp?</strong></p>
 <p>Doanh thu được gán theo <strong>đơn vị được phân bổ</strong> chứ không theo đơn vị cấp đơn. Có 3 trường hợp:
 - hợp tác khai thác giữa các đơn vị;
-- Khối Trụ sở khai thác rủi ro lớn cùng công ty thành viên;
-- Trung tâm Kinh doanh số chuyển doanh thu về công ty quản lý khách hàng.</p>
+- Trụ sở chính khai thác rủi ro lớn cùng đơn vị thành viên;
+- Bảo hiểm PVI Digital chuyển doanh thu về đơn vị quản lý khách hàng.</p>
 <p>Tỷ lệ phân bổ nằm ở <code>core.revenue_allocation</code>, loại phân bổ ở <code>allocation_type_code</code>.</p>
 <p><strong>"Doanh thu Tổng công ty" là gì?</strong></p>
 <p><strong>Quy ước chuẩn:</strong> doanh thu Tổng công ty = tổng doanh thu hợp nhất của mọi đơn vị. Đây là cấp nằm giữa "Tổng doanh thu" và "Công ty" trong đề bài.</p>
-<p>Khối Trụ sở (<code>company_type = HEAD_OFFICE</code>, gồm các trung tâm trực thuộc) được tính là <strong>một đơn vị ngang cấp Công ty</strong>. Doanh thu do trụ sở trực tiếp khai thác vẫn xem riêng được qua đơn vị này.</p>
+<p>Trụ sở chính – các Ban kinh doanh (<code>HO</code>, <code>company_type = HEAD_OFFICE</code>) được tính là <strong>một đơn vị ngang cấp Công ty</strong>, tương tự Bảo hiểm PVI Digital (<code>DGT</code>, <code>company_type = DIGITAL</code>). Doanh thu do trụ sở trực tiếp khai thác vẫn xem riêng được qua đơn vị này.</p>
+<p><strong>Tại sao dùng tên PVI thật mà không dùng doanh nghiệp giả lập?</strong></p>
+<p>Quy mô và cơ cấu doanh thu vốn đã lấy từ BCTC công khai của Bảo hiểm PVI, nên gọi đúng tên giúp người xem đối chiếu được. Tên đơn vị lấy từ <a href="https://www.pvi.com.vn/vi/network" target="_blank" rel="noopener">trang mạng lưới</a>; tỉnh của đơn vị là địa chỉ trụ sở. PVI <strong>không</strong> công bố doanh thu từng đơn vị (đã tìm và không thấy), nên trọng số khai thác là <strong>ước tính</strong>: theo quy mô kinh tế địa bàn, ×1,5 cho Phía Nam (xuất sắc nhất 2024), Thủ Đô (6 tháng 2025), Duyên Hải (xuất sắc nhất 2025), Thăng Long (hoàn thành sớm kế hoạch 2025) và Sài Gòn (tự công bố doanh thu đứng đầu hệ thống bán lẻ). Doanh thu theo đơn vị trên dashboard vì vậy <strong>không</strong> phải số của PVI.</p>
+<p><strong>So với cả PVI thì sao? Tại sao không có Hanoi Re, PVIAM?</strong></p>
+<p>Bảo hiểm PVI là công ty con 100% của CTCP PVI (PVI Holdings). Năm 2025: doanh thu hợp nhất Holdings 28.923 tỷ; Bảo hiểm PVI 27.258 tỷ (94,2%), trong đó phí bảo hiểm gốc 14.908 tỷ; Hanoi Re (tên cũ PVI Re, Holdings sở hữu 81,09%) 3.690 tỷ; PVIAM (61,96%) 76,4 tỷ (BCTN 2025, trang PDF 29, 32, 33, 34). Hanoi Re nhận tái bảo hiểm, PVIAM quản lý quỹ; cả hai không cấp hợp đồng bảo hiểm gốc nên nằm ngoài phạm vi doanh thu phí gốc và không có trong <code>ref.company</code>. POC chỉ gồm 4 nghiệp vụ của Bảo hiểm PVI (10.378 tỷ năm 2025).</p>
+<p><strong>Tại sao &gt; 50.000 giao dịch/ngày mà doanh thu vẫn đúng quy mô PVI?</strong></p>
+<p>Khối lượng đến từ <strong>bảo hiểm vi mô</strong> theo chuyến / theo đơn (≈ 51.700 GCN/ngày, phí 1.000–2.000 đ với chuyến xe và đồ ăn). Doanh thu vi mô nằm trong ngân sách nhóm và được coi là dòng cố định khi hiệu chỉnh, nên tổng doanh thu và cơ cấu nhóm không đổi. Trên DB, GCN vi mô chiếm 77,3% số hợp đồng nhưng chỉ 1,3% doanh thu. Bản trước (16–18/10/2026) nhân mọi ngân sách với một hệ số quy mô, nên doanh thu ≈ 4 lần PVI; cách đó đã bỏ.</p>
+<p><strong>Tại sao đối tác chuyến xe là Green SM mà không phải Grab?</strong></p>
+<p>Bảo hiểm chuyến đi của Grab (Ride Cover) do <strong>Chubb</strong> cung cấp, của Be do <strong>OPES</strong> (<a href="https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html" target="_blank" rel="noopener">tinnhanhchungkhoan.vn</a>). Hợp tác Grab × PVI năm 2026 là BHXH/BHYT tự nguyện cho tài xế (<a href="https://www.grab.com/vn/blog/driver/bhxh-bhyt-pvi/" target="_blank" rel="noopener">grab.com</a>), không phải bảo hiểm theo cuốc. Green SM Care thì có PVI Digital là một trong 5 nhà bảo hiểm (<a href="https://www.greensm.com/vn-vi/bao-hiem-khach-hang" target="_blank" rel="noopener">greensm.com</a>).</p>
+<p><strong>Các nguồn về đơn vị và bảo hiểm vi mô được tìm thế nào?</strong></p>
+<p>Nghiên cứu chéo bằng hai công cụ với cùng một đề bài: codex CLI (gpt-6.1-sol) và agy CLI (gemini-3.8-flash-high). Kết quả hai bên được đối chiếu; mọi link được kiểm lại bằng curl ngày 19/10/2026. Thông tin chỉ một bên đưa ra mà không kiểm chứng được thì loại (ví dụ danh sách "7 đơn vị về đích sớm"). Danh sách nguồn đầy đủ: <a href="../sources/market_data.md">sources/market_data.md</a> mục 9, 10 và bảng nguồn trong <a href="#can-cu-tham-so">calibration/README.md</a>.</p>
 <p><strong>Tại sao cháy nổ xếp vào "Tài sản"?</strong></p>
 <p>Đề bài gộp như vậy (nhóm POC). Theo quy định, cháy nổ là nghiệp vụ riêng (NĐ 46 Điều 4; dòng B.5 trong Mẫu 2-PNT). Mô hình giữ <strong>cả hai</strong> cách phân loại: <code>poc_group</code> để phân tích, <code>report_line_code</code> để đối chiếu báo cáo Bộ Tài chính.</p>
 <p><strong>Tại sao học sinh, du lịch, sinh mạng nằm trong "Con người"?</strong></p>
@@ -844,7 +1574,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <p><strong>Tại sao quý 1 cao nhất, quý 4 thấp nhất?</strong></p>
 <p>Theo phí gốc hợp nhất công bố của PVI năm 2025, các quý chiếm 29,7 / 24,1 / 24,8 / 21,4%. Nguyên nhân là các chương trình bảo hiểm doanh nghiệp (sức khỏe nhóm, tài sản, cháy nổ) tái tục đầu năm. Riêng học sinh tập trung đầu năm học.</p>
 <p><strong>Tại sao cháy nổ chiếm khoảng 1/3 doanh thu, còn xe chỉ khoảng 18%?</strong></p>
-<p>Cơ cấu này lấy theo BCTC kiểm toán 2025 công khai của Bảo hiểm PVI: cháy nổ 3.451 tỷ, sức khỏe &amp; tai nạn 3.213 tỷ, xe 1.823 tỷ. Đó là đặc thù của doanh nghiệp thiên về khách hàng công nghiệp. Bình quân thị trường thì xe chiếm khoảng 24%. Chi tiết xem <a href="../../v2/GENERATION_LOGIC.md">GENERATION_LOGIC.md</a>.</p>
+<p>Cơ cấu này lấy theo BCTC kiểm toán 2025 công khai của Bảo hiểm PVI: cháy nổ 3.451 tỷ, sức khỏe &amp; tai nạn 3.213 tỷ, xe 1.823 tỷ. Đó là đặc thù của doanh nghiệp thiên về khách hàng công nghiệp. Bình quân thị trường thì xe chiếm khoảng 24%. Chi tiết xem <a href="../GENERATION_LOGIC.md">GENERATION_LOGIC.md</a>.</p>
 <p><strong>Tại sao hoàn phí và giảm phí là số âm và có tài khoản riêng?</strong></p>
 <p>Đây là khoản giảm thu (NĐ 46 Điều 49 khoản 3), hạch toán vào TK 5311 / 5321 (TT 232/2012).</p>
 <p><strong>Tại sao dùng 34 tỉnh cho cả dữ liệu 2024?</strong></p>
@@ -881,6 +1611,16 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <td>BCTC PVI gộp tài sản với kỹ thuật, năng lượng</td>
 </tr>
 <tr>
+<td>Trọng số khai thác của đơn vị</td>
+<td>Theo quy mô kinh tế địa bàn; ×1,5 cho 5 đơn vị được vinh danh / tự công bố dẫn đầu</td>
+<td>PVI không công bố doanh thu từng đơn vị</td>
+</tr>
+<tr>
+<td>Số GCN vi mô/ngày (bộ khối lượng lớn)</td>
+<td>40.000 chuyến xe · 8.000 đồ ăn · 300 DelayCare · 3.000 thiết bị điện tử</td>
+<td>Quy ước để đạt &gt; 50.000 giao dịch/ngày; kiểm tra độ hợp lý với quy mô Green SM (&gt; 1 triệu chuyến/ngày) và OPES (109,3 triệu hợp đồng năm 2023)</td>
+</tr>
+<tr>
 <td>Phạm vi</td>
 <td>Không gồm thu phí nhiều kỳ, leading fee, nhận / nhượng tái bảo hiểm</td>
 <td>Đề bài chỉ yêu cầu doanh thu phí bảo hiểm gốc</td>
@@ -902,7 +1642,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 </tr>
 </tbody>
 </table></div></section><section id="data-dictionary"><h2>Data dictionary</h2>
-<p>Sinh tự động từ catalog PostgreSQL ngày 16/10/2026 (reportapi · bronze.ins_*; tên bảng ghi theo mô hình logic ref.X / core.X); bản Excel chi tiết: <a href="Data_Dictionary_volume.xlsx">Data_Dictionary_volume.xlsx</a>.</p>
+<p>Sinh tự động từ catalog PostgreSQL ngày 19/10/2026 (reportapi · bronze.ins_*; tên bảng ghi theo mô hình logic ref.X / core.X); bản Excel chi tiết: <a href="Data_Dictionary_volume.xlsx">Data_Dictionary_volume.xlsx</a>.</p>
 <h3 class="h2">Sơ đồ quan hệ lớp giao dịch (core)</h3><pre class="mermaid">erDiagram
     allocation_type ||--o{ revenue_allocation : &quot;allocation_type_code&quot;
     channel ||--o{ policy : &quot;channel_code&quot;
@@ -920,7 +1660,7 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
     product ||--o{ transaction_coverage : &quot;product_code&quot;
     transaction_type ||--o{ policy_transaction : &quot;txn_type_code&quot;</pre>
 <h3 class="h2">Danh sách bảng</h3>
-<div class="tw"><table><thead><tr><th>Lớp</th><th>Bảng</th><th>Mô tả</th><th>Grain</th><th>Cột</th><th>Dòng</th></tr></thead><tbody><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-region"><code>ref.region</code></a></td><td>Vùng miền dùng để nhóm tỉnh/thành</td><td>1 dòng / vùng</td><td class="num">2</td><td class="num">3</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-province"><code>ref.province</code></a></td><td>Tỉnh/thành phố theo đơn vị hành chính hiện hành (34 đơn vị)</td><td>1 dòng / tỉnh-thành</td><td class="num">3</td><td class="num">34</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-company"><code>ref.company</code></a></td><td>Cơ cấu tổ chức: Tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số</td><td>1 dòng / đơn vị</td><td class="num">6</td><td class="num">21</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-line_of_business"><code>ref.line_of_business</code></a></td><td>Nghiệp vụ bảo hiểm + nhóm phân tích POC (Xe / Con người / Tài sản)</td><td>1 dòng / nghiệp vụ</td><td class="num">6</td><td class="num">4</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-regulatory_line"><code>ref.regulatory_line</code></a></td><td>Dòng báo cáo nghiệp vụ theo mẫu báo cáo Bộ Tài chính (cây cha–con)</td><td>1 dòng / dòng báo cáo</td><td class="num">4</td><td class="num">14</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-product_group"><code>ref.product_group</code></a></td><td>Nhóm sản phẩm — cấp giữa Nghiệp vụ và Sản phẩm, đúng 8 nhóm của đề bài</td><td>1 dòng / nhóm SP</td><td class="num">4</td><td class="num">8</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-product"><code>ref.product</code></a></td><td>Sản phẩm bảo hiểm (phạm vi POC)</td><td>1 dòng / sản phẩm</td><td class="num">10</td><td class="num">19</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-channel"><code>ref.channel</code></a></td><td>Kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm</td><td>1 dòng / kênh</td><td class="num">5</td><td class="num">7</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-partner"><code>ref.partner</code></a></td><td>Đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, OTA, ví điện tử...</td><td>1 dòng / đối tác</td><td class="num">4</td><td class="num">36</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-customer_segment"><code>ref.customer_segment</code></a></td><td>Phân khúc khách hàng</td><td>1 dòng / phân khúc</td><td class="num">3</td><td class="num">6</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-customer"><code>ref.customer</code></a></td><td>Khách hàng — bên mua bảo hiểm (dữ liệu giả)</td><td>1 dòng / khách hàng</td><td class="num">10</td><td class="num">1,917,522</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-currency"><code>ref.currency</code></a></td><td>Tiền tệ</td><td>1 dòng / loại tiền</td><td class="num">2</td><td class="num">2</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-fx_rate"><code>ref.fx_rate</code></a></td><td>Tỷ giá hạch toán theo tháng</td><td>1 dòng / loại tiền × tháng</td><td class="num">4</td><td class="num">60</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-transaction_type"><code>ref.transaction_type</code></a></td><td>Loại giao dịch phí: cấp mới, tái tục, SĐBS, hoàn phí, hủy</td><td>1 dòng / loại giao dịch</td><td class="num">7</td><td class="num">7</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-insurer"><code>ref.insurer</code></a></td><td>Doanh nghiệp bảo hiểm tham gia đồng bảo hiểm (ẩn danh); OWN = chính công ty</td><td>1 dòng / DNBH</td><td class="num">3</td><td class="num">7</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-allocation_type"><code>ref.allocation_type</code></a></td><td>Loại phân bổ doanh thu giữa các đơn vị</td><td>1 dòng / loại</td><td class="num">3</td><td class="num">3</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-policy"><code>core.policy</code></a></td><td>Hợp đồng / đơn bảo hiểm</td><td>1 dòng / hợp đồng</td><td class="num">13</td><td class="num">4,669,144</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-policy_transaction"><code>core.policy_transaction</code></a></td><td>Giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, SĐBS, hoàn phí, hủy)</td><td>1 dòng / giao dịch</td><td class="num">10</td><td class="num">4,717,930</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-transaction_coverage"><code>core.transaction_coverage</code></a></td><td>Phí 100% hợp đồng theo từng sản phẩm của giao dịch</td><td>1 dòng / giao dịch × sản phẩm</td><td class="num">10</td><td class="num">4,844,773</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-coinsurance_share"><code>core.coinsurance_share</code></a></td><td>Tỷ lệ tham gia đồng bảo hiểm của từng DNBH trên hợp đồng (tổng = 100%)</td><td>1 dòng / hợp đồng × DNBH</td><td class="num">4</td><td class="num">4,670,512</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-revenue_allocation"><code>core.revenue_allocation</code></a></td><td>Phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%)</td><td>1 dòng / hợp đồng × đơn vị</td><td class="num">4</td><td class="num">4,991,277</td></tr></tbody></table></div>
+<div class="tw"><table><thead><tr><th>Lớp</th><th>Bảng</th><th>Mô tả</th><th>Grain</th><th>Cột</th><th>Dòng</th></tr></thead><tbody><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-region"><code>ref.region</code></a></td><td>Vùng miền dùng để nhóm tỉnh/thành</td><td>1 dòng / vùng</td><td class="num">2</td><td class="num">3</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-province"><code>ref.province</code></a></td><td>Tỉnh/thành phố theo đơn vị hành chính hiện hành (34 đơn vị)</td><td>1 dòng / tỉnh-thành</td><td class="num">3</td><td class="num">34</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-company"><code>ref.company</code></a></td><td>Cơ cấu tổ chức: Tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số</td><td>1 dòng / đơn vị</td><td class="num">6</td><td class="num">49</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-line_of_business"><code>ref.line_of_business</code></a></td><td>Nghiệp vụ bảo hiểm + nhóm phân tích POC (Xe / Con người / Tài sản)</td><td>1 dòng / nghiệp vụ</td><td class="num">6</td><td class="num">4</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-regulatory_line"><code>ref.regulatory_line</code></a></td><td>Dòng báo cáo nghiệp vụ theo mẫu báo cáo Bộ Tài chính (cây cha–con)</td><td>1 dòng / dòng báo cáo</td><td class="num">4</td><td class="num">14</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-product_group"><code>ref.product_group</code></a></td><td>Nhóm sản phẩm — cấp giữa Nghiệp vụ và Sản phẩm, đúng 8 nhóm của đề bài</td><td>1 dòng / nhóm SP</td><td class="num">4</td><td class="num">8</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-product"><code>ref.product</code></a></td><td>Sản phẩm bảo hiểm (phạm vi POC)</td><td>1 dòng / sản phẩm</td><td class="num">10</td><td class="num">23</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-channel"><code>ref.channel</code></a></td><td>Kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm</td><td>1 dòng / kênh</td><td class="num">5</td><td class="num">7</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-partner"><code>ref.partner</code></a></td><td>Đối tác phân phối — ngân hàng, đăng kiểm, OTA, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với PVI: Green SM, ATADI, Fuse</td><td>1 dòng / đối tác</td><td class="num">4</td><td class="num">39</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-customer_segment"><code>ref.customer_segment</code></a></td><td>Phân khúc khách hàng</td><td>1 dòng / phân khúc</td><td class="num">3</td><td class="num">6</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-customer"><code>ref.customer</code></a></td><td>Khách hàng — bên mua bảo hiểm (dữ liệu giả)</td><td>1 dòng / khách hàng</td><td class="num">10</td><td class="num">1,696,375</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-currency"><code>ref.currency</code></a></td><td>Tiền tệ</td><td>1 dòng / loại tiền</td><td class="num">2</td><td class="num">2</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-fx_rate"><code>ref.fx_rate</code></a></td><td>Tỷ giá hạch toán theo tháng</td><td>1 dòng / loại tiền × tháng</td><td class="num">4</td><td class="num">60</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-transaction_type"><code>ref.transaction_type</code></a></td><td>Loại giao dịch phí: cấp mới, tái tục, SĐBS, hoàn phí, hủy</td><td>1 dòng / loại giao dịch</td><td class="num">7</td><td class="num">7</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-insurer"><code>ref.insurer</code></a></td><td>Doanh nghiệp bảo hiểm tham gia đồng bảo hiểm (ẩn danh); OWN = chính công ty</td><td>1 dòng / DNBH</td><td class="num">3</td><td class="num">7</td></tr><tr><td><span class="tag l0">Danh mục</span></td><td><a href="#t-ref-allocation_type"><code>ref.allocation_type</code></a></td><td>Loại phân bổ doanh thu giữa các đơn vị</td><td>1 dòng / loại</td><td class="num">3</td><td class="num">3</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-policy"><code>core.policy</code></a></td><td>Hợp đồng / đơn bảo hiểm</td><td>1 dòng / hợp đồng</td><td class="num">13</td><td class="num">4,082,637</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-policy_transaction"><code>core.policy_transaction</code></a></td><td>Giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, SĐBS, hoàn phí, hủy)</td><td>1 dòng / giao dịch</td><td class="num">10</td><td class="num">4,098,401</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-transaction_coverage"><code>core.transaction_coverage</code></a></td><td>Phí 100% hợp đồng theo từng sản phẩm của giao dịch</td><td>1 dòng / giao dịch × sản phẩm</td><td class="num">10</td><td class="num">4,127,680</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-coinsurance_share"><code>core.coinsurance_share</code></a></td><td>Tỷ lệ tham gia đồng bảo hiểm của từng DNBH trên hợp đồng (tổng = 100%)</td><td>1 dòng / hợp đồng × DNBH</td><td class="num">4</td><td class="num">4,082,967</td></tr><tr><td><span class="tag l1">Giao dịch</span></td><td><a href="#t-core-revenue_allocation"><code>core.revenue_allocation</code></a></td><td>Phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%)</td><td>1 dòng / hợp đồng × đơn vị</td><td class="num">4</td><td class="num">4,152,252</td></tr></tbody></table></div>
 <h3 class="h2">Quy tắc nghiệp vụ</h3><div class="tw"><table><thead><tr><th>Quy tắc</th><th>Diễn giải</th><th>Căn cứ</th></tr></thead><tbody><tr><td><b>Quy ước NULL &amp; tham chiếu danh mục</b></td><td>Lớp nguồn giữ NULL đúng nghiệp vụ: partner_code NULL = không qua đối tác (hợp lệ); channel_code NULL = nguồn thiếu kênh (lỗi dữ liệu). Mọi mã khác NULL đều có khóa ngoại đã kiểm chứng. Lớp phân tích (view) gán thành viên CHUA_XD / WEB_APP / KHONG_QUA_DT để dòng fact luôn tham chiếu được danh mục</td><td>Quy ước dự án 13/10/2026</td></tr><tr><td><b>Đồng bảo hiểm</b></td><td>Mỗi hợp đồng có ≥ 1 dòng core.coinsurance_share; tổng share_pct = 100. Đơn không đồng BH: 1 dòng insurer_code = &#x27;OWN&#x27;, role = &#x27;SOLE&#x27;, 100%</td><td>Luật KDBH 2022 Điều 4 k29; TT 232/2012/TT-BTC Điều 19</td></tr><tr><td><b>Phân bổ doanh thu</b></td><td>Mỗi hợp đồng có ≥ 1 dòng core.revenue_allocation; tổng allocation_pct = 100</td><td>Thông lệ quản trị Tổng công ty – công ty thành viên</td></tr><tr><td><b>Thời điểm ghi nhận doanh thu</b></td><td>accounting_date = max(ngày cấp, ngày bắt đầu hiệu lực) với cấp mới/tái tục; = ngày chứng từ với SĐBS/hoàn/hủy</td><td>TT 67/2023/TT-BTC Điều 41 k1 (phát sinh trách nhiệm bảo hiểm)</td></tr><tr><td><b>Khoản giảm thu</b></td><td>Hoàn phí, giảm phí, hủy đơn có premium_orig âm; hạch toán TK 5311/5321 (ref.transaction_type.gl_account)</td><td>NĐ 46/2023/NĐ-CP Điều 49 k3; TT 232/2012/TT-BTC</td></tr><tr><td><b>Trạng thái chứng từ</b></td><td>status: APPROVED / PENDING / VOID — chỉ APPROVED là chứng từ hợp lệ để tính doanh thu</td><td>Quy ước chuẩn: chỉ chứng từ đã duyệt là căn cứ ghi nhận; PENDING / VOID là kịch bản kiểm thử</td></tr><tr><td><b>Doanh thu Tổng công ty</b></td><td>= tổng doanh thu hợp nhất mọi đơn vị; Khối Trụ sở (company_type = HEAD_OFFICE) là một đơn vị ngang cấp Công ty</td><td>Quy ước chuẩn theo cấp phân tích của đề bài</td></tr><tr><td><b>Quy đổi ngoại tệ</b></td><td>premium_vnd = premium_orig × fx_rate; fx_rate = tỷ giá hạch toán của tháng accounting_date (ref.fx_rate)</td><td>Tỷ giá hạch toán KBNN</td></tr><tr><td><b>Thuế GTGT</b></td><td>vat_vnd = premium_vnd × ref.product.vat_rate; BH con người 0% (không chịu thuế), xe/tài sản/cháy nổ 10%</td><td>Luật GTGT 48/2024 Điều 5 k8, Điều 9</td></tr><tr><td><b>Hoa hồng</b></td><td>commission_rate_pct ≤ ref.product.max_commission_pct; = 0 với bán trực tiếp và đấu thầu</td><td>TT 67/2023/TT-BTC Điều 51</td></tr><tr><td><b>Biểu phí bắt buộc</b></td><td>TNDS bắt buộc tính theo biểu phí cố định theo loại xe; cháy nổ bắt buộc theo tỷ lệ phí tối thiểu theo nhóm cơ sở</td><td>NĐ 67/2023/NĐ-CP Phụ lục I, II</td></tr><tr><td><b>Cách tính doanh thu từ dữ liệu nguồn (tham khảo cho giai đoạn ETL)</b></td><td>doanh thu = premium_vnd × share_pct(&#x27;OWN&#x27;)/100 × allocation_pct/100, chỉ status = APPROVED, kỳ theo accounting_date</td><td>TT 232/2012/TT-BTC Điều 19; TT 67/2023/TT-BTC Điều 41</td></tr><tr><td><b>Thời điểm ghi nhận (bản khối lượng lớn)</b></td><td>accounting_date = max(ngày chứng từ, ngày hiệu lực) cho MỌI giao dịch, kể cả SĐBS / hoàn / hủy (hủy chuyến du lịch trước ngày đi được ghi nhận cùng ngày với doanh thu gốc)</td><td>TT 67/2023/TT-BTC Điều 41 k1</td></tr><tr><td><b>Mức theo tháng [CHÍNH THỨC]</b></td><td>Phí/ngày tháng 9 = 1,479 × tháng 8, theo phí gốc phi nhân thọ 2025 của Bộ Tài chính (7T 50.784 · 8T 56.376 · 9T 64.378 tỷ). Trong tháng phân bố đều — không có hiệu ứng cuối tháng</td><td>Bản tin thị trường bảo hiểm tháng 8–10/2025, Bộ Tài chính</td></tr><tr><td><b>Ngày hiệu lực [QUY ƯỚC]</b></td><td>Đơn không phải du lịch hiệu lực ngay ngày cấp (không có nguồn về độ trễ); học sinh hiệu lực từ khai giảng 5/9</td><td>Khung kế hoạch năm học Bộ GD&amp;ĐT</td></tr><tr><td><b>Du lịch [DATASET] / [NGUỒN THAY THẾ]</b></td><td>Số ngày mua trước chuyến đi và độ dài chuyến đi trong nước lấy phân bố thực nghiệm từ Hotel booking demand (Data in Brief 2019); thời hạn chuyến đi quốc tế, cơ cấu kênh trung gian, tỷ lệ hoa hồng từ dataset Travel Insurance (hoa hồng cắt ở trần 20%)</td><td>calibration/README.md</td></tr><tr><td><b>Ngày làm việc [QUY ƯỚC]</b></td><td>Kênh văn phòng giảm thứ 7, chủ nhật, lễ 01–02/9; kênh số hoạt động đều mọi ngày</td><td>BLLĐ 2019 Điều 112</td></tr><tr><td><b>Kiểm tra toàn vẹn</b></td><td>41 quy tắc nghiệp vụ (audit/consistency_checks.sql): hợp đồng, khách hàng, giao dịch, dòng phí, đồng BH, phân bổ, tham chiếu danh mục — kết quả mong đợi 0 vi phạm</td><td>audit/run_audit.py</td></tr></tbody></table></div>
 <h3 class="h2">Kịch bản dữ liệu kiểm thử</h3><div class="tw"><table><thead><tr><th>Tình huống</th><th>Nhận diện</th><th>Xử lý mong đợi</th></tr></thead><tbody><tr><td><b>Đồng bảo hiểm (đứng đầu / tham gia)</b></td><td>core.coinsurance_share có &gt; 1 dòng / hợp đồng; role LEADER / FOLLOWER</td><td>Chỉ phần &#x27;OWN&#x27; là doanh thu của công ty</td></tr><tr><td><b>Phân bổ doanh thu nhiều đơn vị</b></td><td>core.revenue_allocation: HO_TRO_CHEO, CHUYEN_GIAO</td><td>Doanh thu theo đơn vị được phân bổ, khác đơn vị cấp đơn</td></tr><tr><td><b>Khối Trụ sở khai thác rủi ro lớn</b></td><td>issuing_company_code = &#x27;HO&#x27; (company_type = HEAD_OFFICE)</td><td>Phân biệt doanh thu hợp nhất và doanh thu khối Trụ sở</td></tr><tr><td><b>SĐBS tăng / giảm phí, hoàn phí, hủy</b></td><td>txn_type_code END_INC / END_DEC / REFUND / CANCEL</td><td>Số âm/dương vào kỳ phát sinh; TK 5111/5311/5321</td></tr><tr><td><b>SĐBS không đổi phí</b></td><td>txn_type_code END_NOCHG, premium = 0</td><td>Không ảnh hưởng doanh thu</td></tr><tr><td><b>Chứng từ chưa duyệt / hủy chứng từ</b></td><td>status PENDING / VOID (~1,5%)</td><td>Loại khỏi doanh thu</td></tr><tr><td><b>Hiệu lực sau ngày cấp (cả sang năm sau)</b></td><td>effective_date &gt; issue_date → accounting_date &gt; txn_date</td><td>Ghi nhận theo accounting_date, không theo ngày chứng từ</td></tr><tr><td><b>Hợp đồng ngoại tệ (USD)</b></td><td>core.policy.currency_code = &#x27;USD&#x27;</td><td>Quy đổi theo fx_rate của giao dịch</td></tr><tr><td><b>Hợp đồng nhiều sản phẩm</b></td><td>VCX ô tô + TNDS; cháy nổ BB + mọi rủi ro tài sản</td><td>Tách doanh thu theo product_code</td></tr><tr><td><b>Đơn lô giấy chứng nhận / khách lẻ theo bảng kê</b></td><td>is_group_policy; ref.customer.is_aggregated_retail</td><td>Loại khi phân tích khách hàng định danh</td></tr><tr><td><b>Tái tục</b></td><td>core.policy.renewal_of_policy_id</td><td>Liên kết hợp đồng năm trước</td></tr><tr><td><b>Kênh chưa khai báo (~0,5%)</b></td><td>core.policy.channel_code IS NULL</td><td>Gán &#x27;Chưa xác định&#x27;</td></tr><tr><td><b>Đơn vị không gắn địa bàn</b></td><td>ref.company.province_code IS NULL (Trung tâm Kinh doanh số)</td><td>Vùng miền để trống</td></tr></tbody></table></div>
 <h3 class="h2">Chi tiết cột</h3>
@@ -935,10 +1675,10 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <p class="meta"><b>Grain:</b> 1 dòng / tỉnh-thành · <b>Căn cứ:</b> NQ 202/2025/QH15</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
 <tbody><tr data-s='ref.province tỉnh/thành phố theo đơn vị hành chính hiện hành (34 đơn vị) province_code mã tỉnh/thành (mã do dự án đặt, 3 ký tự) '><td class='num'>1</td><td><code>province_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(10)</code></td><td>Mã tỉnh/thành (mã do dự án đặt, 3 ký tự)</td><td class='sm'>AGG | BNH | CBG</td><td class='num'>34</td><td class='num'>0%</td></tr><tr data-s='ref.province tỉnh/thành phố theo đơn vị hành chính hiện hành (34 đơn vị) province_name tên tỉnh/thành phố nq 202/2025/qh15'><td class='num'>2</td><td><code>province_name</code> </td><td><code class='ty'>character varying(100)</code></td><td>Tên tỉnh/thành phố<div class=basis>NQ 202/2025/QH15</div></td><td class='sm'>Thành phố Cần Thơ | Thành phố Đà Nẵng | Thành phố Hải Phòng</td><td class='num'>34</td><td class='num'>0%</td></tr><tr data-s='ref.province tỉnh/thành phố theo đơn vị hành chính hiện hành (34 đơn vị) region_code vùng của tỉnh → ref.region đề xuất của dự án'><td class='num'>3</td><td><code>region_code</code> <b class='b fk' title='ref.region.region_code'>FK</b><div class='ref'>→ <code>ref.region.region_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Vùng của tỉnh → ref.region<div class=basis>Đề xuất của dự án</div></td><td class='sm'>BAC | NAM | TRUNG</td><td class='num'>3</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-company" class="tbl"><summary><code>ref.company</code><span>Cơ cấu tổ chức: Tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số</span>
-<em>21 dòng · 6 cột</em></summary>
+<em>49 dòng · 6 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / đơn vị · <b>Căn cứ:</b> Mô hình Tổng công ty – công ty thành viên công khai của các DNBH (BCTN Bảo Việt, PVI)</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số company_code mã đơn vị '><td class='num'>1</td><td><code>company_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(10)</code></td><td>Mã đơn vị</td><td class='sm'>AGG | BNH | CTO</td><td class='num'>21</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số company_name tên đơn vị (giả lập, đặt theo địa bàn) '><td class='num'>2</td><td><code>company_name</code> </td><td><code class='ty'>character varying(200)</code></td><td>Tên đơn vị (giả lập, đặt theo địa bàn)</td><td class='sm'>Công ty Bảo hiểm DEMO An Giang | Công ty Bảo hiểm DEMO Bắc Hà Nội | Công ty Bảo hiểm DEMO Bắc Ninh</td><td class='num'>21</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số company_type loại đơn vị: corporation (tổng công ty) / head_office (khối trụ sở khai thác trực tiếp) / member (công ty thành viên) / digital (đơn vị kinh doanh số) '><td class='num'>3</td><td><code>company_type</code> </td><td><code class='ty'>character varying(20)</code></td><td>Loại đơn vị: CORPORATION (Tổng công ty) / HEAD_OFFICE (khối trụ sở khai thác trực tiếp) / MEMBER (công ty thành viên) / DIGITAL (đơn vị kinh doanh số)</td><td class='sm'>CORPORATION | DIGITAL | HEAD_OFFICE</td><td class='num'>4</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số parent_company_code đơn vị cấp trên → ref.company (null = tổng công ty) '><td class='num'>4</td><td><code>parent_company_code</code> <b class='b fk' title='ref.company.company_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị cấp trên → ref.company (NULL = Tổng công ty)</td><td class='sm'>DEMO</td><td class='num'>1</td><td class='num'>5%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số province_code tỉnh/thành đặt trụ sở → ref.province (null = đơn vị không gắn địa bàn) '><td class='num'>5</td><td><code>province_code</code> <b class='b fk' title='ref.province.province_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.province.province_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Tỉnh/thành đặt trụ sở → ref.province (NULL = đơn vị không gắn địa bàn)</td><td class='sm'>AGG | BNH | CTO</td><td class='num'>14</td><td class='num'>5%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số established_date ngày thành lập (giả lập) '><td class='num'>6</td><td><code>established_date</code> <b class='b nl'>NULL</b></td><td><code class='ty'>date</code></td><td>Ngày thành lập (giả lập)</td><td class='sm'>2005-01-01 | 2005-04-01 | 2006-02-01</td><td class='num'>20</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-line_of_business" class="tbl"><summary><code>ref.line_of_business</code><span>Nghiệp vụ bảo hiểm + nhóm phân tích POC (Xe / Con người / Tài sản)</span>
+<tbody><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số company_code mã đơn vị '><td class='num'>1</td><td><code>company_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(10)</code></td><td>Mã đơn vị</td><td class='sm'>AGI | ALC | BTB</td><td class='num'>49</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số company_name tên đơn vị (giả lập, đặt theo địa bàn) '><td class='num'>2</td><td><code>company_name</code> </td><td><code class='ty'>character varying(200)</code></td><td>Tên đơn vị (giả lập, đặt theo địa bàn)</td><td class='sm'>Bảo hiểm PVI An Giang | Bảo hiểm PVI Âu Lạc | Bảo hiểm PVI Bắc Trung Bộ</td><td class='num'>49</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số company_type loại đơn vị: corporation (tổng công ty) / head_office (khối trụ sở khai thác trực tiếp) / member (công ty thành viên) / digital (đơn vị kinh doanh số) '><td class='num'>3</td><td><code>company_type</code> </td><td><code class='ty'>character varying(20)</code></td><td>Loại đơn vị: CORPORATION (Tổng công ty) / HEAD_OFFICE (khối trụ sở khai thác trực tiếp) / MEMBER (công ty thành viên) / DIGITAL (đơn vị kinh doanh số)</td><td class='sm'>CORPORATION | DIGITAL | HEAD_OFFICE</td><td class='num'>4</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số parent_company_code đơn vị cấp trên → ref.company (null = tổng công ty) '><td class='num'>4</td><td><code>parent_company_code</code> <b class='b fk' title='ref.company.company_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị cấp trên → ref.company (NULL = Tổng công ty)</td><td class='sm'>PVI</td><td class='num'>1</td><td class='num'>2%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số province_code tỉnh/thành đặt trụ sở → ref.province (null = đơn vị không gắn địa bàn) '><td class='num'>5</td><td><code>province_code</code> <b class='b fk' title='ref.province.province_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.province.province_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Tỉnh/thành đặt trụ sở → ref.province (NULL = đơn vị không gắn địa bàn)</td><td class='sm'>AGG | BNH | CMU</td><td class='num'>27</td><td class='num'>0%</td></tr><tr data-s='ref.company cơ cấu tổ chức: tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số established_date ngày thành lập (giả lập) '><td class='num'>6</td><td><code>established_date</code> <b class='b nl'>NULL</b></td><td><code class='ty'>date</code></td><td>Ngày thành lập (giả lập)</td><td class='sm'>2005-01-01 | 2005-04-01 | 2005-07-01</td><td class='num'>48</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-line_of_business" class="tbl"><summary><code>ref.line_of_business</code><span>Nghiệp vụ bảo hiểm + nhóm phân tích POC (Xe / Con người / Tài sản)</span>
 <em>4 dòng · 6 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / nghiệp vụ · <b>Căn cứ:</b> Luật KDBH 2022 Điều 7; NĐ 46/2023/NĐ-CP Điều 4–5</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
@@ -951,26 +1691,26 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <p class="meta"><b>Grain:</b> 1 dòng / nhóm SP · <b>Căn cứ:</b> Phạm vi đề bài POC</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
 <tbody><tr data-s='ref.product_group nhóm sản phẩm — cấp giữa nghiệp vụ và sản phẩm, đúng 8 nhóm của đề bài product_group_code mã nhóm sp: tnds_bb, vcx, hoc_sinh, du_lich, sinh_mang, suc_khoe, tai_san, chay_no đề bài poc'><td class='num'>1</td><td><code>product_group_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã nhóm SP: TNDS_BB, VCX, HOC_SINH, DU_LICH, SINH_MANG, SUC_KHOE, TAI_SAN, CHAY_NO<div class=basis>Đề bài POC</div></td><td class='sm'>CHAY_NO | DU_LICH | HOC_SINH</td><td class='num'>8</td><td class='num'>0%</td></tr><tr data-s='ref.product_group nhóm sản phẩm — cấp giữa nghiệp vụ và sản phẩm, đúng 8 nhóm của đề bài product_group_name tên nhóm sản phẩm '><td class='num'>2</td><td><code>product_group_name</code> </td><td><code class='ty'>character varying(100)</code></td><td>Tên nhóm sản phẩm</td><td class='sm'>BH bắt buộc TNDS chủ xe | BH cháy nổ | BH du lịch</td><td class='num'>8</td><td class='num'>0%</td></tr><tr data-s='ref.product_group nhóm sản phẩm — cấp giữa nghiệp vụ và sản phẩm, đúng 8 nhóm của đề bài lob_code nghiệp vụ → ref.line_of_business '><td class='num'>3</td><td><code>lob_code</code> <b class='b fk' title='ref.line_of_business.lob_code'>FK</b><div class='ref'>→ <code>ref.line_of_business.lob_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Nghiệp vụ → ref.line_of_business</td><td class='sm'>CHAY_NO | SUC_KHOE | TAI_SAN</td><td class='num'>4</td><td class='num'>0%</td></tr><tr data-s='ref.product_group nhóm sản phẩm — cấp giữa nghiệp vụ và sản phẩm, đúng 8 nhóm của đề bài sort_order thứ tự hiển thị '><td class='num'>4</td><td><code>sort_order</code> </td><td><code class='ty'>integer</code></td><td>Thứ tự hiển thị</td><td class='sm'>1 | 2 | 3</td><td class='num'>8</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-product" class="tbl"><summary><code>ref.product</code><span>Sản phẩm bảo hiểm (phạm vi POC)</span>
-<em>19 dòng · 10 cột</em></summary>
+<em>23 dòng · 10 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / sản phẩm · <b>Căn cứ:</b> NĐ 67/2023/NĐ-CP; Luật GTGT 48/2024; TT 67/2023/TT-BTC Điều 51</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) product_code mã sản phẩm (tiền tố xe_ / ng_ / ts_ / chn_) '><td class='num'>1</td><td><code>product_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã sản phẩm (tiền tố XE_ / NG_ / TS_ / CHN_)</td><td class='sm'>CHN_BB | CHN_TN | NG_DL_ND</td><td class='num'>19</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) product_name tên sản phẩm theo cách gọi phổ biến của thị trường website các dnbh'><td class='num'>2</td><td><code>product_name</code> </td><td><code class='ty'>character varying(300)</code></td><td>Tên sản phẩm theo cách gọi phổ biến của thị trường<div class=basis>Website các DNBH</div></td><td class='sm'>Bảo hiểm bắt buộc trách nhiệm dân sự của | Bảo hiểm bắt buộc trách nhiệm dân sự của | Bảo hiểm bệnh hiểm nghèo – ung thư</td><td class='num'>19</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) product_group_code nhóm sản phẩm → ref.product_group '><td class='num'>3</td><td><code>product_group_code</code> <b class='b fk' title='ref.product_group.product_group_code'>FK</b><div class='ref'>→ <code>ref.product_group.product_group_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Nhóm sản phẩm → ref.product_group</td><td class='sm'>CHAY_NO | DU_LICH | HOC_SINH</td><td class='num'>8</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) report_line_code dòng báo cáo mẫu 2-pnt → ref.regulatory_line tt 67/2023/tt-btc phụ lục vi'><td class='num'>4</td><td><code>report_line_code</code> <b class='b fk' title='ref.regulatory_line.report_line_code'>FK</b><div class='ref'>→ <code>ref.regulatory_line.report_line_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Dòng báo cáo Mẫu 2-PNT → ref.regulatory_line<div class=basis>TT 67/2023/TT-BTC Phụ lục VI</div></td><td class='sm'>A.1 | A.2 | B.1b</td><td class='num'>8</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) is_compulsory true = bảo hiểm bắt buộc nđ 67/2023/nđ-cp'><td class='num'>5</td><td><code>is_compulsory</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = bảo hiểm bắt buộc<div class=basis>NĐ 67/2023/NĐ-CP</div></td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) pricing_basis cách tính phí: tariff (biểu phí cố định) / rate_on_si (% số tiền bh) / per_person (theo đầu người) '><td class='num'>6</td><td><code>pricing_basis</code> </td><td><code class='ty'>character varying(20)</code></td><td>Cách tính phí: TARIFF (biểu phí cố định) / RATE_ON_SI (% số tiền BH) / PER_PERSON (theo đầu người)</td><td class='sm'>PER_PERSON | RATE_ON_SI | TARIFF</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) vat_rate thuế suất gtgt %: 0 = không chịu thuế (bh con người), 10 = còn lại luật gtgt 48/2024/qh15 điều 5 khoản 8, điều 9'><td class='num'>7</td><td><code>vat_rate</code> </td><td><code class='ty'>numeric(5,2)</code></td><td>Thuế suất GTGT %: 0 = không chịu thuế (BH con người), 10 = còn lại<div class=basis>Luật GTGT 48/2024/QH15 Điều 5 khoản 8, Điều 9</div></td><td class='sm'>0.00 | 10.00</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) max_commission_pct trần tỷ lệ hoa hồng đại lý % tt 67/2023/tt-btc điều 51 khoản 3'><td class='num'>8</td><td><code>max_commission_pct</code> </td><td><code class='ty'>numeric(5,2)</code></td><td>Trần tỷ lệ hoa hồng đại lý %<div class=basis>TT 67/2023/TT-BTC Điều 51 khoản 3</div></td><td class='sm'>10.00 | 20.00 | 5.00</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) legal_basis căn cứ pháp lý riêng của sản phẩm (nếu có) '><td class='num'>9</td><td><code>legal_basis</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(300)</code></td><td>Căn cứ pháp lý riêng của sản phẩm (nếu có)</td><td class='sm'>Không chịu thuế GTGT – Luật Thuế GTGT 48 | NĐ 67/2023/NĐ-CP Phụ lục I (biểu phí TND | NĐ 67/2023/NĐ-CP Phụ lục II; thay thế bở</td><td class='num'>3</td><td class='num'>32%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) solvency2_lob đối chiếu quốc tế: solvency ii lob; (*) = suy luận theo bản chất rủi ro delegated reg. (eu) 2015/35 annex i'><td class='num'>10</td><td><code>solvency2_lob</code> </td><td><code class='ty'>character varying(60)</code></td><td>Đối chiếu quốc tế: Solvency II LoB; (*) = suy luận theo bản chất rủi ro<div class=basis>Delegated Reg. (EU) 2015/35 Annex I</div></td><td class='sm'>1 Medical expense insurance | 1 Medical expense insurance (*) | 2 Income protection insurance (*)</td><td class='num'>6</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-channel" class="tbl"><summary><code>ref.channel</code><span>Kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm</span>
+<tbody><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) product_code mã sản phẩm (tiền tố xe_ / ng_ / ts_ / chn_) '><td class='num'>1</td><td><code>product_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã sản phẩm (tiền tố XE_ / NG_ / TS_ / CHN_)</td><td class='sm'>CHN_BB | CHN_TN | MV_DELAYCARE</td><td class='num'>23</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) product_name tên sản phẩm theo cách gọi phổ biến của thị trường website các dnbh'><td class='num'>2</td><td><code>product_name</code> </td><td><code class='ty'>character varying(300)</code></td><td>Tên sản phẩm theo cách gọi phổ biến của thị trường<div class=basis>Website các DNBH</div></td><td class='sm'>Bảo hiểm bắt buộc trách nhiệm dân sự của | Bảo hiểm bắt buộc trách nhiệm dân sự của | Bảo hiểm bệnh hiểm nghèo – ung thư</td><td class='num'>23</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) product_group_code nhóm sản phẩm → ref.product_group '><td class='num'>3</td><td><code>product_group_code</code> <b class='b fk' title='ref.product_group.product_group_code'>FK</b><div class='ref'>→ <code>ref.product_group.product_group_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Nhóm sản phẩm → ref.product_group</td><td class='sm'>CHAY_NO | DU_LICH | HOC_SINH</td><td class='num'>8</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) report_line_code dòng báo cáo mẫu 2-pnt → ref.regulatory_line tt 67/2023/tt-btc phụ lục vi'><td class='num'>4</td><td><code>report_line_code</code> <b class='b fk' title='ref.regulatory_line.report_line_code'>FK</b><div class='ref'>→ <code>ref.regulatory_line.report_line_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Dòng báo cáo Mẫu 2-PNT → ref.regulatory_line<div class=basis>TT 67/2023/TT-BTC Phụ lục VI</div></td><td class='sm'>A.1 | A.2 | B.1b</td><td class='num'>8</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) is_compulsory true = bảo hiểm bắt buộc nđ 67/2023/nđ-cp'><td class='num'>5</td><td><code>is_compulsory</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = bảo hiểm bắt buộc<div class=basis>NĐ 67/2023/NĐ-CP</div></td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) pricing_basis cách tính phí: tariff (biểu phí cố định) / rate_on_si (% số tiền bh) / per_person (theo đầu người) '><td class='num'>6</td><td><code>pricing_basis</code> </td><td><code class='ty'>character varying(20)</code></td><td>Cách tính phí: TARIFF (biểu phí cố định) / RATE_ON_SI (% số tiền BH) / PER_PERSON (theo đầu người)</td><td class='sm'>PER_PERSON | RATE_ON_SI | TARIFF</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) vat_rate thuế suất gtgt %: 0 = không chịu thuế (bh con người), 10 = còn lại luật gtgt 48/2024/qh15 điều 5 khoản 8, điều 9'><td class='num'>7</td><td><code>vat_rate</code> </td><td><code class='ty'>numeric(5,2)</code></td><td>Thuế suất GTGT %: 0 = không chịu thuế (BH con người), 10 = còn lại<div class=basis>Luật GTGT 48/2024/QH15 Điều 5 khoản 8, Điều 9</div></td><td class='sm'>0.00 | 10.00</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) max_commission_pct trần tỷ lệ hoa hồng đại lý % tt 67/2023/tt-btc điều 51 khoản 3'><td class='num'>8</td><td><code>max_commission_pct</code> </td><td><code class='ty'>numeric(5,2)</code></td><td>Trần tỷ lệ hoa hồng đại lý %<div class=basis>TT 67/2023/TT-BTC Điều 51 khoản 3</div></td><td class='sm'>10.00 | 20.00 | 5.00</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) legal_basis căn cứ pháp lý riêng của sản phẩm (nếu có) '><td class='num'>9</td><td><code>legal_basis</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(300)</code></td><td>Căn cứ pháp lý riêng của sản phẩm (nếu có)</td><td class='sm'>Không chịu thuế GTGT – Luật Thuế GTGT 48 | NĐ 67/2023/NĐ-CP Phụ lục I (biểu phí TND | NĐ 67/2023/NĐ-CP Phụ lục II; thay thế bở</td><td class='num'>3</td><td class='num'>30%</td></tr><tr data-s='ref.product sản phẩm bảo hiểm (phạm vi poc) solvency2_lob đối chiếu quốc tế: solvency ii lob; (*) = suy luận theo bản chất rủi ro delegated reg. (eu) 2015/35 annex i'><td class='num'>10</td><td><code>solvency2_lob</code> </td><td><code class='ty'>character varying(60)</code></td><td>Đối chiếu quốc tế: Solvency II LoB; (*) = suy luận theo bản chất rủi ro<div class=basis>Delegated Reg. (EU) 2015/35 Annex I</div></td><td class='sm'>12 Miscellaneous financial loss (*) | 1 Medical expense insurance | 1 Medical expense insurance (*)</td><td class='num'>8</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-channel" class="tbl"><summary><code>ref.channel</code><span>Kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm</span>
 <em>7 dòng · 5 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / kênh · <b>Căn cứ:</b> Luật KDBH 2022 Điều 87 khoản 4; TT 67/2023/TT-BTC Mẫu 3-PNT</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm channel_code mã kênh: truc_tiep, dai_ly_cn, dai_ly_tc, banca, moi_gioi, dau_thau, dien_tu '><td class='num'>1</td><td><code>channel_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã kênh: TRUC_TIEP, DAI_LY_CN, DAI_LY_TC, BANCA, MOI_GIOI, DAU_THAU, DIEN_TU</td><td class='sm'>BANCA | DAI_LY_CN | DAI_LY_TC</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm channel_name tên kênh luật kdbh 2022 điều 87 khoản 4'><td class='num'>2</td><td><code>channel_name</code> </td><td><code class='ty'>character varying(150)</code></td><td>Tên kênh<div class=basis>Luật KDBH 2022 Điều 87 khoản 4</div></td><td class='sm'>Bancassurance (đại lý là tổ chức tín dụn | Bán trực tiếp | Đại lý cá nhân</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm report_channel_group nhóm kênh báo cáo: qua tổ chức tín dụng / qua môi trường mạng / qua kênh phân phối khác tt 67/2023/tt-btc mẫu 3-pnt'><td class='num'>3</td><td><code>report_channel_group</code> </td><td><code class='ty'>character varying(100)</code></td><td>Nhóm kênh báo cáo: Qua tổ chức tín dụng / Qua môi trường mạng / Qua kênh phân phối khác<div class=basis>TT 67/2023/TT-BTC Mẫu 3-PNT</div></td><td class='sm'>Qua kênh phân phối khác | Qua môi trường mạng | Qua tổ chức tín dụng</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm legal_basis căn cứ pháp lý của kênh '><td class='num'>4</td><td><code>legal_basis</code> </td><td><code class='ty'>character varying(300)</code></td><td>Căn cứ pháp lý của kênh</td><td class='sm'>Luật KDBH 2022 (08/2022/QH15) Điều 87 k4 | Luật KDBH 2022 (08/2022/QH15) Điều 87 k4 | Luật KDBH 2022 (08/2022/QH15) Điều 87 k4</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm sort_order thứ tự hiển thị '><td class='num'>5</td><td><code>sort_order</code> </td><td><code class='ty'>character varying(10)</code></td><td>Thứ tự hiển thị</td><td class='sm'>01 | 2 | 3</td><td class='num'>7</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-partner" class="tbl"><summary><code>ref.partner</code><span>Đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, OTA, ví điện tử...</span>
-<em>36 dòng · 4 cột</em></summary>
-<p class="meta"><b>Grain:</b> 1 dòng / đối tác · <b>Căn cứ:</b> Loại đối tác theo thực tế thị trường; tên ẩn danh</p>
+<tbody><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm channel_code mã kênh: truc_tiep, dai_ly_cn, dai_ly_tc, banca, moi_gioi, dau_thau, dien_tu '><td class='num'>1</td><td><code>channel_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã kênh: TRUC_TIEP, DAI_LY_CN, DAI_LY_TC, BANCA, MOI_GIOI, DAU_THAU, DIEN_TU</td><td class='sm'>BANCA | DAI_LY_CN | DAI_LY_TC</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm channel_name tên kênh luật kdbh 2022 điều 87 khoản 4'><td class='num'>2</td><td><code>channel_name</code> </td><td><code class='ty'>character varying(150)</code></td><td>Tên kênh<div class=basis>Luật KDBH 2022 Điều 87 khoản 4</div></td><td class='sm'>Bancassurance (đại lý là tổ chức tín dụn | Bán trực tiếp | Đại lý cá nhân</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm report_channel_group nhóm kênh báo cáo: qua tổ chức tín dụng / qua môi trường mạng / qua kênh phân phối khác tt 67/2023/tt-btc mẫu 3-pnt'><td class='num'>3</td><td><code>report_channel_group</code> </td><td><code class='ty'>character varying(100)</code></td><td>Nhóm kênh báo cáo: Qua tổ chức tín dụng / Qua môi trường mạng / Qua kênh phân phối khác<div class=basis>TT 67/2023/TT-BTC Mẫu 3-PNT</div></td><td class='sm'>Qua kênh phân phối khác | Qua môi trường mạng | Qua tổ chức tín dụng</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm legal_basis căn cứ pháp lý của kênh '><td class='num'>4</td><td><code>legal_basis</code> </td><td><code class='ty'>character varying(300)</code></td><td>Căn cứ pháp lý của kênh</td><td class='sm'>Luật KDBH 2022 (08/2022/QH15) Điều 87 k4 | Luật KDBH 2022 (08/2022/QH15) Điều 87 k4 | Luật KDBH 2022 (08/2022/QH15) Điều 87 k4</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='ref.channel kênh phân phối theo hình thức cung cấp sản phẩm bảo hiểm sort_order thứ tự hiển thị '><td class='num'>5</td><td><code>sort_order</code> </td><td><code class='ty'>character varying(10)</code></td><td>Thứ tự hiển thị</td><td class='sm'>1 | 2 | 3</td><td class='num'>7</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-partner" class="tbl"><summary><code>ref.partner</code><span>Đối tác phân phối — ngân hàng, đăng kiểm, OTA, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với PVI: Green SM, ATADI, Fuse</span>
+<em>39 dòng · 4 cột</em></summary>
+<p class="meta"><b>Grain:</b> 1 dòng / đối tác · <b>Căn cứ:</b> Loại đối tác theo thực tế thị trường; đối tác truyền thống ẩn danh, đối tác bảo hiểm vi mô theo nguồn công khai (sources/market_data.md mục 10)</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='ref.partner đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, ota, ví điện tử... partner_code mã đối tác '><td class='num'>1</td><td><code>partner_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã đối tác</td><td class='sm'>BC_A | CTTC_A | CTTC_B</td><td class='num'>36</td><td class='num'>0%</td></tr><tr data-s='ref.partner đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, ota, ví điện tử... partner_name tên đối tác (ẩn danh: ngân hàng tmcp a, ví điện tử b …) '><td class='num'>2</td><td><code>partner_name</code> </td><td><code class='ty'>character varying(200)</code></td><td>Tên đối tác (ẩn danh: Ngân hàng TMCP A, Ví điện tử B …)</td><td class='sm'>Công ty lữ hành A | Công ty lữ hành B | Công ty lữ hành C</td><td class='num'>36</td><td class='num'>0%</td></tr><tr data-s='ref.partner đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, ota, ví điện tử... partner_type loại đối tác: ngan_hang, cty_tai_chinh, dang_kiem, showroom_oto, garage, ota_du_lich, cty_lu_hanh, cty_moi_gioi, vi_dien_tu, san_tmdt, hang_hang_khong, vien_thong '><td class='num'>3</td><td><code>partner_type</code> </td><td><code class='ty'>character varying(30)</code></td><td>Loại đối tác: NGAN_HANG, CTY_TAI_CHINH, DANG_KIEM, SHOWROOM_OTO, GARAGE, OTA_DU_LICH, CTY_LU_HANH, CTY_MOI_GIOI, VI_DIEN_TU, SAN_TMDT, HANG_HANG_KHONG, VIEN_THONG</td><td class='sm'>BUU_CHINH | CTY_LU_HANH | CTY_MOI_GIOI</td><td class='num'>14</td><td class='num'>0%</td></tr><tr data-s='ref.partner đối tác phân phối (ẩn danh) — ngân hàng, đăng kiểm, ota, ví điện tử... channel_code kênh của đối tác → ref.channel '><td class='num'>4</td><td><code>channel_code</code> <b class='b fk' title='ref.channel.channel_code'>FK</b><div class='ref'>→ <code>ref.channel.channel_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Kênh của đối tác → ref.channel</td><td class='sm'>BANCA | DAI_LY_TC | DIEN_TU</td><td class='num'>4</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-customer_segment" class="tbl"><summary><code>ref.customer_segment</code><span>Phân khúc khách hàng</span>
+<tbody><tr data-s='ref.partner đối tác phân phối — ngân hàng, đăng kiểm, ota, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với pvi: green sm, atadi, fuse partner_code mã đối tác '><td class='num'>1</td><td><code>partner_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã đối tác</td><td class='sm'>ATADI | BC_A | CTTC_A</td><td class='num'>39</td><td class='num'>0%</td></tr><tr data-s='ref.partner đối tác phân phối — ngân hàng, đăng kiểm, ota, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với pvi: green sm, atadi, fuse partner_name tên đối tác (ẩn danh: ngân hàng tmcp a, ví điện tử b …; tên thật cho green sm, atadi, fuse) '><td class='num'>2</td><td><code>partner_name</code> </td><td><code class='ty'>character varying(200)</code></td><td>Tên đối tác (ẩn danh: Ngân hàng TMCP A, Ví điện tử B …; tên thật cho Green SM, ATADI, Fuse)</td><td class='sm'>ATADI.vn – đại lý vé máy bay trực tuyến | Công ty lữ hành A | Công ty lữ hành B</td><td class='num'>39</td><td class='num'>0%</td></tr><tr data-s='ref.partner đối tác phân phối — ngân hàng, đăng kiểm, ota, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với pvi: green sm, atadi, fuse partner_type loại đối tác: ngan_hang, cty_tai_chinh, dang_kiem, showroom_oto, garage, ota_du_lich, cty_lu_hanh, cty_moi_gioi, vi_dien_tu, san_tmdt, hang_hang_khong, vien_thong '><td class='num'>3</td><td><code>partner_type</code> </td><td><code class='ty'>character varying(30)</code></td><td>Loại đối tác: NGAN_HANG, CTY_TAI_CHINH, DANG_KIEM, SHOWROOM_OTO, GARAGE, OTA_DU_LICH, CTY_LU_HANH, CTY_MOI_GIOI, VI_DIEN_TU, SAN_TMDT, HANG_HANG_KHONG, VIEN_THONG</td><td class='sm'>BUU_CHINH | CTY_LU_HANH | CTY_MOI_GIOI</td><td class='num'>17</td><td class='num'>0%</td></tr><tr data-s='ref.partner đối tác phân phối — ngân hàng, đăng kiểm, ota, ví điện tử... (ẩn danh); 3 đối tác số tên thật có công bố hợp tác với pvi: green sm, atadi, fuse channel_code kênh của đối tác → ref.channel '><td class='num'>4</td><td><code>channel_code</code> <b class='b fk' title='ref.channel.channel_code'>FK</b><div class='ref'>→ <code>ref.channel.channel_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Kênh của đối tác → ref.channel</td><td class='sm'>BANCA | DAI_LY_TC | DIEN_TU</td><td class='num'>4</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-customer_segment" class="tbl"><summary><code>ref.customer_segment</code><span>Phân khúc khách hàng</span>
 <em>6 dòng · 3 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / phân khúc · <b>Căn cứ:</b> Phân loại phổ biến (cá nhân / hộ gia đình / doanh nghiệp / cơ quan NN / cơ sở giáo dục)</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
 <tbody><tr data-s='ref.customer_segment phân khúc khách hàng segment_code mã phân khúc '><td class='num'>1</td><td><code>segment_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã phân khúc</td><td class='sm'>CA_NHAN | CO_QUAN_NN | CO_SO_GD</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='ref.customer_segment phân khúc khách hàng segment_name tên phân khúc '><td class='num'>2</td><td><code>segment_name</code> </td><td><code class='ty'>character varying(100)</code></td><td>Tên phân khúc</td><td class='sm'>Cá nhân | Cơ quan, đơn vị sự nghiệp nhà nước | Cơ sở giáo dục</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='ref.customer_segment phân khúc khách hàng is_organization true = tổ chức, false = cá nhân / hộ gia đình '><td class='num'>3</td><td><code>is_organization</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = tổ chức, FALSE = cá nhân / hộ gia đình</td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-ref-customer" class="tbl"><summary><code>ref.customer</code><span>Khách hàng — bên mua bảo hiểm (dữ liệu giả)</span>
-<em>1,917,522 dòng · 10 cột</em></summary>
+<em>1,696,375 dòng · 10 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / khách hàng · <b>Căn cứ:</b> Dữ liệu sinh ngẫu nhiên</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) customer_code mã khách hàng (khnnnnnnn) '><td class='num'>1</td><td><code>customer_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã khách hàng (KHnnnnnnn)</td><td class='sm'>KH310000001 | KH310000002 | KH310000003</td><td class='num'>1,917,522</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) customer_name tên khách hàng (giả) dữ liệu sinh ngẫu nhiên'><td class='num'>2</td><td><code>customer_name</code> </td><td><code class='ty'>character varying(200)</code></td><td>Tên khách hàng (giả)<div class=basis>Dữ liệu sinh ngẫu nhiên</div></td><td class='sm'>Ban Quản lý dự án An Giang | Ban Quản lý dự án Bắc Ninh | Ban Quản lý dự án Cà Mau</td><td class='num'>61,788</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) segment_code phân khúc → ref.customer_segment '><td class='num'>3</td><td><code>segment_code</code> <b class='b fk' title='ref.customer_segment.segment_code'>FK</b><div class='ref'>→ <code>ref.customer_segment.segment_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Phân khúc → ref.customer_segment</td><td class='sm'>CA_NHAN | CO_QUAN_NN | CO_SO_GD</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) tax_code mã số thuế (chỉ tổ chức; giả) '><td class='num'>4</td><td><code>tax_code</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã số thuế (chỉ tổ chức; giả)</td><td class='sm'>0100007882 | 0100050897 | 0100056368</td><td class='num'>39,627</td><td class='num'>98%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) province_code tỉnh/thành → ref.province '><td class='num'>5</td><td><code>province_code</code> <b class='b fk' title='ref.province.province_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.province.province_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Tỉnh/thành → ref.province</td><td class='sm'>AGG | BNH | CBG</td><td class='num'>34</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) home_company_code đơn vị quản lý khách hàng → ref.company '><td class='num'>6</td><td><code>home_company_code</code> <b class='b fk' title='ref.company.company_code'>FK</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị quản lý khách hàng → ref.company</td><td class='sm'>AGG | BNH | CTO</td><td class='num'>18</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) is_aggregated_retail true = &#x27;khách lẻ theo bảng kê&#x27; — bên mua gộp của đơn lô giấy chứng nhận bán qua đối tác '><td class='num'>7</td><td><code>is_aggregated_retail</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = &#x27;Khách lẻ theo bảng kê&#x27; — bên mua gộp của đơn lô giấy chứng nhận bán qua đối tác</td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) created_date ngày tạo khách hàng '><td class='num'>8</td><td><code>created_date</code> </td><td><code class='ty'>date</code></td><td>Ngày tạo khách hàng</td><td class='sm'>2015-01-01 | 2015-01-02 | 2015-01-03</td><td class='num'>4,291</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) gender giới tính m / f — chỉ khách cá nhân, hộ gia đình (null với tổ chức) dữ liệu sinh ngẫu nhiên'><td class='num'>9</td><td><code>gender</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character(1)</code></td><td>Giới tính M / F — chỉ khách cá nhân, hộ gia đình (NULL với tổ chức)<div class=basis>Dữ liệu sinh ngẫu nhiên</div></td><td class='sm'>F | M</td><td class='num'>2</td><td class='num'>2%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) birth_year năm sinh — chỉ khách cá nhân, hộ gia đình; bên mua ≥ 18 tuổi dữ liệu sinh ngẫu nhiên'><td class='num'>10</td><td><code>birth_year</code> <b class='b nl'>NULL</b></td><td><code class='ty'>smallint</code></td><td>Năm sinh — chỉ khách cá nhân, hộ gia đình; bên mua ≥ 18 tuổi<div class=basis>Dữ liệu sinh ngẫu nhiên</div></td><td class='sm'>1945 | 1946 | 1947</td><td class='num'>63</td><td class='num'>2%</td></tr></tbody></table></div></details><details id="t-ref-currency" class="tbl"><summary><code>ref.currency</code><span>Tiền tệ</span>
+<tbody><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) customer_code mã khách hàng (khnnnnnnn) '><td class='num'>1</td><td><code>customer_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã khách hàng (KHnnnnnnn)</td><td class='sm'>KH610000001 | KH610000002 | KH610000003</td><td class='num'>1,696,375</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) customer_name tên khách hàng (giả) dữ liệu sinh ngẫu nhiên'><td class='num'>2</td><td><code>customer_name</code> </td><td><code class='ty'>character varying(200)</code></td><td>Tên khách hàng (giả)<div class=basis>Dữ liệu sinh ngẫu nhiên</div></td><td class='sm'>Ban Quản lý dự án Bắc Ninh | Ban Quản lý dự án Cà Mau | Ban Quản lý dự án Cần Thơ</td><td class='num'>48,530</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) segment_code phân khúc → ref.customer_segment '><td class='num'>3</td><td><code>segment_code</code> <b class='b fk' title='ref.customer_segment.segment_code'>FK</b><div class='ref'>→ <code>ref.customer_segment.segment_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Phân khúc → ref.customer_segment</td><td class='sm'>CA_NHAN | CO_QUAN_NN | CO_SO_GD</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) tax_code mã số thuế (chỉ tổ chức; giả) '><td class='num'>4</td><td><code>tax_code</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(20)</code></td><td>Mã số thuế (chỉ tổ chức; giả)</td><td class='sm'>0100037302 | 0100065094 | 0100068691</td><td class='num'>15,879</td><td class='num'>99%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) province_code tỉnh/thành → ref.province '><td class='num'>5</td><td><code>province_code</code> <b class='b fk' title='ref.province.province_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.province.province_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Tỉnh/thành → ref.province</td><td class='sm'>AGG | BNH | CBG</td><td class='num'>34</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) home_company_code đơn vị quản lý khách hàng → ref.company '><td class='num'>6</td><td><code>home_company_code</code> <b class='b fk' title='ref.company.company_code'>FK</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị quản lý khách hàng → ref.company</td><td class='sm'>AGI | ALC | BTB</td><td class='num'>46</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) is_aggregated_retail true = &#x27;khách lẻ theo bảng kê&#x27; — bên mua gộp của đơn lô giấy chứng nhận bán qua đối tác '><td class='num'>7</td><td><code>is_aggregated_retail</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = &#x27;Khách lẻ theo bảng kê&#x27; — bên mua gộp của đơn lô giấy chứng nhận bán qua đối tác</td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) created_date ngày tạo khách hàng '><td class='num'>8</td><td><code>created_date</code> </td><td><code class='ty'>date</code></td><td>Ngày tạo khách hàng</td><td class='sm'>2015-01-01 | 2015-01-02 | 2015-01-03</td><td class='num'>4,291</td><td class='num'>0%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) gender giới tính m / f — chỉ khách cá nhân, hộ gia đình (null với tổ chức) dữ liệu sinh ngẫu nhiên'><td class='num'>9</td><td><code>gender</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character(1)</code></td><td>Giới tính M / F — chỉ khách cá nhân, hộ gia đình (NULL với tổ chức)<div class=basis>Dữ liệu sinh ngẫu nhiên</div></td><td class='sm'>F | M</td><td class='num'>2</td><td class='num'>1%</td></tr><tr data-s='ref.customer khách hàng — bên mua bảo hiểm (dữ liệu giả) birth_year năm sinh — chỉ khách cá nhân, hộ gia đình; bên mua ≥ 18 tuổi dữ liệu sinh ngẫu nhiên'><td class='num'>10</td><td><code>birth_year</code> <b class='b nl'>NULL</b></td><td><code class='ty'>smallint</code></td><td>Năm sinh — chỉ khách cá nhân, hộ gia đình; bên mua ≥ 18 tuổi<div class=basis>Dữ liệu sinh ngẫu nhiên</div></td><td class='sm'>1945 | 1946 | 1947</td><td class='num'>63</td><td class='num'>1%</td></tr></tbody></table></div></details><details id="t-ref-currency" class="tbl"><summary><code>ref.currency</code><span>Tiền tệ</span>
 <em>2 dòng · 2 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / loại tiền · <b>Căn cứ:</b> ISO 4217</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
@@ -991,26 +1731,26 @@ PG_URI=&quot;postgresql://report:&lt;mật khẩu&gt;@192.168.18.101:5432/report
 <p class="meta"><b>Grain:</b> 1 dòng / loại · <b>Căn cứ:</b> Thông lệ quản trị nội bộ</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
 <tbody><tr data-s='ref.allocation_type loại phân bổ doanh thu giữa các đơn vị allocation_type_code tu_khai_thac / ho_tro_cheo / chuyen_giao '><td class='num'>1</td><td><code>allocation_type_code</code> <b class='b pk'>PK</b></td><td><code class='ty'>character varying(20)</code></td><td>TU_KHAI_THAC / HO_TRO_CHEO / CHUYEN_GIAO</td><td class='sm'>CHUYEN_GIAO | HO_TRO_CHEO | TU_KHAI_THAC</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.allocation_type loại phân bổ doanh thu giữa các đơn vị allocation_type_name tên loại phân bổ '><td class='num'>2</td><td><code>allocation_type_name</code> </td><td><code class='ty'>character varying(150)</code></td><td>Tên loại phân bổ</td><td class='sm'>Chuyển giao doanh thu | Hợp tác khai thác giữa các đơn vị | Tự khai thác</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='ref.allocation_type loại phân bổ doanh thu giữa các đơn vị note diễn giải '><td class='num'>3</td><td><code>note</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(300)</code></td><td>Diễn giải</td><td class='sm'>100% doanh thu cho đơn vị cấp đơn | Chia doanh thu theo tỷ lệ đóng góp khai  | Đơn vị cấp đơn chuyển doanh thu cho đơn </td><td class='num'>3</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-policy" class="tbl"><summary><code>core.policy</code><span>Hợp đồng / đơn bảo hiểm</span>
-<em>4,669,144 dòng · 13 cột</em></summary>
+<em>4,082,637 dòng · 13 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / hợp đồng · <b>Căn cứ:</b> Luật KDBH 2022; ACORD Policy; IBM IIW Agreement</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='core.policy hợp đồng / đơn bảo hiểm policy_id khóa hợp đồng '><td class='num'>1</td><td><code>policy_id</code> <b class='b pk'>PK</b></td><td><code class='ty'>bigint</code></td><td>Khóa hợp đồng</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,669,144</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm policy_no số hợp đồng: &lt;năm&gt;-&lt;đơn vị&gt;-&lt;nhóm sp&gt;-&lt;số thứ tự&gt; '><td class='num'>2</td><td><code>policy_no</code> <b class='b uq'>UQ</b></td><td><code class='ty'>character varying(40)</code></td><td>Số hợp đồng: &lt;năm&gt;-&lt;đơn vị&gt;-&lt;nhóm SP&gt;-&lt;số thứ tự&gt;</td><td class='sm'>2026-AGG-BHN-3000001 | 2026-AGG-BHN-3000002 | 2026-AGG-BHN-3000003</td><td class='num'>4,669,144</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm issuing_company_code đơn vị cấp đơn → ref.company '><td class='num'>3</td><td><code>issuing_company_code</code> <b class='b fk' title='ref.company.company_code'>FK</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị cấp đơn → ref.company</td><td class='sm'>AGG | BNH | CTO</td><td class='num'>20</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm customer_code bên mua bảo hiểm → ref.customer '><td class='num'>4</td><td><code>customer_code</code> <b class='b fk' title='ref.customer.customer_code'>FK</b><div class='ref'>→ <code>ref.customer.customer_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Bên mua bảo hiểm → ref.customer</td><td class='sm'>KH310000001 | KH310000002 | KH310000003</td><td class='num'>1,917,522</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm channel_code kênh bán → ref.channel. bắt buộc theo nghiệp vụ; null = nguồn không khai báo (~0,5%, dữ liệu bẩn có chủ đích) — lớp phân tích gán &#x27;chua_xd&#x27; tt 67/2023/tt-btc mẫu 3-pnt (báo cáo theo kênh)'><td class='num'>5</td><td><code>channel_code</code> <b class='b fk' title='ref.channel.channel_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.channel.channel_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Kênh bán → ref.channel. Bắt buộc theo nghiệp vụ; NULL = nguồn không khai báo (~0,5%, dữ liệu bẩn có chủ đích) — lớp phân tích gán &#x27;CHUA_XD&#x27;<div class=basis>TT 67/2023/TT-BTC Mẫu 3-PNT (báo cáo theo kênh)</div></td><td class='sm'>BANCA | DAI_LY_CN | DAI_LY_TC</td><td class='num'>7</td><td class='num'>1%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm partner_code đối tác phân phối → ref.partner. không bắt buộc: null = không qua đối tác (bán trực tiếp, đại lý cá nhân, đấu thầu, website/app công ty) — hợp lệ; lớp phân tích gán &#x27;web_app&#x27; (kênh điện tử) / &#x27;khong_qua_dt&#x27; (kênh khác) quy ước dự án 13/10/2026'><td class='num'>6</td><td><code>partner_code</code> <b class='b fk' title='ref.partner.partner_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.partner.partner_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Đối tác phân phối → ref.partner. Không bắt buộc: NULL = không qua đối tác (bán trực tiếp, đại lý cá nhân, đấu thầu, website/app công ty) — hợp lệ; lớp phân tích gán &#x27;WEB_APP&#x27; (kênh điện tử) / &#x27;KHONG_QUA_DT&#x27; (kênh khác)<div class=basis>Quy ước dự án 13/10/2026</div></td><td class='sm'>BC_A | CTTC_A | CTTC_B</td><td class='num'>36</td><td class='num'>57%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm currency_code loại tiền của hợp đồng → ref.currency '><td class='num'>7</td><td><code>currency_code</code> <b class='b fk' title='ref.currency.currency_code'>FK</b><div class='ref'>→ <code>ref.currency.currency_code</code></div></td><td><code class='ty'>character(3)</code></td><td>Loại tiền của hợp đồng → ref.currency</td><td class='sm'>USD | VND</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm issue_date ngày cấp đơn / giao kết hợp đồng '><td class='num'>8</td><td><code>issue_date</code> </td><td><code class='ty'>date</code></td><td>Ngày cấp đơn / giao kết hợp đồng</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>61</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm effective_date ngày bắt đầu thời hạn bảo hiểm '><td class='num'>9</td><td><code>effective_date</code> </td><td><code class='ty'>date</code></td><td>Ngày bắt đầu thời hạn bảo hiểm</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>797</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm expiry_date ngày kết thúc thời hạn bảo hiểm '><td class='num'>10</td><td><code>expiry_date</code> </td><td><code class='ty'>date</code></td><td>Ngày kết thúc thời hạn bảo hiểm</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>996</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm is_group_policy true = đơn nhóm / đơn lô giấy chứng nhận '><td class='num'>11</td><td><code>is_group_policy</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = đơn nhóm / đơn lô giấy chứng nhận</td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm prev_policy_no số hợp đồng năm trước được tái tục (hợp đồng ngoài kỳ dữ liệu nên lưu text; null = cấp mới) '><td class='num'>13</td><td><code>prev_policy_no</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(40)</code></td><td>Số hợp đồng năm trước được tái tục (hợp đồng ngoài kỳ dữ liệu nên lưu text; NULL = cấp mới)</td><td class='sm'>2025-AGG-BHN-0035618 | 2025-AGG-BHN-0041851 | 2025-AGG-BHN-0051363</td><td class='num'>720,041</td><td class='num'>85%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm renewal_of_policy_id hợp đồng được tái tục → core.policy (null = đơn mới) '><td class='num'>14</td><td><code>renewal_of_policy_id</code> <b class='b fk' title='core.policy.policy_id'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng được tái tục → core.policy (NULL = đơn mới)</td><td class='sm'></td><td class='num'>0</td><td class='num'>100%</td></tr></tbody></table></div></details><details id="t-core-policy_transaction" class="tbl"><summary><code>core.policy_transaction</code><span>Giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, SĐBS, hoàn phí, hủy)</span>
-<em>4,717,930 dòng · 10 cột</em></summary>
+<tbody><tr data-s='core.policy hợp đồng / đơn bảo hiểm policy_id khóa hợp đồng '><td class='num'>1</td><td><code>policy_id</code> <b class='b pk'>PK</b></td><td><code class='ty'>bigint</code></td><td>Khóa hợp đồng</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,082,637</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm policy_no số hợp đồng: &lt;năm&gt;-&lt;đơn vị&gt;-&lt;nhóm sp&gt;-&lt;số thứ tự&gt; '><td class='num'>2</td><td><code>policy_no</code> <b class='b uq'>UQ</b></td><td><code class='ty'>character varying(40)</code></td><td>Số hợp đồng: &lt;năm&gt;-&lt;đơn vị&gt;-&lt;nhóm SP&gt;-&lt;số thứ tự&gt;</td><td class='sm'>2026-AGI-BHN-2000001 | 2026-AGI-BHN-2000002 | 2026-AGI-BHN-2000003</td><td class='num'>4,082,637</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm issuing_company_code đơn vị cấp đơn → ref.company '><td class='num'>3</td><td><code>issuing_company_code</code> <b class='b fk' title='ref.company.company_code'>FK</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị cấp đơn → ref.company</td><td class='sm'>AGI | ALC | BTB</td><td class='num'>48</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm customer_code bên mua bảo hiểm → ref.customer '><td class='num'>4</td><td><code>customer_code</code> <b class='b fk' title='ref.customer.customer_code'>FK</b><div class='ref'>→ <code>ref.customer.customer_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Bên mua bảo hiểm → ref.customer</td><td class='sm'>KH610000001 | KH610000002 | KH610000003</td><td class='num'>1,696,375</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm channel_code kênh bán → ref.channel. bắt buộc theo nghiệp vụ; null = nguồn không khai báo (~0,5%, dữ liệu bẩn có chủ đích) — lớp phân tích gán &#x27;chua_xd&#x27; tt 67/2023/tt-btc mẫu 3-pnt (báo cáo theo kênh)'><td class='num'>5</td><td><code>channel_code</code> <b class='b fk' title='ref.channel.channel_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.channel.channel_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Kênh bán → ref.channel. Bắt buộc theo nghiệp vụ; NULL = nguồn không khai báo (~0,5%, dữ liệu bẩn có chủ đích) — lớp phân tích gán &#x27;CHUA_XD&#x27;<div class=basis>TT 67/2023/TT-BTC Mẫu 3-PNT (báo cáo theo kênh)</div></td><td class='sm'>BANCA | DAI_LY_CN | DAI_LY_TC</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm partner_code đối tác phân phối → ref.partner. không bắt buộc: null = không qua đối tác (bán trực tiếp, đại lý cá nhân, đấu thầu, website/app công ty) — hợp lệ; lớp phân tích gán &#x27;web_app&#x27; (kênh điện tử) / &#x27;khong_qua_dt&#x27; (kênh khác) quy ước dự án 13/10/2026'><td class='num'>6</td><td><code>partner_code</code> <b class='b fk' title='ref.partner.partner_code'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>ref.partner.partner_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Đối tác phân phối → ref.partner. Không bắt buộc: NULL = không qua đối tác (bán trực tiếp, đại lý cá nhân, đấu thầu, website/app công ty) — hợp lệ; lớp phân tích gán &#x27;WEB_APP&#x27; (kênh điện tử) / &#x27;KHONG_QUA_DT&#x27; (kênh khác)<div class=basis>Quy ước dự án 13/10/2026</div></td><td class='sm'>ATADI | BC_A | CTTC_A</td><td class='num'>39</td><td class='num'>12%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm currency_code loại tiền của hợp đồng → ref.currency '><td class='num'>7</td><td><code>currency_code</code> <b class='b fk' title='ref.currency.currency_code'>FK</b><div class='ref'>→ <code>ref.currency.currency_code</code></div></td><td><code class='ty'>character(3)</code></td><td>Loại tiền của hợp đồng → ref.currency</td><td class='sm'>USD | VND</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm issue_date ngày cấp đơn / giao kết hợp đồng '><td class='num'>8</td><td><code>issue_date</code> </td><td><code class='ty'>date</code></td><td>Ngày cấp đơn / giao kết hợp đồng</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>61</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm effective_date ngày bắt đầu thời hạn bảo hiểm '><td class='num'>9</td><td><code>effective_date</code> </td><td><code class='ty'>date</code></td><td>Ngày bắt đầu thời hạn bảo hiểm</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>778</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm expiry_date ngày kết thúc thời hạn bảo hiểm '><td class='num'>10</td><td><code>expiry_date</code> </td><td><code class='ty'>date</code></td><td>Ngày kết thúc thời hạn bảo hiểm</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>979</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm is_group_policy true = đơn nhóm / đơn lô giấy chứng nhận '><td class='num'>11</td><td><code>is_group_policy</code> </td><td><code class='ty'>boolean</code></td><td>TRUE = đơn nhóm / đơn lô giấy chứng nhận</td><td class='sm'>false | true</td><td class='num'>2</td><td class='num'>0%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm prev_policy_no số hợp đồng năm trước được tái tục (hợp đồng ngoài kỳ dữ liệu nên lưu text; null = cấp mới) '><td class='num'>13</td><td><code>prev_policy_no</code> <b class='b nl'>NULL</b></td><td><code class='ty'>character varying(40)</code></td><td>Số hợp đồng năm trước được tái tục (hợp đồng ngoài kỳ dữ liệu nên lưu text; NULL = cấp mới)</td><td class='sm'>2025-AGI-BHN-0264157 | 2025-AGI-BHN-0486076 | 2025-AGI-BHN-0661096</td><td class='num'>172,888</td><td class='num'>96%</td></tr><tr data-s='core.policy hợp đồng / đơn bảo hiểm renewal_of_policy_id hợp đồng được tái tục → core.policy (null = đơn mới) '><td class='num'>14</td><td><code>renewal_of_policy_id</code> <b class='b fk' title='core.policy.policy_id'>FK</b><b class='b nl'>NULL</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng được tái tục → core.policy (NULL = đơn mới)</td><td class='sm'></td><td class='num'>0</td><td class='num'>100%</td></tr></tbody></table></div></details><details id="t-core-policy_transaction" class="tbl"><summary><code>core.policy_transaction</code><span>Giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, SĐBS, hoàn phí, hủy)</span>
+<em>4,098,401 dòng · 10 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / giao dịch · <b>Căn cứ:</b> NĐ 46/2023/NĐ-CP Điều 49; TT 232/2012/TT-BTC TK 5111/5311/5321; Microsoft CDM PolicyTransaction</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_id khóa giao dịch '><td class='num'>1</td><td><code>txn_id</code> <b class='b pk'>PK</b></td><td><code class='ty'>bigint</code></td><td>Khóa giao dịch</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,717,930</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) policy_id hợp đồng → core.policy '><td class='num'>2</td><td><code>policy_id</code> <b class='b fk' title='core.policy.policy_id'>FK</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng → core.policy</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,669,144</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_no số chứng từ: &lt;số hợp đồng&gt;/&lt;thứ tự giao dịch&gt; '><td class='num'>3</td><td><code>txn_no</code> </td><td><code class='ty'>character varying(50)</code></td><td>Số chứng từ: &lt;số hợp đồng&gt;/&lt;thứ tự giao dịch&gt;</td><td class='sm'>2026-AGG-BHN-3000001/00 | 2026-AGG-BHN-3000002/00 | 2026-AGG-BHN-3000003/00</td><td class='num'>4,717,930</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_type_code loại giao dịch → ref.transaction_type '><td class='num'>4</td><td><code>txn_type_code</code> <b class='b fk' title='ref.transaction_type.txn_type_code'>FK</b><div class='ref'>→ <code>ref.transaction_type.txn_type_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Loại giao dịch → ref.transaction_type</td><td class='sm'>CANCEL | END_DEC | END_INC</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_date ngày chứng từ (ngày phát sinh giao dịch) '><td class='num'>5</td><td><code>txn_date</code> </td><td><code class='ty'>date</code></td><td>Ngày chứng từ (ngày phát sinh giao dịch)</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>61</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) accounting_date ngày ghi nhận doanh thu = ngày phát sinh trách nhiệm bảo hiểm (cấp mới/tái tục: max(ngày cấp, ngày hiệu lực); sđbs: ngày chứng từ) tt 67/2023/tt-btc điều 41 khoản 1'><td class='num'>6</td><td><code>accounting_date</code> </td><td><code class='ty'>date</code></td><td>Ngày ghi nhận doanh thu = ngày phát sinh trách nhiệm bảo hiểm (cấp mới/tái tục: max(ngày cấp, ngày hiệu lực); SĐBS: ngày chứng từ)<div class=basis>TT 67/2023/TT-BTC Điều 41 khoản 1</div></td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>797</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) status trạng thái: approved (tính doanh thu) / pending / void '><td class='num'>7</td><td><code>status</code> </td><td><code class='ty'>character varying(10)</code></td><td>Trạng thái: APPROVED (tính doanh thu) / PENDING / VOID</td><td class='sm'>APPROVED | PENDING | VOID</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) fx_rate tỷ giá hạch toán tại tháng ghi nhận (vnd = 1) ref.fx_rate'><td class='num'>8</td><td><code>fx_rate</code> </td><td><code class='ty'>numeric(18,2)</code></td><td>Tỷ giá hạch toán tại tháng ghi nhận (VND = 1)<div class=basis>ref.fx_rate</div></td><td class='sm'>1.00 | 26050.00 | 26150.00</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) created_by người tạo chứng từ (giả) '><td class='num'>9</td><td><code>created_by</code> </td><td><code class='ty'>character varying(30)</code></td><td>Người tạo chứng từ (giả)</td><td class='sm'>AGG.NV01 | AGG.NV02 | AGG.NV03</td><td class='num'>766</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) created_at thời điểm tạo chứng từ '><td class='num'>10</td><td><code>created_at</code> </td><td><code class='ty'>timestamp(0) without time zone</code></td><td>Thời điểm tạo chứng từ</td><td class='sm'>2026-08-01 00:00:10 | 2026-08-01 00:00:28 | 2026-08-01 00:00:36</td><td class='num'>2,581,920</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-transaction_coverage" class="tbl"><summary><code>core.transaction_coverage</code><span>Phí 100% hợp đồng theo từng sản phẩm của giao dịch</span>
-<em>4,844,773 dòng · 10 cột</em></summary>
+<tbody><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_id khóa giao dịch '><td class='num'>1</td><td><code>txn_id</code> <b class='b pk'>PK</b></td><td><code class='ty'>bigint</code></td><td>Khóa giao dịch</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,098,401</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) policy_id hợp đồng → core.policy '><td class='num'>2</td><td><code>policy_id</code> <b class='b fk' title='core.policy.policy_id'>FK</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng → core.policy</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,082,637</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_no số chứng từ: &lt;số hợp đồng&gt;/&lt;thứ tự giao dịch&gt; '><td class='num'>3</td><td><code>txn_no</code> </td><td><code class='ty'>character varying(50)</code></td><td>Số chứng từ: &lt;số hợp đồng&gt;/&lt;thứ tự giao dịch&gt;</td><td class='sm'>2026-AGI-BHN-2000001/00 | 2026-AGI-BHN-2000002/00 | 2026-AGI-BHN-2000003/00</td><td class='num'>4,098,401</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_type_code loại giao dịch → ref.transaction_type '><td class='num'>4</td><td><code>txn_type_code</code> <b class='b fk' title='ref.transaction_type.txn_type_code'>FK</b><div class='ref'>→ <code>ref.transaction_type.txn_type_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Loại giao dịch → ref.transaction_type</td><td class='sm'>CANCEL | END_DEC | END_INC</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) txn_date ngày chứng từ (ngày phát sinh giao dịch) '><td class='num'>5</td><td><code>txn_date</code> </td><td><code class='ty'>date</code></td><td>Ngày chứng từ (ngày phát sinh giao dịch)</td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>61</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) accounting_date ngày ghi nhận doanh thu = ngày phát sinh trách nhiệm bảo hiểm (cấp mới/tái tục: max(ngày cấp, ngày hiệu lực); sđbs: ngày chứng từ) tt 67/2023/tt-btc điều 41 khoản 1'><td class='num'>6</td><td><code>accounting_date</code> </td><td><code class='ty'>date</code></td><td>Ngày ghi nhận doanh thu = ngày phát sinh trách nhiệm bảo hiểm (cấp mới/tái tục: max(ngày cấp, ngày hiệu lực); SĐBS: ngày chứng từ)<div class=basis>TT 67/2023/TT-BTC Điều 41 khoản 1</div></td><td class='sm'>2026-08-01 | 2026-08-02 | 2026-08-03</td><td class='num'>778</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) status trạng thái: approved (tính doanh thu) / pending / void '><td class='num'>7</td><td><code>status</code> </td><td><code class='ty'>character varying(10)</code></td><td>Trạng thái: APPROVED (tính doanh thu) / PENDING / VOID</td><td class='sm'>APPROVED | PENDING | VOID</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) fx_rate tỷ giá hạch toán tại tháng ghi nhận (vnd = 1) ref.fx_rate'><td class='num'>8</td><td><code>fx_rate</code> </td><td><code class='ty'>numeric(18,2)</code></td><td>Tỷ giá hạch toán tại tháng ghi nhận (VND = 1)<div class=basis>ref.fx_rate</div></td><td class='sm'>1.00 | 26050.00 | 26150.00</td><td class='num'>6</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) created_by người tạo chứng từ (giả) '><td class='num'>9</td><td><code>created_by</code> </td><td><code class='ty'>character varying(30)</code></td><td>Người tạo chứng từ (giả)</td><td class='sm'>AGI.NV01 | AGI.NV02 | AGI.NV03</td><td class='num'>1,889</td><td class='num'>0%</td></tr><tr data-s='core.policy_transaction giao dịch phát sinh phí của hợp đồng (cấp mới, tái tục, sđbs, hoàn phí, hủy) created_at thời điểm tạo chứng từ '><td class='num'>10</td><td><code>created_at</code> </td><td><code class='ty'>timestamp(0) without time zone</code></td><td>Thời điểm tạo chứng từ</td><td class='sm'>2026-08-01 00:00:04 | 2026-08-01 00:00:08 | 2026-08-01 00:00:09</td><td class='num'>2,538,911</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-transaction_coverage" class="tbl"><summary><code>core.transaction_coverage</code><span>Phí 100% hợp đồng theo từng sản phẩm của giao dịch</span>
+<em>4,127,680 dòng · 10 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / giao dịch × sản phẩm · <b>Căn cứ:</b> TT 232/2012/TT-BTC Điều 12 (DT chi tiết theo nghiệp vụ); ACORD Coverage NetChangeAmt</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch coverage_id khóa dòng phí '><td class='num'>1</td><td><code>coverage_id</code> <b class='b pk'>PK</b></td><td><code class='ty'>bigint</code></td><td>Khóa dòng phí</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,844,773</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch txn_id giao dịch → core.policy_transaction '><td class='num'>2</td><td><code>txn_id</code> <b class='b fk' title='core.policy_transaction.txn_id'>FK</b><div class='ref'>→ <code>core.policy_transaction.txn_id</code></div></td><td><code class='ty'>bigint</code></td><td>Giao dịch → core.policy_transaction</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,717,930</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch product_code sản phẩm → ref.product '><td class='num'>3</td><td><code>product_code</code> <b class='b fk' title='ref.product.product_code'>FK</b><div class='ref'>→ <code>ref.product.product_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Sản phẩm → ref.product</td><td class='sm'>CHN_BB | CHN_TN | NG_DL_ND</td><td class='num'>19</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch sum_insured số tiền bảo hiểm (nguyên tệ; tổng cho cả lô / nhóm) '><td class='num'>4</td><td><code>sum_insured</code> </td><td><code class='ty'>numeric(20,2)</code></td><td>Số tiền bảo hiểm (nguyên tệ; tổng cho cả lô / nhóm)</td><td class='sm'>0.00 | -10000.00 | 10000.00</td><td class='num'>41,870</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch premium_rate_pct tỷ lệ phí % (chỉ sản phẩm tính theo % stbh) nđ 67/2023/nđ-cp pl ii (cháy nổ bắt buộc)'><td class='num'>5</td><td><code>premium_rate_pct</code> <b class='b nl'>NULL</b></td><td><code class='ty'>numeric(9,6)</code></td><td>Tỷ lệ phí % (chỉ sản phẩm tính theo % STBH)<div class=basis>NĐ 67/2023/NĐ-CP PL II (cháy nổ bắt buộc)</div></td><td class='sm'>0.049993 | 0.049995 | 0.049997</td><td class='num'>124,156</td><td class='num'>42%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch insured_count số người / xe / giấy chứng nhận được bảo hiểm '><td class='num'>6</td><td><code>insured_count</code> </td><td><code class='ty'>integer</code></td><td>Số người / xe / giấy chứng nhận được bảo hiểm</td><td class='sm'>0 | 1 | 10</td><td class='num'>946</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch premium_orig phí 100% hợp đồng, nguyên tệ, chưa vat; là phần thay đổi phí của giao dịch (âm với giảm/hoàn/hủy) acord coverage netchangeamt'><td class='num'>7</td><td><code>premium_orig</code> </td><td><code class='ty'>numeric(18,2)</code></td><td>Phí 100% hợp đồng, nguyên tệ, chưa VAT; là phần THAY ĐỔI phí của giao dịch (âm với giảm/hoàn/hủy)<div class=basis>ACORD Coverage NetChangeAmt</div></td><td class='sm'>0.00 | 100.00 | 10000.00</td><td class='num'>77,374</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch premium_vnd phí quy đổi vnd, bằng premium_orig × fx_rate '><td class='num'>8</td><td><code>premium_vnd</code> </td><td><code class='ty'>numeric(18,0)</code></td><td>Phí quy đổi VND, bằng premium_orig × fx_rate</td><td class='sm'>0 | 10000 | 100000</td><td class='num'>77,620</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch vat_vnd thuế gtgt (vnd) = premium_vnd × vat_rate luật gtgt 48/2024'><td class='num'>9</td><td><code>vat_vnd</code> </td><td><code class='ty'>numeric(18,0)</code></td><td>Thuế GTGT (VND) = premium_vnd × vat_rate<div class=basis>Luật GTGT 48/2024</div></td><td class='sm'>0 | -1000 | 100000</td><td class='num'>56,288</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch commission_rate_pct tỷ lệ hoa hồng % (0 với bán trực tiếp, đấu thầu); ≤ ref.product.max_commission_pct tt 67/2023/tt-btc điều 51'><td class='num'>10</td><td><code>commission_rate_pct</code> </td><td><code class='ty'>numeric(7,4)</code></td><td>Tỷ lệ hoa hồng % (0 với bán trực tiếp, đấu thầu); ≤ ref.product.max_commission_pct<div class=basis>TT 67/2023/TT-BTC Điều 51</div></td><td class='sm'>0.0000 | 0.0004 | 0.0013</td><td class='num'>180,565</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-coinsurance_share" class="tbl"><summary><code>core.coinsurance_share</code><span>Tỷ lệ tham gia đồng bảo hiểm của từng DNBH trên hợp đồng (tổng = 100%)</span>
-<em>4,670,512 dòng · 4 cột</em></summary>
+<tbody><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch coverage_id khóa dòng phí '><td class='num'>1</td><td><code>coverage_id</code> <b class='b pk'>PK</b></td><td><code class='ty'>bigint</code></td><td>Khóa dòng phí</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,127,680</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch txn_id giao dịch → core.policy_transaction '><td class='num'>2</td><td><code>txn_id</code> <b class='b fk' title='core.policy_transaction.txn_id'>FK</b><div class='ref'>→ <code>core.policy_transaction.txn_id</code></div></td><td><code class='ty'>bigint</code></td><td>Giao dịch → core.policy_transaction</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,098,401</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch product_code sản phẩm → ref.product '><td class='num'>3</td><td><code>product_code</code> <b class='b fk' title='ref.product.product_code'>FK</b><div class='ref'>→ <code>ref.product.product_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Sản phẩm → ref.product</td><td class='sm'>CHN_BB | CHN_TN | MV_DELAYCARE</td><td class='num'>23</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch sum_insured số tiền bảo hiểm (nguyên tệ; tổng cho cả lô / nhóm) '><td class='num'>4</td><td><code>sum_insured</code> </td><td><code class='ty'>numeric(20,2)</code></td><td>Số tiền bảo hiểm (nguyên tệ; tổng cho cả lô / nhóm)</td><td class='sm'>0.00 | -10000.00 | 10000.00</td><td class='num'>18,381</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch premium_rate_pct tỷ lệ phí % (chỉ sản phẩm tính theo % stbh) nđ 67/2023/nđ-cp pl ii (cháy nổ bắt buộc)'><td class='num'>5</td><td><code>premium_rate_pct</code> <b class='b nl'>NULL</b></td><td><code class='ty'>numeric(9,6)</code></td><td>Tỷ lệ phí % (chỉ sản phẩm tính theo % STBH)<div class=basis>NĐ 67/2023/NĐ-CP PL II (cháy nổ bắt buộc)</div></td><td class='sm'>0.049978 | 0.050000 | 0.050001</td><td class='num'>67,009</td><td class='num'>82%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch insured_count số người / xe / giấy chứng nhận được bảo hiểm '><td class='num'>6</td><td><code>insured_count</code> </td><td><code class='ty'>integer</code></td><td>Số người / xe / giấy chứng nhận được bảo hiểm</td><td class='sm'>0 | 1 | 10</td><td class='num'>654</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch premium_orig phí 100% hợp đồng, nguyên tệ, chưa vat; là phần thay đổi phí của giao dịch (âm với giảm/hoàn/hủy) acord coverage netchangeamt'><td class='num'>7</td><td><code>premium_orig</code> </td><td><code class='ty'>numeric(18,2)</code></td><td>Phí 100% hợp đồng, nguyên tệ, chưa VAT; là phần THAY ĐỔI phí của giao dịch (âm với giảm/hoàn/hủy)<div class=basis>ACORD Coverage NetChangeAmt</div></td><td class='sm'>0.00 | 100.00 | 1000.00</td><td class='num'>95,396</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch premium_vnd phí quy đổi vnd, bằng premium_orig × fx_rate '><td class='num'>8</td><td><code>premium_vnd</code> </td><td><code class='ty'>numeric(18,0)</code></td><td>Phí quy đổi VND, bằng premium_orig × fx_rate</td><td class='sm'>0 | 1000 | 10000</td><td class='num'>95,524</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch vat_vnd thuế gtgt (vnd) = premium_vnd × vat_rate luật gtgt 48/2024'><td class='num'>9</td><td><code>vat_vnd</code> </td><td><code class='ty'>numeric(18,0)</code></td><td>Thuế GTGT (VND) = premium_vnd × vat_rate<div class=basis>Luật GTGT 48/2024</div></td><td class='sm'>0 | 1000 | 10000</td><td class='num'>52,027</td><td class='num'>0%</td></tr><tr data-s='core.transaction_coverage phí 100% hợp đồng theo từng sản phẩm của giao dịch commission_rate_pct tỷ lệ hoa hồng % (0 với bán trực tiếp, đấu thầu); ≤ ref.product.max_commission_pct tt 67/2023/tt-btc điều 51'><td class='num'>10</td><td><code>commission_rate_pct</code> </td><td><code class='ty'>numeric(7,4)</code></td><td>Tỷ lệ hoa hồng % (0 với bán trực tiếp, đấu thầu); ≤ ref.product.max_commission_pct<div class=basis>TT 67/2023/TT-BTC Điều 51</div></td><td class='sm'>0.0000 | 0.0067 | 0.0226</td><td class='num'>176,803</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-coinsurance_share" class="tbl"><summary><code>core.coinsurance_share</code><span>Tỷ lệ tham gia đồng bảo hiểm của từng DNBH trên hợp đồng (tổng = 100%)</span>
+<em>4,082,967 dòng · 4 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / hợp đồng × DNBH · <b>Căn cứ:</b> Luật KDBH 2022 Điều 4 k29; TT 232/2012/TT-BTC Điều 19; TT 67/2023/TT-BTC Điều 41 k2</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) policy_id hợp đồng → core.policy '><td class='num'>1</td><td><code>policy_id</code> <b class='b pk'>PK</b><b class='b fk' title='core.policy.policy_id'>FK</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng → core.policy</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,669,144</td><td class='num'>0%</td></tr><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) insurer_code dnbh tham gia → ref.insurer (&#x27;own&#x27; = chính công ty) '><td class='num'>2</td><td><code>insurer_code</code> <b class='b pk'>PK</b><b class='b fk' title='ref.insurer.insurer_code'>FK</b><div class='ref'>→ <code>ref.insurer.insurer_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>DNBH tham gia → ref.insurer (&#x27;OWN&#x27; = chính công ty)</td><td class='sm'>CO_A | CO_B | CO_C</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) role vai trò: leader (đồng chính) / follower (đồng phụ) / sole (bảo hiểm 100%) tt 232/2012/tt-btc điều 19'><td class='num'>3</td><td><code>role</code> </td><td><code class='ty'>character varying(10)</code></td><td>Vai trò: LEADER (đồng chính) / FOLLOWER (đồng phụ) / SOLE (bảo hiểm 100%)<div class=basis>TT 232/2012/TT-BTC Điều 19</div></td><td class='sm'>FOLLOWER | LEADER | SOLE</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) share_pct tỷ lệ tham gia %; tổng theo hợp đồng = 100 luật kdbh 2022 điều 4 khoản 29'><td class='num'>4</td><td><code>share_pct</code> </td><td><code class='ty'>numeric(7,4)</code></td><td>Tỷ lệ tham gia %; tổng theo hợp đồng = 100<div class=basis>Luật KDBH 2022 Điều 4 khoản 29</div></td><td class='sm'>0.4100 | 0.6100 | 0.8800</td><td class='num'>1,011</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-revenue_allocation" class="tbl"><summary><code>core.revenue_allocation</code><span>Phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%)</span>
-<em>4,991,277 dòng · 4 cột</em></summary>
+<tbody><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) policy_id hợp đồng → core.policy '><td class='num'>1</td><td><code>policy_id</code> <b class='b pk'>PK</b><b class='b fk' title='core.policy.policy_id'>FK</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng → core.policy</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,082,637</td><td class='num'>0%</td></tr><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) insurer_code dnbh tham gia → ref.insurer (&#x27;own&#x27; = chính công ty) '><td class='num'>2</td><td><code>insurer_code</code> <b class='b pk'>PK</b><b class='b fk' title='ref.insurer.insurer_code'>FK</b><div class='ref'>→ <code>ref.insurer.insurer_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>DNBH tham gia → ref.insurer (&#x27;OWN&#x27; = chính công ty)</td><td class='sm'>CO_A | CO_B | CO_C</td><td class='num'>7</td><td class='num'>0%</td></tr><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) role vai trò: leader (đồng chính) / follower (đồng phụ) / sole (bảo hiểm 100%) tt 232/2012/tt-btc điều 19'><td class='num'>3</td><td><code>role</code> </td><td><code class='ty'>character varying(10)</code></td><td>Vai trò: LEADER (đồng chính) / FOLLOWER (đồng phụ) / SOLE (bảo hiểm 100%)<div class=basis>TT 232/2012/TT-BTC Điều 19</div></td><td class='sm'>FOLLOWER | LEADER | SOLE</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='core.coinsurance_share tỷ lệ tham gia đồng bảo hiểm của từng dnbh trên hợp đồng (tổng = 100%) share_pct tỷ lệ tham gia %; tổng theo hợp đồng = 100 luật kdbh 2022 điều 4 khoản 29'><td class='num'>4</td><td><code>share_pct</code> </td><td><code class='ty'>numeric(7,4)</code></td><td>Tỷ lệ tham gia %; tổng theo hợp đồng = 100<div class=basis>Luật KDBH 2022 Điều 4 khoản 29</div></td><td class='sm'>10.0000 | 100.0000 | 10.0900</td><td class='num'>290</td><td class='num'>0%</td></tr></tbody></table></div></details><details id="t-core-revenue_allocation" class="tbl"><summary><code>core.revenue_allocation</code><span>Phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%)</span>
+<em>4,152,252 dòng · 4 cột</em></summary>
 <p class="meta"><b>Grain:</b> 1 dòng / hợp đồng × đơn vị · <b>Căn cứ:</b> Thông lệ quản trị Tổng công ty – công ty thành viên</p>
 <div class="tw"><table class="dd"><thead><tr><th>#</th><th>Cột</th><th>Kiểu</th><th>Mô tả</th><th>Giá trị mẫu</th><th>Khác nhau</th><th>NULL</th></tr></thead>
-<tbody><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) policy_id hợp đồng → core.policy '><td class='num'>1</td><td><code>policy_id</code> <b class='b pk'>PK</b><b class='b fk' title='core.policy.policy_id'>FK</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng → core.policy</td><td class='sm'>30000001 | 30000002 | 30000003</td><td class='num'>4,669,144</td><td class='num'>0%</td></tr><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) company_code đơn vị được phân bổ doanh thu → ref.company '><td class='num'>2</td><td><code>company_code</code> <b class='b pk'>PK</b><b class='b fk' title='ref.company.company_code'>FK</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị được phân bổ doanh thu → ref.company</td><td class='sm'>AGG | BNH | CTO</td><td class='num'>20</td><td class='num'>0%</td></tr><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) allocation_type_code loại phân bổ → ref.allocation_type '><td class='num'>3</td><td><code>allocation_type_code</code> <b class='b fk' title='ref.allocation_type.allocation_type_code'>FK</b><div class='ref'>→ <code>ref.allocation_type.allocation_type_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Loại phân bổ → ref.allocation_type</td><td class='sm'>CHUYEN_GIAO | HO_TRO_CHEO | TU_KHAI_THAC</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) allocation_pct tỷ lệ phân bổ %; tổng theo hợp đồng = 100 '><td class='num'>4</td><td><code>allocation_pct</code> </td><td><code class='ty'>numeric(7,4)</code></td><td>Tỷ lệ phân bổ %; tổng theo hợp đồng = 100</td><td class='sm'>100.0000 | 20.0000 | 30.0000</td><td class='num'>8</td><td class='num'>0%</td></tr></tbody></table></div></details></section><section id="schema-change"><h2>Mô phỏng thay đổi schema</h2><p>Bộ này gồm 3 case phổ biến, chạy trên 2 bảng trong schema <code>bronze</code> của DB <code>reportapi</code>. Mỗi case gồm <strong>DDL</strong> và <strong>DML phát sinh sau thay đổi</strong>. Cần có DML vì CDC hoặc pipeline phía sau chỉ "thấy" schema mới khi có dòng dữ liệu mới.</p>
+<tbody><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) policy_id hợp đồng → core.policy '><td class='num'>1</td><td><code>policy_id</code> <b class='b pk'>PK</b><b class='b fk' title='core.policy.policy_id'>FK</b><div class='ref'>→ <code>core.policy.policy_id</code></div></td><td><code class='ty'>bigint</code></td><td>Hợp đồng → core.policy</td><td class='sm'>60000001 | 60000002 | 60000003</td><td class='num'>4,082,637</td><td class='num'>0%</td></tr><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) company_code đơn vị được phân bổ doanh thu → ref.company '><td class='num'>2</td><td><code>company_code</code> <b class='b pk'>PK</b><b class='b fk' title='ref.company.company_code'>FK</b><div class='ref'>→ <code>ref.company.company_code</code></div></td><td><code class='ty'>character varying(10)</code></td><td>Đơn vị được phân bổ doanh thu → ref.company</td><td class='sm'>AGI | ALC | BTB</td><td class='num'>48</td><td class='num'>0%</td></tr><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) allocation_type_code loại phân bổ → ref.allocation_type '><td class='num'>3</td><td><code>allocation_type_code</code> <b class='b fk' title='ref.allocation_type.allocation_type_code'>FK</b><div class='ref'>→ <code>ref.allocation_type.allocation_type_code</code></div></td><td><code class='ty'>character varying(20)</code></td><td>Loại phân bổ → ref.allocation_type</td><td class='sm'>CHUYEN_GIAO | HO_TRO_CHEO | TU_KHAI_THAC</td><td class='num'>3</td><td class='num'>0%</td></tr><tr data-s='core.revenue_allocation phân bổ doanh thu phần của công ty cho các đơn vị (tổng = 100%) allocation_pct tỷ lệ phân bổ %; tổng theo hợp đồng = 100 '><td class='num'>4</td><td><code>allocation_pct</code> </td><td><code class='ty'>numeric(7,4)</code></td><td>Tỷ lệ phân bổ %; tổng theo hợp đồng = 100</td><td class='sm'>100.0000 | 20.0000 | 30.0000</td><td class='num'>8</td><td class='num'>0%</td></tr></tbody></table></div></details></section><section id="schema-change"><h2>Mô phỏng thay đổi schema</h2><p>Bộ này gồm 3 case phổ biến, chạy trên 2 bảng trong schema <code>bronze</code> của DB <code>reportapi</code>. Mỗi case gồm <strong>DDL</strong> và <strong>DML phát sinh sau thay đổi</strong>. Cần có DML vì CDC hoặc pipeline phía sau chỉ "thấy" schema mới khi có dòng dữ liệu mới.</p>
 <div class="tw"><table>
 <thead>
 <tr>

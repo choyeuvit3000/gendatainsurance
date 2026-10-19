@@ -163,13 +163,18 @@ def target_tree(m):
     return "".join(rows), direct / t25 * 100
 
 
+def cref(code):
+    """Vị trí code: mặc định build_v2.py; tham số của bộ khối lượng ghi sẵn 'gen_volume.py:…'."""
+    return code if ".py" in code else f"build_v2.py:{code}"
+
+
 def registry():
     by_step = defaultdict(list)
     for p in PARAMS:
         by_step[p["step"]].append(p)
     out = []
     for sid, title, code, _ in STEPS:
-        out.append(f'<tr class="stephead"><th colspan="6">{sid} · {e(title)} <span>build_v2.py:{e(code)}</span></th></tr>')
+        out.append(f'<tr class="stephead"><th colspan="6">{sid} · {e(title)} <span>{e(cref(code))}</span></th></tr>')
         for p in by_step[sid]:
             imp = ""
             if p.get("impact"):
@@ -178,7 +183,7 @@ def registry():
             text = " ".join([p["id"], p["name"], p["value"], p["why"]]).lower()
             out.append(f'<tr class="pr" data-tags="{" ".join(p["tags"])}" data-text="{e(text)}" id="{p["id"]}">'
                        f'<td class="pid">{p["id"]}</td><td><b>{e(p["name"])}</b><div class="val">{e(p["value"])}</div>'
-                       f'<div class="code">build_v2.py:{e(p["code"])}</div></td>'
+                       f'<div class="code">{e(cref(p["code"]))}</div></td>'
                        f'<td>{"".join(pill(t) for t in p["tags"])}</td><td class="why">{e(p["why"])}</td>'
                        f'<td class="srcs">{src_links(p["src"]) or "<span class=muted>—</span>"}</td><td class="imp">{imp}</td></tr>')
     return "".join(out)
@@ -337,7 +342,7 @@ def build():
     n_pure = sum("ASSUME" not in p["tags"] for p in PARAMS)
     cards = "".join(f'<button type="button" class="card t-{k}" data-f="{k}" aria-pressed="false"><b>{cnt.get(k, 0)}</b><span>{e(v[0])}</span><em>{e(v[1])}</em></button>'
                     for k, v in TAGS.items())
-    steps = "".join(f'<li><b>{sid} · {e(t)}</b> <span class="code">build_v2.py:{e(c)}</span>' + "".join(f"<p>{e(x)}</p>" for x in paras) + "</li>"
+    steps = "".join(f'<li><b>{sid} · {e(t)}</b> <span class="code">{e(cref(c))}</span>' + "".join(f"<p>{e(x)}</p>" for x in paras) + "</li>"
                     for sid, t, c, paras in STEPS)
     used = defaultdict(list)
     for p in PARAMS:

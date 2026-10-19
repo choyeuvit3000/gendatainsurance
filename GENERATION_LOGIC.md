@@ -6,7 +6,7 @@ Tài liệu này giải thích cách `build_v2.py` quyết định các tham s�
 - mỗi hợp đồng bao nhiêu tiền;
 - rơi vào tháng nào, qua kênh nào.
 
-Mọi tham số đều **neo vào số liệu công khai**. Chỗ nào không có số công khai thì ghi rõ **[ƯỚC TÍNH]** kèm lý do. Kết quả ở các bảng là số **đo thật** trên dữ liệu đã sinh (năm 2025, chỉ giao dịch đã duyệt, phần của công ty).
+Mọi tham số đều **neo vào số liệu công khai**. Chỗ nào không có số công khai thì ghi rõ **[ƯỚC TÍNH]** kèm lý do. Kết quả ở các bảng là số **đo thật** trên dữ liệu đã sinh (năm 2025, chỉ giao dịch đã duyệt, phần của công ty). Mục 9 nói về bộ khối lượng lớn `gen_volume.py` (tháng 8–9/2026, có bảo hiểm vi mô); số ở đó đo trên DB (`docs/db_snapshot.json`).
 
 > **Bản học đầy đủ:** [docs/Logic_Sinh_Du_Lieu.html](docs/Logic_Sinh_Du_Lieu.html) — sổ 74 tham số. Mỗi tham số có nhãn căn cứ (luật / số công bố / thông tin công khai / chuẩn ngành / dataset mẫu public / đề bài / suy ra / **giả định**), nguồn, vị trí code, và mức ảnh hưởng nếu giả định sai. Số liệu trong bản học được đo trực tiếp từ bộ sinh mỗi lần build. Sinh lại bằng lệnh `python scripts/build_learning.py`.
 
@@ -159,10 +159,15 @@ Kết quả so với mục tiêu: 2025 đạt 10.237 / 10.378 tỷ (lệch 1,4%)
 | Đấu thầu | 1,9% | Cơ quan nhà nước, dự án |
 | Chưa khai báo | 0,9% | Dữ liệu bẩn có chủ đích |
 
-**Đơn vị:**
-- 18 công ty thành viên. Trọng số khai thác lớn nhất ở Hà Nội và TP.HCM, nhỏ dần ở các tỉnh.
-- **Khối Trụ sở** cấp 60% số rủi ro tài sản / cháy nổ có STBH ≥ 500 tỷ và 40% đơn sức khỏe nhóm trên 800 người.
-- **Trung tâm Kinh doanh số** cấp 70% đơn kênh điện tử.
+**Đơn vị** (danh mục `ref.company`, cập nhật 19/10/2026; nguồn ở mục 9):
+- Doanh nghiệp là **Tổng Công ty Bảo hiểm PVI** (PVI Insurance, công ty con 100% của CTCP PVI — BCTN 2024, trang PDF 12), không còn doanh nghiệp giả lập "DEMO".
+- Đơn vị: **Trụ sở chính – các Ban kinh doanh** (`HO`), **Bảo hiểm PVI Digital** (`DGT`, TP.HCM) và 46 đơn vị thật theo trang mạng lưới (DGT + 46 = 47 đơn vị trên trang) pvi.com.vn (Đông Đô, Thăng Long, Hà Nội, …, Phía Nam). Tỉnh của đơn vị = địa chỉ trụ sở trên trang mạng lưới; tỉnh không có đơn vị được gán đơn vị gần nhất [QUY ƯỚC].
+- Trọng số khai thác **[ƯỚC TÍNH]**: PVI không công bố doanh thu từng đơn vị. Trọng số theo quy mô kinh tế địa bàn (1–4), ×1,5 cho 5 đơn vị được PVI vinh danh hoặc tự công bố dẫn đầu: Phía Nam (xuất sắc nhất 2024), Thủ Đô (6 tháng 2025), Duyên Hải (xuất sắc nhất 2025), Thăng Long (hoàn thành sớm kế hoạch 2025), Sài Gòn (doanh thu đứng đầu hệ thống bán lẻ). Lớn nhất: Duyên Hải 6; Thăng Long, Thủ Đô, Sài Gòn, Phía Nam 4,5; Đông Nam Bộ 4. Gộp theo tỉnh, Hà Nội và TP.HCM vẫn lớn nhất vì có nhiều đơn vị.
+- **Trụ sở chính** cấp 60% số rủi ro tài sản / cháy nổ có STBH ≥ 500 tỷ và 40% đơn sức khỏe nhóm trên 800 người.
+- **Bảo hiểm PVI Digital** cấp 70% đơn kênh điện tử.
+- Hanoi Re (tên cũ PVI Re, nhận tái bảo hiểm) và PVIAM (quản lý quỹ) là công ty con khác của PVI Holdings, không cấp hợp đồng bảo hiểm gốc nên **không** có trong `ref.company`.
+
+**Đối tác:** đối tác cũ vẫn ẩn danh (Ngân hàng A, OTA A…). Ba đối tác số thật mới, có công bố hợp tác với PVI: Green SM, ATADI, Fuse (mục 9); giao dịch qua họ là giả lập.
 
 **Khách hàng:**
 - Theo nhóm: xe 80–85% cá nhân; sức khỏe nhóm là doanh nghiệp (25% FDI); cháy nổ 68% doanh nghiệp trong nước; nhà tư nhân là hộ gia đình.
@@ -173,7 +178,7 @@ Kết quả so với mục tiêu: 2025 đạt 10.237 / 10.378 tỷ (lệch 1,4%)
 | Quy tắc | Tham số | Căn cứ |
 |---|---|---|
 | Đồng bảo hiểm | Tài sản / cháy nổ STBH ≥ 300 tỷ: 55% có đồng BH. Sức khỏe nhóm > 1.000 người: 30%. Đứng đầu (40%): công ty giữ 40–70%. Tham gia: 10–40% | Liên danh thực tế: [Vietnam Airlines 3 DN](https://fireant.vn/bai-viet/nha-thau-trung-goi-bao-hiem-hon-500-ty-co-nang-luc-the-nao/29752615), [Long Thành 6 DN](https://baodauthau.vn/lien-danh-6-thanh-vien-trung-goi-thau-bao-hiem-cang-hkqt-long-thanh-post136014.html) |
-| Phân bổ doanh thu | Trụ sở: 60% hợp tác với công ty quản lý khách (Trụ sở giữ 50–70%). Kinh doanh số: 50% chuyển giao về công ty địa bàn. Công ty thành viên: 10% hợp tác (50–80%), 1% chuyển giao | Thông lệ quản trị |
+| Phân bổ doanh thu | Trụ sở chính: 60% hợp tác với đơn vị quản lý khách (Trụ sở giữ 50–70%). PVI Digital: 50% chuyển giao về đơn vị địa bàn. Đơn vị thành viên: 10% hợp tác (50–80%), 1% chuyển giao. GCN vi mô (bộ khối lượng lớn, mục 9): 100% cho đơn vị cấp | Thông lệ quản trị |
 | SĐBS | 7% hợp đồng (trừ du lịch): tăng phí 30%, giảm phí 15%, hoàn phí 15%, hủy 25% (hoàn 90% phí thời gian còn lại), không đổi phí 15% | NĐ 46/2023 Điều 49 |
 | Tái tục | 55% hợp đồng năm 2024 (sản phẩm năm, không phải đơn lô) được tái tục năm 2025, phí điều chỉnh 0,95–1,12 lần | [ƯỚC TÍNH] |
 | Trạng thái | 98,5% APPROVED, 1% PENDING, 0,5% VOID | [ƯỚC TÍNH] |
@@ -181,7 +186,74 @@ Kết quả so với mục tiêu: 2025 đạt 10.237 / 10.378 tỷ (lệch 1,4%)
 | Hoa hồng | 50–100% trần theo nghiệp vụ, chỉ cho kênh trung gian | TT 67/2023 Điều 51 |
 | VAT | 0% bảo hiểm con người; 10% xe, tài sản, cháy nổ | Luật GTGT 48/2024 |
 
-## 9. Quy ước chuẩn
+## 9. Bộ khối lượng lớn: bảo hiểm vi mô, quy mô và phân phối doanh thu
+
+Bộ khối lượng lớn (`gen_volume.py`, tháng 8–9/2026, nạp vào `bronze.ins_*`) dùng cùng mục tiêu nhóm ở bước 1 × tỷ trọng tháng của Bộ Tài chính, và cùng tỷ trọng sản phẩm trong nhóm (`build_v2.PRODUCT_MIX`, một nguồn duy nhất). Từ 19/10/2026 **không nhân hệ số quy mô**: doanh thu đúng quy mô PVI, còn yêu cầu > 50.000 giao dịch/ngày được đáp ứng bằng **bảo hiểm vi mô** theo chuyến / theo đơn. Tham số đầy đủ: [calibration/README.md](calibration/README.md).
+
+### Sản phẩm vi mô
+
+| Mã | Sản phẩm | Nhóm | Phí / GCN | Số GCN/ngày | Đơn vị cấp · đối tác |
+|---|---|---|---|---:|---|
+| `MV_XSM_CARE` | Tai nạn hành khách theo chuyến (Green SM Care) | Sinh mạng – tai nạn | 1.000 đ Bike / 2.000 đ Taxi **[NGUỒN]** greensm.com | 40.000 **[ƯỚC TÍNH]**: Green SM > 1 triệu chuyến/ngày × 20% chuyến mua bảo hiểm × 20% về PVI (1 trong 5 nhà bảo hiểm) | PVI Digital · Green SM |
+| `MV_FOOD_CARE` | Bảo hiểm đơn giao đồ ăn (Food Care) | Sinh mạng – tai nạn | 1.000 đ/đơn **[NGUỒN]** greensm.com | 8.000 **[ƯỚC TÍNH]**: số đơn không công bố, giá trị quy ước của POC | PVI Digital · Green SM |
+| `MV_DELAYCARE` | Trễ chuyến bay (DelayCare), từ 20/08/2026 | Du lịch | 35.000 đ/người **[ƯỚC TÍNH]**: ≈ 4% xác suất trễ ≥ 2 giờ × 500.000 đ ÷ tỷ lệ bồi thường 60% (mức chi trả 500.000 đ là [NGUỒN] pvi.com.vn) | 300 **[ƯỚC TÍNH]**: quy ước của POC | PVI Thủ Đô (nguồn ghi đơn vị cung cấp) · ATADI |
+| `MV_TBDT_TMDT` | Thiết bị điện tử mua trên sàn TMĐT | Tài sản | 1,5–3,5% giá máy **[ƯỚC TÍNH]**, neo ví dụ 38.102 đ/12 tháng (help.shopee.vn) | 3.000, ×3 ngày 8/8, 9/9 **[ƯỚC TÍNH]** | PVI Digital · Fuse |
+
+Kênh luôn là giao dịch điện tử qua đối tác; khách là người dùng app (kho riêng 1,5 triệu người); GCN chuyến xe, đồ ăn hiệu lực trong ngày. Grab **không** dùng làm đối tác: bảo hiểm chuyến đi của Grab do Chubb cung cấp, của Be do OPES; hợp tác Grab × PVI năm 2026 là BHXH/BHYT tự nguyện cho tài xế.
+
+### Quy mô
+
+Doanh thu vi mô nằm **trong** ngân sách nhóm (sinh mạng, du lịch, tài sản). Ở bước hiệu chỉnh (mục 5), dòng vi mô được coi là **cố định** giống đơn bán lẻ; phần đơn doanh nghiệp / nhóm còn lại được co giãn, nên tổng từng nhóm và cơ cấu tài sản + cháy nổ / con người / xe không đổi.
+
+Số đo trên DB (`docs/db_snapshot.json`, 19/10/2026): phí gốc khai thác tháng 8–9 **1.600,6 tỷ** so với ngân sách 10.377,9 × 13.594 / 88.054 ≈ 1.602 tỷ; cơ cấu 51,5 / 31,0 / 17,5% (đã tính). Giao dịch/ngày tháng 8: 57.722–69.201 (bình quân 63.923); tháng 9: 62.635–77.822 (bình quân 70.559).
+
+### Phân phối
+
+Doanh thu = doanh thu ghi nhận tháng 8–9 theo sản phẩm (1.577,9 tỷ); tỷ lệ và phí bình quân là số tự tính.
+
+| Phần | Số hợp đồng / GCN | % số HĐ | Doanh thu (tỷ) | % doanh thu | Phí bình quân |
+|---|---:|---:|---:|---:|---:|
+| `MV_XSM_CARE` | 2.431.497 | 59,6% | 3,36 | 0,21% | 1.383 đ |
+| `MV_FOOD_CARE` | 516.750 | 12,7% | 0,51 | 0,03% | 988 đ |
+| `MV_TBDT_TMDT` | 194.993 | 4,8% | 16,35 | 1,04% | 83.837 đ |
+| `MV_DELAYCARE` | 12.749 | 0,3% | 0,62 | 0,04% | 48.739 đ/GCN (1–4 người × 35.000 đ) |
+| **Vi mô** | **3.155.989** | **77,3%** | **20,84** | **1,32%** | |
+| **Truyền thống** | **926.648** | **22,7%** | **1.557,0** | **98,68%** | ≈ 1,68 triệu đ |
+| **Tổng** | **4.082.637** | 100% | **1.577,9** | 100% | |
+
+Đọc bảng:
+- Dáng "rất nhiều đơn, mỗi đơn rất nhỏ" (mục 1) nay có thêm một tầng cực đoan: 10% hợp đồng lớn nhất chiếm **97,7%** doanh thu, 1% lớn nhất **80,1%** (lần nạp trước trên DB, chưa có vi mô: 93% / 74%; v2 năm 2025 ở mục 3: 74% / 25%).
+- Nhóm sinh mạng có 3.298.699 hợp đồng (chủ yếu GCN vi mô) nhưng chỉ ≈ 74 tỷ phí gốc. Đây là đặc trưng thật của bảo hiểm nhúng: OPES phát hành 109,3 triệu hợp đồng năm 2023.
+- Dashboard nên tách "số giao dịch" và "doanh thu", và lọc riêng sản phẩm `MV_*` khi tính phí bình quân hoặc phân vị phí.
+
+### Nguồn cho bảo hiểm vi mô và đơn vị
+
+Nghiên cứu chéo bằng codex CLI (gpt-6.1-sol) và agy CLI (gemini-3.8-flash-high) với cùng một đề bài, đối chiếu kết quả hai bên; mọi link đã kiểm lại bằng curl ngày 19/10/2026. Mục bị loại: danh sách "7 đơn vị về đích sớm" (agy) không kiểm chứng được. Bản gốc: [sources/market_data.md](sources/market_data.md) mục 9, 10.
+
+| Nội dung dùng | Số liệu | Nhãn | URL (trang) |
+|---|---|---|---|
+| Tổng Công ty Bảo hiểm PVI là công ty con 100% của CTCP PVI (PVI Holdings) | 100% tại 31/12/2024 | [NGUỒN] | BCTN PVI 2024, trang PDF 12: https://cdn.24hmoney.vn/upload/file/2025-1/2025-03-22/no-name-1742584373.pdf |
+| Các công ty con khác của Holdings; doanh thu 2024 | Hanoi Re 81,09%, PVIAM 61,96%; Holdings 21.824 tỷ, PVI Insurance 20.405 tỷ, Hanoi Re 3.017,3 tỷ, PVIAM 57,4 tỷ | [NGUỒN] | BCTN PVI 2024, trang PDF 12, 22, 29, 30, 31 (link trên) |
+| Hanoi Re là tên mới của PVI Re | — | [NGUỒN] | https://www.hanoire.com/vi/pvi-re-chinh-thuc-doi-ten-thanh-hanoi-re |
+| Doanh thu 2025 của Holdings và các công ty con | Holdings 28.923 tỷ; Bảo hiểm PVI 27.258 tỷ (phí gốc 14.908 tỷ); Hanoi Re 3.690 tỷ; PVIAM 76,4 tỷ | [NGUỒN] | BCTN PVI 2025, trang PDF 29, 32, 33, 34: https://www.pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/4f50f1c9-9092-4e0e-b128-1bcfc18922d2.pdf |
+| Danh sách đơn vị, địa chỉ trụ sở → tỉnh | 47 đơn vị: PVI Digital + 45 công ty thành viên + Phía Nam | [NGUỒN] | https://www.pvi.com.vn/vi/network |
+| Bảo hiểm PVI Digital là chi nhánh của Tổng Công ty | — | [NGUỒN] | https://online.pvi.com.vn/lien-he |
+| PVI Sài Gòn tự công bố doanh thu đứng đầu hệ thống bán lẻ | — | [NGUỒN] | https://pvisg.net |
+| Đơn vị được vinh danh (Phía Nam 2024; Thủ Đô 6T/2025; Duyên Hải 2025; Thủ Đô, Thăng Long hoàn thành sớm kế hoạch 2025) | Hệ số ×1,5 suy ra từ đây là **[ƯỚC TÍNH]** | [NGUỒN] | https://www.pvi.com.vn/vi/news/bao-hiem-pvi-mot-nam-vuot-song-chinh-phuc-nhung-cot-moc-moi-681b4f9737783 ; https://www.pvi.com.vn/en/news/bao-hiem-pvi-doi-moi-sang-tao-va-thanh-cong ; https://vnexpress.net/nhung-yeu-to-giup-doanh-thu-bao-hiem-pvi-vuot-1-ty-usd-5011267.html ; https://www.pvi.com.vn/vi/news/pvi-thu-do-va-pvi-thang-long-hai-don-vi-tiep-theo-duoc-vinh-danh-hoan-thanh-som-ke-hoach-kinh-doanh-nam-2025 |
+| Green SM Care; PVI Digital là 1 trong 5 nhà bảo hiểm (PVI Digital, OPES, BIC, TCGI, MIC) | 1.000 đ/chuyến Bike, 2.000 đ/chuyến Taxi | [NGUỒN] | https://www.greensm.com/vn-vi/bao-hiem-khach-hang ; https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html |
+| Food Care (Green SM × Bảo hiểm PVI) | 1.000 đ/đơn; tai nạn 150 triệu đ/đơn | [NGUỒN] | https://www.greensm.com/vn-vi/bao-hiem-giao-do-an |
+| DelayCare (PVI × ATADI, ra mắt 20/08/2026, đơn vị cung cấp PVI Thủ Đô) | Trễ ≥ 120 phút trả 500.000 đ/người; phí KHÔNG TÌM THẤY | [NGUỒN] | https://www.pvi.com.vn/vi/news/bao-hiem-pvi-ra-mat-delaycare-giai-phap-bao-hiem-tre-chuyen-bay-danh-cho-hanh-khach |
+| Bảo hiểm thiết bị điện tử trên Shopee / Lazada (PVI qua Fuse, PasarPolis) | Ví dụ 38.102 đ/12 tháng (nguồn thứ cấp) | [NGUỒN] | https://help.shopee.vn/portal/4/article/79225 ; https://magiamgia.com/bao-hiem-thiet-bi-dien-tu-lazada/ |
+| Đối tác số của PVI Digital (MoMo, Viettel Money, Shopee, Lazada, FE Credit, Home Credit, Xanh SM, Grab, Trip.com, Thế Giới Di Động, Điện Máy Xanh) | "hàng triệu khách hàng" | [NGUỒN] | https://www.pvi.com.vn/vi/news/pvi-digital-doi-tac-bao-hiem-so-cua-cac-nen-tang-va-he-sinh-thai-so-hang-dau-viet-nam |
+| Quy mô Green SM | > 1 triệu chuyến/ngày (2025, nguồn thứ cấp) | [NGUỒN] | https://fhsc.com.vn/co-ca-tram-nghin-xe-chay-tren-duong-day-la-so-cuoc-ma-xanh-sm-nhan-moi-ngay-tai-viet-nam |
+| Sản lượng vi mô OPES | 109,3 triệu hợp đồng năm 2023; cao điểm > 500.000 đơn/ngày | [NGUỒN] | https://opes.com.vn/posts/business/opes-va-hanh-trinh-chuyen-minh-nho-so-hoa-1716806154 |
+| TMĐT của Bảo hiểm PVI | Gần 800 tỷ năm 2024 (30 kết nối API); 2025 gần gấp đôi | [NGUỒN] | BCTN 2024 trang PDF 29 (link trên); https://pviholdings.com.vn/vi/news-details?id=6013 |
+| Bảo hiểm chuyến đi của Grab do Chubb, của Be do OPES | — | [NGUỒN] | https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html |
+| Grab × PVI 2026 là BHXH/BHYT tự nguyện cho tài xế | — | [NGUỒN] | https://www.grab.com/vn/blog/driver/bhxh-bhyt-pvi/ |
+
+**[ƯỚC TÍNH]** (không có số công bố): số GCN vi mô/ngày, tỷ lệ mua 20% × 20% về PVI, phí DelayCare, phí thiết bị điện tử, trọng số khai thác từng đơn vị. Các số GCN/ngày là quy ước để đạt khối lượng giao dịch của POC, đã kiểm tra độ hợp lý với quy mô Green SM và OPES.
+
+## 10. Quy ước chuẩn
 
 - Các số **[ƯỚC TÍNH]** ở trên là **giá trị chuẩn** dự án đã chọn, với căn cứ ghi bên cạnh. Quan trọng nhất là cách chia trong nhóm Con người (75 / 15 / 5 / 5) và phần tài sản thuần (50%) trong "Tài sản & thiệt hại".
 - Số hợp đồng của từng nhóm được chuẩn hóa theo nguyên tắc tần suất × độ lớn ở bước 2–3, vì PVI không công bố số hợp đồng. Tổng doanh thu khớp số công khai.

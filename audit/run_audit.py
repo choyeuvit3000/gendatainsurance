@@ -1,6 +1,6 @@
 """Chạy consistency_checks.sql và in bảng vi phạm.
 
-    PG_URI=postgresql://report:<pw>@127.0.0.1:15432/reportapi  python audit/run_audit.py
+    PG_URI=postgresql://report:<mật khẩu>@192.168.18.101:5432/reportapi  python audit/run_audit.py
 """
 import os
 import re

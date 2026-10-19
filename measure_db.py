@@ -1,8 +1,8 @@
 """Đo số liệu thật trên bronze.ins_* (reportapi) → docs/db_snapshot.json.
 Dùng cho tài liệu học, hỏi đáp và deck (scripts/build_learning.py, scripts/build_deck.js) — mọi con số về "dữ liệu trên DB" lấy từ file này.
 
-Chạy (khi tunnel mở, xem README):
-    PG_URI=postgresql://report:<mật khẩu>@127.0.0.1:15432/reportapi python measure_db.py
+Chạy (kết nối trực tiếp, xem README):
+    PG_URI=postgresql://report:<mật khẩu>@192.168.18.101:5432/reportapi python measure_db.py
 """
 import datetime as dt
 import json
@@ -64,6 +64,19 @@ Q = {
     "spill_after": f"""SELECT sum(c.premium_vnd * cs.share_pct / 100) / 1e9 FROM {S}transaction_coverage c
                       JOIN {S}policy_transaction t ON t.txn_id = c.txn_id AND t.status = 'APPROVED' {OWN}
                       WHERE t.accounting_date > '2026-09-30'""",
+    # sản phẩm chính: số hợp đồng + doanh thu (bao gồm bảo hiểm vi mô MV_*)
+    "product": f"""WITH m AS (SELECT DISTINCT ON (t.policy_id) t.policy_id, c.product_code
+                              FROM {S}policy_transaction t JOIN {S}transaction_coverage c ON c.txn_id = t.txn_id
+                              WHERE t.txn_type_code IN ('NEW', 'RENEW') ORDER BY t.policy_id, c.coverage_id),
+                      r AS (SELECT c.product_code, sum(c.premium_vnd * cs.share_pct / 100) / 1e9 rev
+                            FROM {S}transaction_coverage c JOIN {S}policy_transaction t ON t.txn_id = c.txn_id AND t.status = 'APPROVED'
+                            {OWN} WHERE t.accounting_date BETWEEN '2026-08-01' AND '2026-09-30' GROUP BY 1)
+                  SELECT m.product_code, count(*), max(r.rev) FROM m LEFT JOIN r USING (product_code) GROUP BY 1 ORDER BY 2 DESC""",
+    # doanh thu theo đơn vị được phân bổ
+    "company": f"""SELECT a.company_code, co.company_name, sum(c.premium_vnd * cs.share_pct / 100 * a.allocation_pct / 100) / 1e9
+                  FROM {S}transaction_coverage c JOIN {S}policy_transaction t ON t.txn_id = c.txn_id AND t.status = 'APPROVED'
+                  {OWN} JOIN {S}revenue_allocation a ON a.policy_id = t.policy_id JOIN {S}company co ON co.company_code = a.company_code
+                  WHERE t.accounting_date BETWEEN '2026-08-01' AND '2026-09-30' GROUP BY 1, 2 ORDER BY 3 DESC""",
     "deductions": f"""SELECT sum(c.premium_vnd * cs.share_pct / 100) / 1e9 FROM {S}transaction_coverage c
                      JOIN {S}policy_transaction t ON t.txn_id = c.txn_id AND t.status = 'APPROVED'
                      AND t.txn_type_code NOT IN ('NEW', 'RENEW') {OWN}

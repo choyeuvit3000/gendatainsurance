@@ -33,6 +33,9 @@ WHERE NOT (
    OR (pa.partner_type IN ('VI_DIEN_TU','SAN_TMDT') AND m.product_code IN ('XE_TNDS_MOTO','XE_TNDS_OTO','XE_VCX_MOTO','XE_VCX_OTO','NG_DL_ND','NG_DL_QT','NG_TN24','NG_SK_CN','NG_SK_BHN','NG_HSSV_TN','NG_HSSV_SK','NG_SM_CN','TS_NHA'))
    OR (pa.partner_type = 'VIEN_THONG'      AND m.product_code IN ('NG_TN24','XE_TNDS_MOTO','NG_SM_CN'))
    OR (pa.partner_type = 'CTY_MOI_GIOI'    AND m.product_code IN ('NG_SK_NHOM','NG_SK_CN','TS_MRR','TS_MRRCN','CHN_BB','CHN_TN','XE_VCX_OTO'))
+   OR (pa.partner_type = 'NEN_TANG_DI_CHUYEN' AND m.product_code IN ('MV_XSM_CARE','MV_FOOD_CARE'))
+   OR (pa.partner_type = 'OTA_VE_MAY_BAY'  AND m.product_code IN ('MV_DELAYCARE'))
+   OR (pa.partner_type = 'INSURTECH'       AND m.product_code IN ('MV_TBDT_TMDT'))
 )
 GROUP BY pa.partner_type, m.product_code;
 
@@ -74,7 +77,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_constraint c
                   WHERE c.contype = 'f' AND c.convalidated
                     AND replace(c.conrelid::regclass::text, 'bronze.', '') || substring(pg_get_constraintdef(c.oid) FROM '\(\w+\)') = need);
 
--- P04 Trung tâm Kinh doanh số chỉ cấp đơn kênh điện tử
+-- P04 Bảo hiểm PVI Digital chỉ cấp đơn kênh điện tử
 SELECT 'P04', 'DGT cấp đơn kênh ' || coalesce(channel_code, 'NULL'), count(*), min(policy_no)
 FROM bronze.ins_policy WHERE issuing_company_code = 'DGT' AND channel_code IS DISTINCT FROM 'DIEN_TU'
 GROUP BY channel_code;
@@ -91,18 +94,22 @@ WHERE split_part(p.policy_no, '-', 3) <> CASE m.product_code
       WHEN 'NG_HSSV_TN' THEN 'HTN' WHEN 'NG_HSSV_SK' THEN 'HSK' WHEN 'NG_DL_ND' THEN 'DLN' WHEN 'NG_DL_QT' THEN 'DLQ'
       WHEN 'NG_SM_CN' THEN 'SMC' WHEN 'NG_NVV' THEN 'NVV' WHEN 'NG_TN24' THEN 'T24' WHEN 'NG_SK_CN' THEN 'SKC'
       WHEN 'NG_SK_NHOM' THEN 'SKN' WHEN 'NG_SK_BHN' THEN 'BHN' WHEN 'TS_NHA' THEN 'TSN' WHEN 'TS_MRR' THEN 'MRR'
-      WHEN 'TS_MRRCN' THEN 'MRC' WHEN 'CHN_BB' THEN 'CBB' WHEN 'CHN_TN' THEN 'CTN' END
+      WHEN 'TS_MRRCN' THEN 'MRC' WHEN 'CHN_BB' THEN 'CBB' WHEN 'CHN_TN' THEN 'CTN'
+      WHEN 'MV_XSM_CARE' THEN 'XSC' WHEN 'MV_FOOD_CARE' THEN 'FDC' WHEN 'MV_DELAYCARE' THEN 'DLY' WHEN 'MV_TBDT_TMDT' THEN 'TBD' END
 GROUP BY split_part(p.policy_no, '-', 3), m.product_code;
 
 -- P07 ngày: hiệu lực ≥ ngày cấp, hết hạn ≥ hiệu lực
 SELECT 'P07', 'Ngày hiệu lực/hết hạn sai thứ tự', count(*), min(policy_no)
 FROM bronze.ins_policy WHERE effective_date < issue_date OR expiry_date < effective_date;
 
--- P08 thời hạn theo sản phẩm (du lịch ≤ 365 ngày theo dataset Travel Insurance; còn lại 1 năm, trừ học sinh/năm học, người vay vốn nhiều năm)
+-- P08 thời hạn theo sản phẩm (du lịch ≤ 365 ngày theo dataset Travel Insurance; vi mô theo chuyến / đơn / chuyến bay = 1 ngày;
+--     còn lại 1 năm, trừ học sinh/năm học, người vay vốn nhiều năm)
 SELECT 'P08', 'Thời hạn không hợp lý cho ' || m.product_code || ' (' || min(p.expiry_date - p.effective_date + 1) || '–' || max(p.expiry_date - p.effective_date + 1) || ' ngày)', count(*), min(p.policy_no)
 FROM bronze.ins_policy p JOIN _main m USING (policy_id)
 WHERE (m.product_code IN ('NG_DL_ND','NG_DL_QT') AND p.expiry_date - p.effective_date + 1 > 365)
-   OR (m.product_code NOT IN ('NG_DL_ND','NG_DL_QT','NG_NVV','NG_HSSV_TN','NG_HSSV_SK') AND p.expiry_date - p.effective_date + 1 <> 365)
+   OR (m.product_code IN ('MV_XSM_CARE','MV_FOOD_CARE','MV_DELAYCARE') AND p.expiry_date <> p.effective_date)
+   OR (m.product_code NOT IN ('NG_DL_ND','NG_DL_QT','NG_NVV','NG_HSSV_TN','NG_HSSV_SK','MV_XSM_CARE','MV_FOOD_CARE','MV_DELAYCARE')
+       AND p.expiry_date - p.effective_date + 1 <> 365)
 GROUP BY m.product_code;
 
 -- P09 tiền tệ: USD chỉ cho du lịch quốc tế, mọi rủi ro tài sản / công nghiệp
@@ -172,9 +179,8 @@ JOIN bronze.ins_company co ON co.company_code = cu.home_company_code
 WHERE NOT cu.is_aggregated_retail AND co.company_type = 'MEMBER'
   AND co.province_code <> cu.province_code
   AND NOT (cu.province_code, cu.home_company_code) IN (
-      ('HYN','HN2'),('NBH','HN3'),('PTO','HN3'),('TNN','BNH'),('TQG','BNH'),('LCI','HN3'),('LSN','BNH'),('CBG','BNH'),
-      ('DBN','HN3'),('LCU','HN3'),('SLA','HN3'),('HTH','NAN'),('QTR','HUE'),('QNG','DNG'),('GLI','DLK'),('LDG','KHA'),
-      ('TNH','HC3'),('VLG','CTO'),('DTP','AGG'),('CMU','CTO'))
+      -- tỉnh không có đơn vị PVI đặt trụ sở → đơn vị gần nhất (gen_volume._NO_UNIT)
+      ('TQG','TNU'),('LCI','VPU'),('LSN','TNU'),('CBG','TNU'),('DBN','HNO'),('LCU','VPU'),('SLA','HNO'))
 GROUP BY cu.home_company_code, cu.province_code;
 
 -- C08 tên khách theo phân khúc

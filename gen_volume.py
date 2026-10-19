@@ -62,11 +62,10 @@ TARGET_YEAR_2025 = {"SUC_KHOE": 2410.05, "SINH_MANG": 482.01, "DU_LICH": 160.67,
 #   cả năm 88.054 tỷ (bản tin 01/2026). Giả định PVI có mùa vụ tháng giống toàn thị trường [ƯỚC TÍNH].
 MOF_YEAR_2025 = 88_054
 MONTH_SHARE = {8: CAL["mof_nonlife_2025"]["aug_2025"] / MOF_YEAR_2025, 9: CAL["mof_nonlife_2025"]["sep_2025"] / MOF_YEAR_2025}
-# [QUY ƯỚC] yêu cầu dự án: > 50.000 giao dịch/ngày. Ở đúng quy mô PVI với giá niêm yết chỉ được ~13–25 nghìn/ngày,
-#   nên nhân ĐỀU ngân sách mọi nhóm với cùng hệ số k (volume_scale) → cơ cấu doanh thu giữ nguyên như PVI,
-#   đơn giá giữ nguyên biểu phí / giá niêm yết, chỉ số hợp đồng và doanh thu tuyệt đối tăng k lần.
-MIN_DAILY = 52_000           # sàn cấp mới/tái tục ở ngày thấp nhất (SĐBS cộng thêm)
-_SCALE = []
+# [QUY ƯỚC] yêu cầu dự án: > 50.000 giao dịch/ngày. Doanh thu giữ ĐÚNG quy mô PVI (không nhân hệ số);
+#   khối lượng giao dịch đến từ bảo hiểm vi mô theo chuyến / theo đơn (MICRO) — mỗi giao dịch chỉ 1.000–2.000 đ nên
+#   gần như không làm đổi doanh thu. Kiểm tra sau khi sinh: ngày thấp nhất phải > MIN_DAILY.
+MIN_DAILY = 50_000
 
 
 def month_budget_pvi(group, month):
@@ -74,25 +73,7 @@ def month_budget_pvi(group, month):
     return TARGET_YEAR_2025[group] * 1e9 * MONTH_SHARE[month]
 
 
-def volume_scale():
-    """Hệ số quy mô k: ngày có số hợp đồng kỳ vọng thấp nhất trong cả kỳ đạt MIN_DAILY × 1,03."""
-    if not _SCALE:
-        days = [START + dt.timedelta(i) for i in range((END - START).days + 1)]
-        exp = np.zeros(len(days))
-        for code, _, prof, _ in PRODUCTS:
-            for m in sorted({d.month for d in days}):
-                w_month = sum(day_profile_mult(prof, d) for d in month_days(m))
-                n_month = month_budget_pvi(PGROUP[code], m) * REV_SHARE[code] / mean_premium(code)
-                for i, d in enumerate(days):
-                    if d.month == m:
-                        exp[i] += n_month * day_profile_mult(prof, d) / w_month
-        _SCALE.append(MIN_DAILY * 1.03 / exp.min())
-    return _SCALE[0]
-
-
-def month_budget(group, month):
-    """Ngân sách doanh thu phí gốc (VND) của nhóm sản phẩm trong tháng = quy mô PVI × hệ số k."""
-    return month_budget_pvi(group, month) * volume_scale()
+month_budget = month_budget_pvi
 
 
 # Nhóm sản phẩm của từng sản phẩm (= ref.product.product_group_code của v2)
@@ -100,12 +81,32 @@ PGROUP = {"XE_TNDS_MOTO": "TNDS_BB", "XE_TNDS_OTO": "TNDS_BB", "XE_VCX_OTO": "VC
           "NG_HSSV_TN": "HOC_SINH", "NG_HSSV_SK": "HOC_SINH", "NG_DL_ND": "DU_LICH", "NG_DL_QT": "DU_LICH",
           "NG_SM_CN": "SINH_MANG", "NG_NVV": "SINH_MANG", "NG_TN24": "SINH_MANG", "NG_SK_CN": "SUC_KHOE",
           "NG_SK_NHOM": "SUC_KHOE", "NG_SK_BHN": "SUC_KHOE", "TS_NHA": "TAI_SAN", "TS_MRR": "TAI_SAN",
-          "TS_MRRCN": "TAI_SAN", "CHN_BB": "CHAY_NO", "CHN_TN": "CHAY_NO"}
-# [ƯỚC TÍNH] tỷ trọng DOANH THU của sản phẩm trong nhóm (PVI không công bố). Số hợp đồng = ngân sách × tỷ trọng ÷ phí bình quân
-REV_SHARE = {"XE_TNDS_MOTO": .65, "XE_TNDS_OTO": .35, "XE_VCX_OTO": .80, "XE_VCX_MOTO": .20,
-             "NG_HSSV_TN": .60, "NG_HSSV_SK": .40, "NG_DL_ND": .55, "NG_DL_QT": .45,
-             "NG_SM_CN": .25, "NG_NVV": .35, "NG_TN24": .40, "NG_SK_CN": .30, "NG_SK_NHOM": .60, "NG_SK_BHN": .10,
-             "TS_NHA": .20, "TS_MRR": .50, "TS_MRRCN": .30, "CHN_BB": .70, "CHN_TN": .30}
+          "TS_MRRCN": "TAI_SAN", "CHN_BB": "CHAY_NO", "CHN_TN": "CHAY_NO",
+          "MV_XSM_CARE": "SINH_MANG", "MV_FOOD_CARE": "SINH_MANG", "MV_DELAYCARE": "DU_LICH", "MV_TBDT_TMDT": "TAI_SAN"}
+# [ƯỚC TÍNH] tỷ trọng DOANH THU của sản phẩm trong nhóm (PVI không công bố) — lấy ĐÚNG bảng PRODUCT_MIX của v2
+#   (một nguồn duy nhất, không chỉnh riêng cho bản khối lượng). Số hợp đồng = ngân sách × tỷ trọng ÷ phí bình quân
+sys.path.insert(0, str(HERE))
+from build_v2 import PRODUCT_MIX as _V2_MIX  # noqa: E402
+REV_SHARE = {p: float(s) for lst in _V2_MIX.values() for p, s in lst}
+
+# Bảo hiểm vi mô / nhúng: số giấy chứng nhận theo NGÀY (không suy từ ngân sách — phí quá nhỏ). Doanh thu của chúng nằm
+#   trong ngân sách nhóm và được trừ ra ở bước hiệu chỉnh (dòng cố định), nên tổng doanh thu nhóm vẫn đúng quy mô PVI.
+#   Căn cứ (sources/market_data.md mục "Bảo hiểm vi mô"):
+#   - MV_XSM_CARE: Green SM Care 1.000 đ/chuyến Bike, 2.000 đ/chuyến Taxi; PVI Digital là 1/5 nhà bảo hiểm của chương trình
+#     (greensm.com). Green SM > 1 triệu chuyến/ngày (2025, fhsc.com.vn). [ƯỚC TÍNH] 20% chuyến mua bảo hiểm × 20% về PVI
+#     = 40.000 GCN/ngày; tỷ lệ Bike/Taxi 60/40.
+#   - MV_FOOD_CARE: Food Care Green SM × PVI 1.000 đ/đơn (greensm.com). Số đơn giao đồ ăn không công bố →
+#     [ƯỚC TÍNH] 8.000 đơn/ngày mua bảo hiểm.
+#   - MV_DELAYCARE: DelayCare PVI × ATADI, ra mắt 20/08/2026, đơn vị cung cấp PVI Thủ Đô, trả 500.000 đ/người khi trễ ≥ 120 phút
+#     (pvi.com.vn). Phí không công bố → [ƯỚC TÍNH] 35.000 đ/người (≈ 4% xác suất trễ ≥ 2 giờ × 500.000 ÷ tỷ lệ bồi thường 60%);
+#     300 GCN/ngày.
+#   - MV_TBDT_TMDT: bảo hiểm thiết bị điện tử của PVI qua Fuse trên Shopee/Lazada (help.shopee.vn; ví dụ 38.102 đ/12 tháng).
+#     [ƯỚC TÍNH] 3.000 GCN/ngày, phí 1,5–3,5% giá thiết bị; ngày hội mua sắm 8/8, 9/9 gấp 3.
+MICRO = {"MV_XSM_CARE": 40_000, "MV_FOOD_CARE": 8_000, "MV_DELAYCARE": 300, "MV_TBDT_TMDT": 3_000}
+MICRO_START = {"MV_DELAYCARE": dt.date(2026, 8, 20)}
+MICRO_ISSUER = {"MV_XSM_CARE": "DGT", "MV_FOOD_CARE": "DGT", "MV_DELAYCARE": "TDO", "MV_TBDT_TMDT": "DGT"}
+MICRO_PARTNER = {"MV_XSM_CARE": "GREEN_SM", "MV_FOOD_CARE": "GREEN_SM", "MV_DELAYCARE": "ATADI", "MV_TBDT_TMDT": "FUSE"}
+MICRO_POOL = 1_500_000      # [ƯỚC TÍNH] số người dùng app khác nhau mua bảo hiểm vi mô trong kỳ (khách lặp lại nhiều lần)
 # Sản phẩm doanh nghiệp: được co giãn STBH / số người ở bước hiệu chỉnh (đơn bán lẻ giữ nguyên giá niêm yết)
 SCALABLE_PRODUCTS = {"NG_SK_NHOM", "TS_MRR", "TS_MRRCN", "CHN_BB", "CHN_TN"}
 # Sản phẩm đơn giá cố định theo xe / người: co giãn số lượng, không đổi đơn giá
@@ -140,6 +141,10 @@ PRODUCTS = [
     ("TS_MRRCN",     "MRC", "corp",      0.0004),
     ("CHN_BB",       "CBB", "corp",      0.0040),
     ("CHN_TN",       "CTN", "corp",      0.0020),
+    ("MV_XSM_CARE",  "XSC", "ride",      0),
+    ("MV_FOOD_CARE", "FDC", "food",      0),
+    ("MV_DELAYCARE", "DLY", "digital",   0),
+    ("MV_TBDT_TMDT", "TBD", "ecom",      0),
 ]
 PCODE = [p[0] for p in PRODUCTS]
 PIDX = {p: i for i, p in enumerate(PCODE)}
@@ -180,6 +185,7 @@ CHANNEL_MIX = {
     "TS_MRRCN":     {"TRUC_TIEP": .45, "MOI_GIOI": .50, "DAU_THAU": .05},
     "CHN_BB":       {"TRUC_TIEP": .45, "DAI_LY_CN": .30, "MOI_GIOI": .15, "BANCA": .05, "DAU_THAU": .05},
     "CHN_TN":       {"TRUC_TIEP": .45, "MOI_GIOI": .30, "DAI_LY_CN": .15, "BANCA": .10},
+    **{c: {"DIEN_TU": 1.0} for c in ("MV_XSM_CARE", "MV_FOOD_CARE", "MV_DELAYCARE", "MV_TBDT_TMDT")},
 }
 # Đối tác theo (sản phẩm, kênh). Trọng số lệch (đối tác lớn chiếm phần lớn).
 PARTNERS_BY = {
@@ -249,6 +255,7 @@ SEGMENT_MIX = {
     "TS_MRRCN":     {"DN_TRONG_NUOC": .55, "DN_FDI": .45},
     "CHN_BB":       {"DN_TRONG_NUOC": .68, "DN_FDI": .17, "CO_QUAN_NN": .08, "CO_SO_GD": .03, "HO_GIA_DINH": .04},
     "CHN_TN":       {"DN_TRONG_NUOC": .70, "DN_FDI": .20, "CO_QUAN_NN": .05, "HO_GIA_DINH": .05},
+    **{c: {"CA_NHAN": 1.0} for c in ("MV_XSM_CARE", "MV_FOOD_CARE", "MV_DELAYCARE", "MV_TBDT_TMDT")},
 }
 # Quy mô "kho" khách hàng tiềm năng theo phân khúc (khách thực tế = khách có hợp đồng)
 POOL = {"CA_NHAN": 2_600_000, "HO_GIA_DINH": 120_000, "DN_TRONG_NUOC": 40_000, "DN_FDI": 6_000,
@@ -259,13 +266,16 @@ SEG_PREFIX = {"CA_NHAN": 1, "HO_GIA_DINH": 2, "DN_TRONG_NUOC": 3, "DN_FDI": 4, "
 RENEW_RATE = {"XE_TNDS_MOTO": .08, "XE_TNDS_OTO": .20, "XE_VCX_OTO": .45, "XE_VCX_MOTO": .20, "NG_HSSV_TN": .30,
               "NG_HSSV_SK": .30, "NG_DL_ND": 0, "NG_DL_QT": 0, "NG_SM_CN": .35, "NG_NVV": 0, "NG_TN24": .15,
               "NG_SK_CN": .40, "NG_SK_NHOM": .60, "NG_SK_BHN": .45, "TS_NHA": .40, "TS_MRR": .55, "TS_MRRCN": .60,
-              "CHN_BB": .55, "CHN_TN": .55}
+              "CHN_BB": .55, "CHN_TN": .55, "MV_XSM_CARE": 0, "MV_FOOD_CARE": 0, "MV_DELAYCARE": 0, "MV_TBDT_TMDT": 0}
 
 # Sửa đổi bổ sung trong kỳ: xác suất / hợp đồng và cơ cấu loại [ƯỚC TÍNH]
 END_PROB = {"XE_TNDS_MOTO": .004, "XE_TNDS_OTO": .02, "XE_VCX_OTO": .07, "XE_VCX_MOTO": .02, "NG_HSSV_TN": .01,
             "NG_HSSV_SK": .01, "NG_DL_ND": .05, "NG_DL_QT": .06, "NG_SM_CN": .03, "NG_NVV": .04, "NG_TN24": .01,
             "NG_SK_CN": .04, "NG_SK_NHOM": .35, "NG_SK_BHN": .03, "TS_NHA": .03, "TS_MRR": .15, "TS_MRRCN": .18,
-            "CHN_BB": .12, "CHN_TN": .12}
+            "CHN_BB": .12, "CHN_TN": .12,
+            # vi mô: GCN chuyến xe / đơn đồ ăn chỉ phát hành khi chuyến, đơn hoàn tất và hết hạn trong ngày → không có SĐBS;
+            # DelayCare hủy cùng vé trước ngày bay; thiết bị điện tử hủy khi trả hàng [ƯỚC TÍNH]
+            "MV_XSM_CARE": 0, "MV_FOOD_CARE": 0, "MV_DELAYCARE": .03, "MV_TBDT_TMDT": .02}
 END_MIX = {
     "vehicle": {"END_NOCHG": .35, "END_INC": .20, "END_DEC": .10, "CANCEL": .25, "REFUND": .10},
     "group":   {"END_INC": .55, "END_DEC": .30, "END_NOCHG": .15},
@@ -273,10 +283,12 @@ END_MIX = {
     "loan":    {"REFUND": .70, "END_NOCHG": .30},
     "travel":  {"CANCEL": 1.0},
     "person":  {"END_NOCHG": .40, "END_INC": .20, "END_DEC": .10, "CANCEL": .20, "REFUND": .10},
+    "micro":   {"CANCEL": 1.0},
 }
 END_KIND = {"XE_TNDS_MOTO": "vehicle", "XE_TNDS_OTO": "vehicle", "XE_VCX_OTO": "vehicle", "XE_VCX_MOTO": "vehicle",
             "NG_SK_NHOM": "group", "TS_MRR": "property", "TS_MRRCN": "property", "CHN_BB": "property",
-            "CHN_TN": "property", "TS_NHA": "property", "NG_NVV": "loan", "NG_DL_ND": "travel", "NG_DL_QT": "travel"}
+            "CHN_TN": "property", "TS_NHA": "property", "NG_NVV": "loan", "NG_DL_ND": "travel", "NG_DL_QT": "travel",
+            "MV_XSM_CARE": "micro", "MV_FOOD_CARE": "micro", "MV_DELAYCARE": "travel", "MV_TBDT_TMDT": "micro"}
 
 # Địa bàn: trọng số tỉnh (dân số + kinh tế) và công ty thành viên quản lý địa bàn
 PROVINCE_W = {"HNI": .20, "HCM": .25, "HPG": .05, "QNH": .02, "BNH": .03, "HYN": .02, "NBH": .015, "PTO": .02,
@@ -284,22 +296,24 @@ PROVINCE_W = {"HNI": .20, "HCM": .25, "HPG": .05, "QNH": .02, "BNH": .03, "HYN":
               "THA": .03, "NAN": .03, "HTH": .01, "QTR": .01, "HUE": .01, "DNG": .035, "QNG": .012, "GLI": .012,
               "KHA": .015, "DLK": .015, "LDG": .015, "DNI": .04, "TNH": .02, "CTO": .025, "VLG": .012, "DTP": .012,
               "CMU": .008, "AGG": .015}
-PROVINCE_HOME = {"HNI": {"HN1": .45, "HN2": .30, "HN3": .25}, "HCM": {"HC1": .45, "HC2": .35, "HC3": .20},
-                 "HPG": "HPG", "QNH": "QNH", "BNH": "BNH", "HYN": "HN2", "NBH": "HN3", "PTO": "HN3", "TNN": "BNH",
-                 "TQG": "BNH", "LCI": "HN3", "LSN": "BNH", "CBG": "BNH", "DBN": "HN3", "LCU": "HN3", "SLA": "HN3",
-                 "THA": "THA", "NAN": "NAN", "HTH": "NAN", "QTR": "HUE", "HUE": "HUE", "DNG": "DNG", "QNG": "DNG",
-                 "GLI": "DLK", "KHA": "KHA", "DLK": "DLK", "LDG": "KHA", "DNI": "DNI", "TNH": "HC3", "CTO": "CTO",
-                 "VLG": "CTO", "DTP": "AGG", "CMU": "CTO", "AGG": "AGG"}
-MEMBERS = ["HN1", "HN2", "HN3", "HPG", "QNH", "BNH", "THA", "NAN", "HUE", "DNG", "KHA", "DLK", "HC1", "HC2", "HC3",
-           "DNI", "CTO", "AGG"]
-COMPANY_PROVINCE = {"DEMO": "HNI", "HO": "HNI", "DGT": None, "HN1": "HNI", "HN2": "HNI", "HN3": "HNI", "HPG": "HPG",
-                    "QNH": "QNH", "BNH": "BNH", "THA": "THA", "NAN": "NAN", "HUE": "HUE", "DNG": "DNG", "KHA": "KHA",
-                    "DLK": "DLK", "HC1": "HCM", "HC2": "HCM", "HC3": "HCM", "DNI": "DNI", "CTO": "CTO", "AGG": "AGG"}
-COMPANY_NAME = {"HO": "Khối Trụ sở chính", "DGT": "Trung tâm Kinh doanh số"}
+# Đơn vị PVI (build_v2.COMPANIES, trang mạng lưới pvi.com.vn): đơn vị quản lý địa bàn = các đơn vị có trụ sở tại tỉnh,
+#   chia theo trọng số khai thác [ƯỚC TÍNH]. Tỉnh không có đơn vị → đơn vị gần nhất [QUY ƯỚC].
+from build_v2 import COMPANIES as _V2_COMP, CORP as _V2_CORP  # noqa: E402
+MEMBERS = [c[0] for c in _V2_COMP if c[2] == "MEMBER"]
+MEMBER_W = [float(c[4]) for c in _V2_COMP if c[2] == "MEMBER"]
+COMPANY_PROVINCE = {_V2_CORP[0]: "HNI"} | {c[0]: c[3] for c in _V2_COMP}
+_NO_UNIT = {"TQG": "TNU", "LCI": "VPU", "LSN": "TNU", "CBG": "TNU", "DBN": "HNO", "LCU": "VPU", "SLA": "HNO"}
+PROVINCE_HOME = {}
+for _p in PROVINCE_W:
+    _u = {c[0]: float(c[4]) for c in _V2_COMP if c[2] == "MEMBER" and c[3] == _p}
+    PROVINCE_HOME[_p] = (next(iter(_u)) if len(_u) == 1 else _u) if _u else _NO_UNIT[_p]
 
 # Giờ tạo chứng từ: văn phòng vs kênh số (trọng số theo giờ 0–23)
 HOUR_OFFICE = [0, 0, 0, 0, 0, 0, 0, 1, 4, 9, 10, 9, 5, 6, 9, 10, 8, 5, 2, 1, 1, .5, 0, 0]
 HOUR_DIGITAL = [1, .6, .4, .3, .3, .6, 1.5, 3, 4.5, 5.5, 6, 6, 5.5, 5, 5, 5.5, 6, 6.5, 7.5, 8.5, 9, 8, 5.5, 3]
+# [ƯỚC TÍNH] chuyến xe: cao điểm sáng 7–8h và chiều 17–19h; giao đồ ăn: trưa 10–12h và tối 17–19h
+HOUR_RIDE = [1, .5, .3, .3, .5, 1.5, 4, 8, 8, 5, 4, 4.5, 5, 4, 4, 5, 6.5, 8.5, 8.5, 6, 4.5, 3.5, 2.5, 1.5]
+HOUR_FOOD = [.5, .2, .1, .1, .1, .2, .8, 2, 2.5, 3, 7, 11, 9, 4, 2.5, 2.5, 3.5, 7, 9, 7, 4, 2.5, 1.5, 1]
 
 LAST_NAMES = ["Nguyễn", "Trần", "Lê", "Phạm", "Hoàng", "Huỳnh", "Phan", "Vũ", "Võ", "Đặng", "Bùi", "Đỗ", "Hồ", "Ngô",
               "Dương", "Lý", "Đinh", "Trương", "Mai", "Cao", "Lưu", "Tạ", "Hà", "Đoàn"]
@@ -379,6 +393,12 @@ def day_profile_mult(profile, d: dt.date):
     if profile == "school":
         x = (d - SCHOOL_START).days
         return (.55 + 2.6 * np.exp(-((x + 6) / 11.0) ** 2)) * (.30 if hol else [1, 1, 1, 1, 1, .60, .30][wd])
+    if profile == "ride":                        # [ƯỚC TÍNH] chủ nhật ít chuyến đi làm hơn
+        return 1.10 if hol else [1, 1, 1, 1, 1.05, 1.0, .90][wd]
+    if profile == "food":                        # [ƯỚC TÍNH] cuối tuần, lễ đặt đồ ăn nhiều hơn
+        return 1.20 if hol else [1, 1, 1, 1, 1.05, 1.15, 1.15][wd]
+    if profile == "ecom":                        # ngày hội mua sắm "ngày đôi" 8/8, 9/9 [ƯỚC TÍNH ×3]
+        return 3.0 if (d.month == d.day) else 1.0
     return 1.0                                   # digital, travel: mọi ngày như nhau
 
 
@@ -412,6 +432,11 @@ def build_calendar(rng, start, end):
     budget = {}
     for j, (code, _, prof, _) in enumerate(PRODUCTS):
         g = PGROUP[code]
+        if code in MICRO:
+            for i, d in enumerate(days):
+                if d >= MICRO_START.get(code, START):
+                    mix[i, j] = rng.poisson(MICRO[code] * day_profile_mult(prof, d))
+            continue
         for m in sorted({d.month for d in days}):
             w_month = sum(day_profile_mult(prof, d) for d in month_days(m))
             rev = month_budget(g, m) * REV_SHARE[code]
@@ -536,8 +561,25 @@ def gen_product(rng, code, n, issue):
         else:
             o["rate"] = np.round(rng.uniform(.05, .20, n), 3)
         o["usd"] = rng.random(n) < {"TS_MRR": .20, "TS_MRRCN": .40}.get(code, 0)
+    elif code == "MV_XSM_CARE":            # 1 hành khách / chuyến; Bike 1.000 đ, Taxi 2.000 đ; STBH tử vong tới 500 triệu
+        o["prem"] = np.where(u < .60, 1_000.0, 2_000.0)
+        o["si"] = np.full(n, 500e6)
+        o["term"] = np.ones(n, np.int64)
+    elif code == "MV_FOOD_CARE":           # 1.000 đ / đơn; tai nạn 150 triệu / đơn
+        o["prem"] = np.full(n, 1_000.0)
+        o["si"] = np.full(n, 150e6)
+        o["term"] = np.ones(n, np.int64)
+    elif code == "MV_DELAYCARE":           # mua cùng vé: 1–4 hành khách; 500.000 đ / người / chuyến; bay sau 1–45 ngày
+        o["cnt"] = rng.choice([1, 1, 1, 2, 2, 3, 4], n)
+        o["prem"] = 35_000.0 * o["cnt"]
+        o["si"] = 500_000.0 * o["cnt"]
+        o["eff_delay"] = np.minimum(rng.geometric(1 / 12, n), 45)
+        o["term"] = np.ones(n, np.int64)
+    elif code == "MV_TBDT_TMDT":           # giá thiết bị (trung vị 2,5 triệu) × 1,5–3,5%; hiệu lực 12 tháng
+        o["si"] = np.round(lognorm(rng, 2.5e6, .8, n, 3e5, 40e6), -4)
+        o["rate"] = np.round(rng.uniform(1.5, 3.5, n), 2)
     if "prem" not in o and "prem_usd" not in o:
-        o["prem"] = np.round(o["si"] * o["rate"] / 100, -3)
+        o["prem"] = np.round(o["si"] * o["rate"] / 100, -3 if code != "MV_TBDT_TMDT" else 0)
     return o
 
 
@@ -627,8 +669,11 @@ class Gen:
             partner[m] = wchoice(rng, plist, weights, m.sum())
         m = ch == "MOI_GIOI"
         partner[m] = wchoice(rng, BROKERS, zipf_weights(len(BROKERS), .8), m.sum())
+        for code, pc in MICRO_PARTNER.items():
+            partner[(prod == code) & (ch == "DIEN_TU")] = pc
         # dữ liệu bẩn có chủ đích: ~0,5% nguồn không khai báo kênh (NULL)
-        dirty = rng.random(len(pol)) < .005
+        # (GCN vi mô cấp tự động qua API đối tác luôn có kênh → không thuộc nhóm này)
+        dirty = (rng.random(len(pol)) < .005) & ~np.isin(prod, list(MICRO))
         ch[dirty], partner[dirty] = None, None
         pol["channel_code"], pol["partner_code"] = ch, partner
         # hoa hồng: % trần theo kênh (trực tiếp, đấu thầu, web/app công ty, không rõ kênh = 0)
@@ -665,6 +710,11 @@ class Gen:
             cust_no[m[loyal]] = np.minimum(rng.zipf(1.6, loyal.sum()), k)
         pol["segment_code"] = seg
         pol["cust_key"] = pd.Series(seg).map(SEG_PREFIX).to_numpy() * 10_000_000 + cust_no
+        mic = np.isin(prod, list(MICRO))
+        heavy = rng.random(mic.sum()) < .40          # 40% GCN từ nhóm người dùng thường xuyên (đi làm / đặt đồ ăn hằng ngày)
+        no = rng.integers(1, MICRO_POOL + 1, mic.sum())
+        no[heavy] = rng.integers(1, MICRO_POOL // 10 + 1, heavy.sum())
+        pol.loc[mic, "cust_key"] = 7 * 10_000_000 + no
 
         # thuộc tính cố định của từng khách (tỉnh, công ty quản lý): hàm băm theo mã khách → nhất quán giữa các đơn
         provs = list(PROVINCE_W)
@@ -688,7 +738,7 @@ class Gen:
         comp = home.copy()
         ch = pol["channel_code"].to_numpy()
         other = rng.random(n) < .12
-        comp[other] = wchoice(rng, MEMBERS, [1] * len(MEMBERS), other.sum())
+        comp[other] = wchoice(rng, MEMBERS, MEMBER_W, other.sum())
         dig = (ch == "DIEN_TU") & (rng.random(n) < .70)
         comp[dig] = "DGT"
         si_vnd = pol["si_vnd0"].fillna(0).to_numpy()
@@ -697,6 +747,8 @@ class Gen:
         comp[big & (rng.random(n) < .60)] = "HO"
         corp_broker = (ch == "MOI_GIOI") & np.isin(prod, ["TS_MRR", "TS_MRRCN", "CHN_BB", "CHN_TN", "NG_SK_NHOM"])
         comp[corp_broker & (rng.random(n) < .25)] = "HO"
+        for code, c in MICRO_ISSUER.items():
+            comp[prod == code] = c
         pol["issuing_company_code"] = comp
         # đơn lô: bên mua là "Khách lẻ theo bảng kê" của đơn vị cấp đơn
         lot_key = 9 * 10_000_000 + pd.Series(comp[lot]).map({c: i + 1 for i, c in enumerate(["HO", "DGT"] + MEMBERS)}).to_numpy()
@@ -837,6 +889,10 @@ class Gen:
         ho = np.array(HOUR_OFFICE) / sum(HOUR_OFFICE)
         hd = np.array(HOUR_DIGITAL) / sum(HOUR_DIGITAL)
         hour = np.where(digital, rng.choice(24, n, p=hd), rng.choice(24, n, p=ho))
+        mprod = tx[["policy_id"]].merge(pol[["policy_id", "product_code"]], on="policy_id", how="left")["product_code"].to_numpy()
+        for code, prof in (("MV_XSM_CARE", HOUR_RIDE), ("MV_FOOD_CARE", HOUR_FOOD)):
+            m = mprod == code
+            hour[m] = rng.choice(24, m.sum(), p=np.array(prof) / sum(prof))
         secs = hour * 3600 + rng.integers(0, 3600, n)
         tx["created_at"] = tx["txn_date"] + secs.astype("timedelta64[s]")
         # trạng thái: chứng từ gốc lấy từ build_endorsements; SĐBS rút ngẫu nhiên cùng quy luật
@@ -932,11 +988,13 @@ class Gen:
         mem = np.isin(comp, MEMBERS)
         mem_coop = mem & (u < .10)
         mem_tr = mem & (u >= .10) & (u < .11)
+        mic = np.isin(prod, list(MICRO))
+        ho_coop, dgt_tr, mem_coop, mem_tr = ho_coop & ~mic, dgt_tr & ~mic, mem_coop & ~mic, mem_tr & ~mic
         single = ~(ho_coop | dgt_tr | mem_coop | mem_tr)
         mine_ho = rng.choice([50.0, 60.0, 70.0], n)
         mine_mem = rng.choice([50.0, 60.0, 70.0, 80.0], n)
-        partner_mem = wchoice(rng, MEMBERS, [1] * len(MEMBERS), n)
-        partner_mem = np.where(partner_mem == comp, np.where(comp == "HN1", "HC1", "HN1"), partner_mem)
+        partner_mem = wchoice(rng, MEMBERS, MEMBER_W, n)
+        partner_mem = np.where(partner_mem == comp, np.where(comp == "TDO", "PNA", "TDO"), partner_mem)
         al = [
             pd.DataFrame({"policy_id": pid[single], "company_code": comp[single], "allocation_type_code": "TU_KHAI_THAC", "allocation_pct": 100.0}),
             pd.DataFrame({"policy_id": pid[ho_coop], "company_code": "HO", "allocation_type_code": "HO_TRO_CHEO", "allocation_pct": mine_ho[ho_coop]}),
@@ -986,7 +1044,6 @@ class Gen:
         cov["vat_vnd"] = np.round(cov["premium_vnd"] * cov["product_code"].map(self.vat) / 100).astype(np.int64)
         self.cov = cov
         log("  hiệu chỉnh: " + " · ".join(f"{g} ×{v[3]:.2f}" for g, v in self.calib.items()))
-        log(f"  hệ số quy mô k = {volume_scale():.3f} (doanh thu = k × quy mô PVI, cơ cấu giữ nguyên)")
 
     # ------------------------------------------------------- khách hàng
     def build_customers(self):
@@ -1290,11 +1347,34 @@ def existing_keys(cur):
     cur.execute("SELECT split_part(policy_no, '-', 2) || '-' || split_part(policy_no, '-', 3), "
                 "max(split_part(policy_no, '-', 4)::bigint) FROM core.policy GROUP BY 1")
     keys["seq"] = {k: int(up(v, 1_000_000)) for k, v in cur.fetchall()}
+    # mốc khóa đã từng phát hành (lưu lâu dài, không bị DELETE): dù bảng fact trống / nạp dở, khóa mới vẫn sau mọi khóa cũ
+    cur.execute(f"CREATE TABLE IF NOT EXISTS {SCHEMA}.{WATERMARK} (key_name text PRIMARY KEY, max_value bigint NOT NULL)")
+    cur.execute(f"SELECT key_name, max_value FROM {SCHEMA}.{WATERMARK}")
+    for k, v in cur.fetchall():
+        if k in ("pid", "tid", "cid"):
+            keys[k] = max(keys[k], up(v, 10_000_000))
+        elif k == "cust_base":
+            keys[k] = max(keys[k], up(v, 100_000_000))
+        elif k.startswith("seq:"):
+            keys["seq"][k[4:]] = max(keys["seq"].get(k[4:], 0), int(up(v, 1_000_000)))
     log(f"Khóa bắt đầu sau dữ liệu cũ: policy_id > {keys['pid']:,} · txn_id > {keys['tid']:,} · coverage_id > {keys['cid']:,} "
         f"· mã khách từ KH{keys['cust_base']:09d} · số hợp đồng từ {min(keys['seq'].values(), default=0):,}")
     if keys["cust_base"] >= 900_000_000 or max(keys["seq"].values(), default=0) >= 9_000_000:
         sys.exit("Dải mã khách / số hợp đồng sắp hết chỗ — cần đổi định dạng mã trước khi sinh lại.")
     return keys
+
+
+WATERMARK = "poc_key_watermark"
+
+
+def save_watermark(cur, state):
+    """Ghi mốc khóa lớn nhất đã phát hành (sau mỗi đợt nạp)."""
+    rows = [("pid", state["pid"]), ("tid", state["tid"]), ("cid", state["cid"]),
+            ("cust_base", state["cust_base"] + 90_000_000)] + [("seq:" + k, v) for k, v in state["seq"].items()]
+    cur.execute(f"CREATE TABLE IF NOT EXISTS {SCHEMA}.{WATERMARK} (key_name text PRIMARY KEY, max_value bigint NOT NULL)")
+    for k, v in rows:
+        cur.execute(f"INSERT INTO {SCHEMA}.{WATERMARK} VALUES (%s, %s) ON CONFLICT (key_name) DO UPDATE "
+                    f"SET max_value = greatest({SCHEMA}.{WATERMARK}.max_value, EXCLUDED.max_value)", (k, int(v)))
 
 
 def prepare_replace(cur):
@@ -1316,7 +1396,43 @@ def prepare_replace(cur):
         t0 = time.time()
         cur.execute(f"DELETE FROM {t}")
         log(f"  DELETE {t}: {time.time() - t0:,.0f}s")
+    sync_ref(cur)
     return fks, idx
+
+
+def sync_ref(cur):
+    """Đồng bộ danh mục với 02_data.sql (sau khi đã xóa fact): thêm dòng mới, UPDATE dòng đổi nội dung,
+    DELETE dòng không còn trong danh mục. Dòng không đổi giữ nguyên → CDC không phát sự kiện thừa.
+    fx_rate chỉ thêm / cập nhật (các tháng 2026 do bộ sinh này bổ sung)."""
+    keep_only = [t for t in REF_TABLES if t != "fx_rate"]
+    for t, sql in zip(REF_TABLES, v2_ref_sql()):
+        tgt = f"{SCHEMA}.{PREFIX}{t}"
+        cur.execute(f"DROP TABLE IF EXISTS pg_temp.n_{t}")
+        cur.execute(f"CREATE TEMP TABLE n_{t} (LIKE {tgt} INCLUDING DEFAULTS)")
+        cur.execute(sql.replace(f"INSERT INTO ref.{t} ", f"INSERT INTO pg_temp.n_{t} ", 1))
+        if t == "partner":
+            for r in EXTRA_PARTNERS:
+                cur.execute(f"INSERT INTO pg_temp.n_partner (partner_code, partner_name, partner_type, channel_code) "
+                            f"VALUES (%s, %s, %s, %s)", r)
+        cur.execute("""SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                       WHERE i.indrelid = %s::regclass AND i.indisprimary""", (tgt,))
+        pk = [r[0] for r in cur.fetchall()]
+        cur.execute("SELECT attname FROM pg_attribute WHERE attrelid = %s::regclass AND attnum > 0 AND NOT attisdropped "
+                    "ORDER BY attnum", (tgt,))
+        cols = [r[0] for r in cur.fetchall()]
+        upd = [c for c in cols if c not in pk]
+        on = " AND ".join(f"n.{c} = x.{c}" for c in pk)
+        cur.execute(f"""INSERT INTO {tgt} ({', '.join(cols)}) SELECT {', '.join(cols)} FROM pg_temp.n_{t}
+                        ON CONFLICT ({', '.join(pk)}) DO UPDATE SET {', '.join(f'{c} = EXCLUDED.{c}' for c in upd)}
+                        WHERE ({', '.join(f'{tgt}.{c}' for c in upd)}) IS DISTINCT FROM ({', '.join(f'EXCLUDED.{c}' for c in upd)})""")
+    for t in reversed(keep_only):           # xóa theo thứ tự ngược để không vướng khóa ngoại giữa các danh mục
+        tgt = f"{SCHEMA}.{PREFIX}{t}"
+        cur.execute("""SELECT a.attname FROM pg_index i JOIN pg_attribute a ON a.attrelid = i.indrelid AND a.attnum = ANY(i.indkey)
+                       WHERE i.indrelid = %s::regclass AND i.indisprimary""", (tgt,))
+        pk = [r[0] for r in cur.fetchall()]
+        on = " AND ".join(f"n.{c} = x.{c}" for c in pk)
+        cur.execute(f"DELETE FROM {tgt} x WHERE NOT EXISTS (SELECT 1 FROM pg_temp.n_{t} n WHERE {on})")
+    log("  Đồng bộ danh mục với 02_data.sql xong")
 
 
 def prepare(cur, reset: bool):
@@ -1443,6 +1559,7 @@ def main():
         g.stats()
         if cur:
             load_chunk(cur, g)
+            save_watermark(cur, state)
         del g
         d = e + dt.timedelta(1)
     if cur:

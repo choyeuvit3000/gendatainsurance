@@ -129,3 +129,36 @@ Kết quả đo xem `docs/Logic_Sinh_Du_Lieu.html` (tham số P33).
 | Đội tàu Vinalines | 76 tàu của 9 DN, STBH hơn 565 triệu USD | https://www.pvn.vn/bao-hiem-pvi-ky-thoa-thuan-khung-voi-vinalines-5860 |
 
 **Mô tả định tính:** sức khỏe PVI chủ yếu là bảo hiểm nhóm doanh nghiệp (FPTS, báo cáo định giá PVI 04/2025: https://file.fpts.com.vn/FileStore2/File/2025/04/14/DuyenNTM14042025Bao_cao_dinh_gia_lan_dau_PVI_0bef673f.pdf, trang 14).
+
+## 9. Đơn vị của Bảo hiểm PVI (danh mục `ref.company`)
+
+Tra cứu 19/10/2026; nghiên cứu chéo bằng codex CLI (gpt-6.1-sol) và agy CLI (gemini-3.8-flash-high), mọi link đã kiểm lại bằng curl.
+
+| Nội dung | Số liệu | Nguồn |
+|---|---|---|
+| Tổng Công ty Bảo hiểm PVI (PVI Insurance) là công ty con 100% của CTCP PVI (PVI Holdings, mã PVI – HNX) | 100% tại 31/12/2024 | BCTN PVI 2024, trang PDF 12 (in 22–23): https://cdn.24hmoney.vn/upload/file/2025-1/2025-03-22/no-name-1742584373.pdf |
+| Các công ty con khác của Holdings: Tái bảo hiểm Hà Nội (Hanoi Re, tên cũ PVI Re) 81,09%; Quản lý Quỹ PVI (PVIAM) 61,96% | Doanh thu 2024: Holdings hợp nhất 21.824 tỷ; PVI Insurance 20.405 tỷ (93,5%); Hanoi Re 3.017,3 tỷ; PVIAM 57,4 tỷ | BCTN 2024, trang PDF 12, 22, 29, 30, 31 (link trên); đổi tên: https://www.hanoire.com/vi/pvi-re-chinh-thuc-doi-ten-thanh-hanoi-re |
+| Năm 2025: doanh thu hợp nhất Holdings 28.923 tỷ; Bảo hiểm PVI 27.258 tỷ (94,2%), trong đó phí bảo hiểm gốc 14.908 tỷ; Hanoi Re 3.690 tỷ; PVIAM 76,4 tỷ | 94,2% = 27.258 / 28.923 **[tính]** | BCTN PVI 2025, trang PDF 29, 32, 33, 34: https://www.pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/4f50f1c9-9092-4e0e-b128-1bcfc18922d2.pdf |
+| PVI Sài Gòn tự công bố "có doanh thu đứng đầu trong hệ thống bán lẻ của Bảo hiểm PVI" | — | https://pvisg.net |
+| 47 đơn vị của Bảo hiểm PVI (46 công ty thành viên + Bảo hiểm PVI Phía Nam), có địa chỉ trụ sở → tỉnh của đơn vị | 47 | https://www.pvi.com.vn/vi/network |
+| Bảo hiểm PVI Digital là chi nhánh của Tổng Công ty | — | https://online.pvi.com.vn/lien-he |
+| Đơn vị được vinh danh: Phía Nam (xuất sắc nhất 2024); Thủ Đô (6 tháng 2025); Duyên Hải (2025); Thủ Đô và Thăng Long hoàn thành sớm kế hoạch 2025 | — | https://www.pvi.com.vn/vi/news/bao-hiem-pvi-mot-nam-vuot-song-chinh-phuc-nhung-cot-moc-moi-681b4f9737783 ; https://www.pvi.com.vn/en/news/bao-hiem-pvi-doi-moi-sang-tao-va-thanh-cong ; https://vnexpress.net/nhung-yeu-to-giup-doanh-thu-bao-hiem-pvi-vuot-1-ty-usd-5011267.html ; https://www.pvi.com.vn/vi/news/pvi-thu-do-va-pvi-thang-long-hai-don-vi-tiep-theo-duoc-vinh-danh-hoan-thanh-som-ke-hoach-kinh-doanh-nam-2025 |
+
+**KHÔNG TÌM THẤY:** doanh thu từng đơn vị thành viên, tỷ trọng trụ sở chính so với đơn vị. → **[ƯỚC TÍNH]** trọng số khai thác của đơn vị theo quy mô kinh tế địa bàn, ×1,5 cho 5 đơn vị được vinh danh / tự công bố dẫn đầu (Phía Nam, Thủ Đô, Duyên Hải, Thăng Long, Sài Gòn) (`build_v2.COMPANIES`). Phạm vi POC là Tổng Công ty Bảo hiểm PVI; Hanoi Re (nhận tái bảo hiểm) và PVIAM (quản lý quỹ) không cấp hợp đồng bảo hiểm gốc nên không có trong `ref.company`.
+
+## 10. Bảo hiểm vi mô / nhúng theo giao dịch của PVI (2024–2026)
+
+| Sản phẩm | Phí | Nguồn |
+|---|---|---|
+| Green SM Care (Xanh SM Care) — tai nạn hành khách theo chuyến; PVI Digital là 1 trong 5 nhà bảo hiểm (PVI Digital, OPES, BIC, TCGI, MIC) | 1.000 đ/chuyến Bike, 2.000 đ/chuyến Taxi | https://www.greensm.com/vn-vi/bao-hiem-khach-hang ; https://www.tinnhanhchungkhoan.vn/bao-hiem-so-don-tin-vui-tu-xe-cong-nghe-post352383.html |
+| Food Care — Green SM × Bảo hiểm PVI, theo đơn giao đồ ăn; tai nạn 150 triệu đ/đơn | 1.000 đ/đơn | https://www.greensm.com/vn-vi/bao-hiem-giao-do-an |
+| DelayCare — PVI × ATADI, ra mắt 20/08/2026, đơn vị cung cấp PVI Thủ Đô; trễ ≥ 120 phút trả 500.000 đ/người | Phí: KHÔNG TÌM THẤY | https://www.pvi.com.vn/vi/news/bao-hiem-pvi-ra-mat-delaycare-giai-phap-bao-hiem-tre-chuyen-bay-danh-cho-hanh-khach |
+| Bảo hiểm thiết bị điện tử khi mua trên Shopee / Lazada (PVI qua Fuse, PasarPolis) | Ví dụ 38.102 đ/12 tháng (nguồn thứ cấp) | https://help.shopee.vn/portal/4/article/79225 ; https://magiamgia.com/bao-hiem-thiet-bi-dien-tu-lazada/ |
+| Đối tác số của PVI Digital: MoMo, Viettel Money, Shopee, Lazada, FE Credit, Home Credit, Xanh SM, Grab, Trip.com, Thế Giới Di Động, Điện Máy Xanh — "hàng triệu khách hàng" | — | https://www.pvi.com.vn/vi/news/pvi-digital-doi-tac-bao-hiem-so-cua-cac-nen-tang-va-he-sinh-thai-so-hang-dau-viet-nam |
+| Quy mô Green SM: vượt 1 triệu chuyến/ngày (2025, nguồn thứ cấp) | > 1.000.000 chuyến/ngày | https://fhsc.com.vn/co-ca-tram-nghin-xe-chay-tren-duong-day-la-so-cuoc-ma-xanh-sm-nhan-moi-ngay-tai-viet-nam |
+| Tham chiếu sản lượng vi mô ở Việt Nam: OPES phát hành 109,3 triệu hợp đồng năm 2023, cao điểm > 500.000 đơn/ngày | — | https://opes.com.vn/posts/business/opes-va-hanh-trinh-chuyen-minh-nho-so-hoa-1716806154 |
+| TMĐT của Bảo hiểm PVI: gần 800 tỷ (2024, 30 kết nối API); 2025 gần gấp đôi 2024 | — | BCTN 2024 trang PDF 29 (link mục 9); https://pviholdings.com.vn/vi/news-details?id=6013 |
+
+**Lưu ý về Grab, Be:** bảo hiểm chuyến đi của Grab (Ride Cover, 2.000 đ) do **Chubb** cung cấp, của Be do **OPES** — không phải PVI (bài tinnhanhchungkhoan ở trên). Hợp tác Grab × PVI năm 2026 là chương trình BHXH/BHYT tự nguyện cho tài xế (https://www.grab.com/vn/blog/driver/bhxh-bhyt-pvi/), không phải bảo hiểm theo cuốc. Vì vậy POC dùng **Green SM** làm đối tác bảo hiểm theo chuyến.
+
+**KHÔNG TÌM THẤY:** số GCN vi mô PVI phát hành theo ngày / năm; tỷ lệ khách chọn mua Green SM Care; số đơn Food Care; phí DelayCare. → **[ƯỚC TÍNH]** trong `gen_volume.MICRO`: 40.000 GCN chuyến xe/ngày (1 triệu chuyến × 20% mua × 20% về PVI), 8.000 GCN Food Care/ngày, 300 GCN DelayCare/ngày (phí 35.000 đ/người ≈ 4% xác suất trễ ≥ 2 giờ × 500.000 đ ÷ tỷ lệ bồi thường 60%), 3.000 GCN thiết bị điện tử/ngày (phí 1,5–3,5% giá máy). Các số này là quy ước để đạt khối lượng giao dịch của POC, có kiểm tra độ hợp lý với quy mô Green SM và OPES.

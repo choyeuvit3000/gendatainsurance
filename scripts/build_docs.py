@@ -274,7 +274,7 @@ def write_excel(cols, pk, fk, uq, tables, rows, stats, codes, samples):
         ("Sheet 'Kịch bản dữ liệu'", "Các tình huống cài sẵn trong dữ liệu dummy để kiểm thử ETL."),
         ("Sheet 'DM …'", "Giá trị các danh mục mã chính (sản phẩm, kênh/đối tác, loại giao dịch, đơn vị, dòng báo cáo)."),
         ("Màu", "Tab / cột 'Lớp': xanh dương = Danh mục · cam = Giao dịch · xanh lá = Phân tích. Tên cột khóa chính in đậm."),
-        ("Lưu ý dữ liệu", "Toàn bộ dữ liệu là giả lập: doanh nghiệp 'DEMO', đối tác và DN đồng bảo hiểm ẩn danh, khách hàng sinh ngẫu nhiên."),
+        ("Lưu ý dữ liệu", "Danh mục doanh nghiệp là Tổng Công ty Bảo hiểm PVI với 47 đơn vị thật (pvi.com.vn/vi/network); 3 đối tác số có công bố hợp tác với PVI mang tên thật (Green SM, ATADI, Fuse); các đối tác khác và DN đồng bảo hiểm ẩn danh. Mọi giao dịch, số tiền, khách hàng là giả lập — không phải số liệu thật của PVI hay của từng đơn vị."),
     ]
     ws.append([])
     ws.append(["Mục", "Nội dung"])
@@ -648,7 +648,7 @@ code.ty{{white-space:nowrap}}details.code{{margin:8px 0}}details.code summary{{c
 <button type="button" id="theme" aria-label="Đổi giao diện sáng/tối">Sáng / Tối</button></nav>
 <main><header><h1>Dữ liệu nguồn dummy — POC Doanh thu bảo hiểm</h1>
 <p>{intro}</p>
-<div class="kpis">{kpis}</div><p class="note">Số liệu tính trên bộ dữ liệu dummy (doanh nghiệp giả lập "DEMO").</p></header>
+<div class="kpis">{kpis}</div><p class="note">Số liệu tính trên bộ dữ liệu giả lập: Tổng Công ty Bảo hiểm PVI và 47 đơn vị thật, giao dịch giả lập ở đúng quy mô doanh thu PVI.</p></header>
 {body}
 </main></div>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>

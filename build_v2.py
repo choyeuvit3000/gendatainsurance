@@ -39,20 +39,41 @@ PROVINCES = [
     ("CMU", "Tỉnh Cà Mau", "NAM"), ("AGG", "Tỉnh An Giang", "NAM"),
 ]
 
-CORP = ("DEMO", "Tổng công ty Bảo hiểm DEMO (doanh nghiệp giả lập)")
+# Doanh nghiệp: Tổng Công ty Bảo hiểm PVI (PVI Insurance) — công ty con 100% của CTCP PVI (PVI Holdings), BCTN 2024 trang PDF 12
+# https://cdn.24hmoney.vn/upload/file/2025-1/2025-03-22/no-name-1742584373.pdf
+CORP = ("PVI", "Tổng Công ty Bảo hiểm PVI")
+# Đơn vị: 47 đơn vị trên trang mạng lưới https://www.pvi.com.vn/vi/network (tra 19/10/2026), tỉnh = địa chỉ trụ sở đơn vị.
+# Trọng số khai thác [ƯỚC TÍNH]: PVI không công bố doanh thu từng đơn vị → theo quy mô kinh tế địa bàn (cùng PROVINCE_W);
+#   ×1,5 cho đơn vị được PVI vinh danh: Phía Nam (xuất sắc nhất 2024), Thủ Đô (6T/2025), Duyên Hải (2025), Thăng Long
+#   (hoàn thành sớm kế hoạch 2025) và Sài Gòn (tự công bố doanh thu đứng đầu hệ thống bán lẻ, pvisg.net)
+#   — nguồn: sources/market_data.md mục 9.
 # (code, name, type, province, trọng số khai thác)
 COMPANIES = [
-    ("HO", "Khối Trụ sở chính – Ban Kinh doanh trực tiếp", "HEAD_OFFICE", "HNI", 0),
-    ("DGT", "Trung tâm Kinh doanh số", "DIGITAL", None, 0),
-    ("HN1", "Công ty Bảo hiểm DEMO Hà Nội", "MEMBER", "HNI", 10), ("HN2", "Công ty Bảo hiểm DEMO Bắc Hà Nội", "MEMBER", "HNI", 7),
-    ("HN3", "Công ty Bảo hiểm DEMO Tây Hà Nội", "MEMBER", "HNI", 6), ("HPG", "Công ty Bảo hiểm DEMO Hải Phòng", "MEMBER", "HPG", 5),
-    ("QNH", "Công ty Bảo hiểm DEMO Quảng Ninh", "MEMBER", "QNH", 3), ("BNH", "Công ty Bảo hiểm DEMO Bắc Ninh", "MEMBER", "BNH", 4),
-    ("THA", "Công ty Bảo hiểm DEMO Thanh Hóa", "MEMBER", "THA", 3), ("NAN", "Công ty Bảo hiểm DEMO Nghệ An", "MEMBER", "NAN", 3),
-    ("HUE", "Công ty Bảo hiểm DEMO Huế", "MEMBER", "HUE", 2), ("DNG", "Công ty Bảo hiểm DEMO Đà Nẵng", "MEMBER", "DNG", 5),
-    ("KHA", "Công ty Bảo hiểm DEMO Khánh Hòa", "MEMBER", "KHA", 3), ("DLK", "Công ty Bảo hiểm DEMO Đắk Lắk", "MEMBER", "DLK", 2),
-    ("HC1", "Công ty Bảo hiểm DEMO TP. Hồ Chí Minh", "MEMBER", "HCM", 10), ("HC2", "Công ty Bảo hiểm DEMO Đông TP. Hồ Chí Minh", "MEMBER", "HCM", 7),
-    ("HC3", "Công ty Bảo hiểm DEMO Bình Dương", "MEMBER", "HCM", 5), ("DNI", "Công ty Bảo hiểm DEMO Đồng Nai", "MEMBER", "DNI", 4),
-    ("CTO", "Công ty Bảo hiểm DEMO Cần Thơ", "MEMBER", "CTO", 3), ("AGG", "Công ty Bảo hiểm DEMO An Giang", "MEMBER", "AGG", 2),
+    ("HO", "Trụ sở chính Tổng Công ty Bảo hiểm PVI – các Ban kinh doanh", "HEAD_OFFICE", "HNI", 0),
+    ("DGT", "Bảo hiểm PVI Digital", "DIGITAL", "HCM", 0),
+    ("DDO", "Bảo hiểm PVI Đông Đô", "MEMBER", "HNI", 3), ("TLG", "Bảo hiểm PVI Thăng Long", "MEMBER", "HNI", 4.5),
+    ("HNO", "Bảo hiểm PVI Hà Nội", "MEMBER", "HNI", 3), ("HTA", "Bảo hiểm PVI Hà Thành", "MEMBER", "HNI", 3),
+    ("TDO", "Bảo hiểm PVI Thủ Đô", "MEMBER", "HNI", 4.5), ("TAN", "Bảo hiểm PVI Tràng An", "MEMBER", "HNI", 3),
+    ("ALC", "Bảo hiểm PVI Âu Lạc", "MEMBER", "HNI", 3), ("LNK", "Bảo hiểm PVI Link", "MEMBER", "HNI", 2),
+    ("HHG", "Bảo hiểm PVI Hải Hưng", "MEMBER", "HYN", 2), ("NTB", "Bảo hiểm PVI Nam Trung Bộ", "MEMBER", "QNG", 1.5),
+    ("DHI", "Bảo hiểm PVI Duyên Hải", "MEMBER", "HPG", 6), ("KHO", "Bảo hiểm PVI Khánh Hoà", "MEMBER", "KHA", 2),
+    ("TNG", "Bảo hiểm PVI Tây Nguyên", "MEMBER", "DLK", 2), ("QNI", "Bảo hiểm PVI Quảng Ninh", "MEMBER", "QNH", 2),
+    ("LDO", "Bảo hiểm PVI Lâm Đồng", "MEMBER", "LDG", 1.5), ("KBC", "Bảo hiểm PVI Kinh Bắc", "MEMBER", "BNH", 3),
+    ("TPH", "Bảo hiểm PVI TP. Hồ Chí Minh", "MEMBER", "HCM", 3), ("VPU", "Bảo hiểm PVI Vĩnh Phú", "MEMBER", "PTO", 2),
+    ("TNU", "Bảo hiểm PVI Thái Nguyên", "MEMBER", "TNN", 1.5), ("THO", "Bảo hiểm PVI Thanh Hóa", "MEMBER", "THA", 3),
+    ("BTB", "Bảo hiểm PVI Bắc Trung Bộ", "MEMBER", "NAN", 3), ("QTI", "Bảo hiểm PVI Quảng Trị", "MEMBER", "QTR", 1),
+    ("GLA", "Bảo hiểm PVI Gia Lai", "MEMBER", "GLI", 1.5), ("TTH", "Bảo hiểm PVI Huế", "MEMBER", "HUE", 1),
+    ("SGN", "Bảo hiểm PVI Sài Gòn", "MEMBER", "HCM", 4.5), ("DNA", "Bảo hiểm PVI Đà Nẵng", "MEMBER", "DNG", 2.5),
+    ("BTH", "Bảo hiểm PVI Bến Thành", "MEMBER", "HCM", 2.5), ("GDI", "Bảo hiểm PVI Gia Định", "MEMBER", "HCM", 2.5),
+    ("NDN", "Bảo hiểm PVI Nam Đà Nẵng", "MEMBER", "DNG", 1.5), ("TDH", "Bảo hiểm PVI Thành Đô", "MEMBER", "HCM", 2.5),
+    ("TDU", "Bảo hiểm PVI Thủ Đức", "MEMBER", "HCM", 2.5), ("TNT", "Bảo hiểm PVI Thống Nhất", "MEMBER", "HCM", 2.5),
+    ("NSG", "Bảo hiểm PVI Nam Sài Gòn", "MEMBER", "HCM", 2.5), ("DNB", "Bảo hiểm PVI Đông Nam Bộ", "MEMBER", "DNI", 4),
+    ("DSG", "Bảo hiểm PVI Đông Sài Gòn", "MEMBER", "HCM", 2.5), ("TNA", "Bảo hiểm PVI Tây Nam", "MEMBER", "CTO", 2.5),
+    ("CLG", "Bảo hiểm PVI Cửu Long", "MEMBER", "VLG", 1.5), ("VTU", "Bảo hiểm PVI Vũng Tàu", "MEMBER", "HCM", 2.5),
+    ("CMA", "Bảo hiểm PVI Cà Mau", "MEMBER", "CMU", 1), ("DKH", "Bảo hiểm PVI Đồng Khởi", "MEMBER", "HCM", 2.5),
+    ("NBI", "Bảo hiểm PVI Ninh Bình", "MEMBER", "NBH", 1.5), ("DTH", "Bảo hiểm PVI Đồng Tháp", "MEMBER", "DTP", 1.5),
+    ("AGI", "Bảo hiểm PVI An Giang", "MEMBER", "AGG", 1.5), ("TYN", "Bảo hiểm PVI Tây Ninh", "MEMBER", "TNH", 2),
+    ("HTI", "Bảo hiểm PVI Hà Tĩnh", "MEMBER", "HTH", 1), ("PNA", "Bảo hiểm PVI Phía Nam", "MEMBER", "HCM", 4.5),
 ]
 MEMBERS = [c for c in COMPANIES if c[2] == "MEMBER"]
 
@@ -107,6 +128,11 @@ PRODUCTS = [
     ("TS_MRRCN", "Bảo hiểm mọi rủi ro công nghiệp", "TAI_SAN", "B.1b", 0, "RATE_ON_SI", 10, 5, None),
     ("CHN_BB", "Bảo hiểm cháy, nổ bắt buộc", "CHAY_NO", "B.5a", 1, "RATE_ON_SI", 10, 5, ND67_CN),
     ("CHN_TN", "Bảo hiểm cháy và các rủi ro đặc biệt (tự nguyện)", "CHAY_NO", "B.5b", 0, "RATE_ON_SI", 10, 10, None),
+    # Bảo hiểm vi mô / nhúng theo giao dịch (phí theo chuyến, theo đơn) — sản phẩm PVI có công bố công khai, xem sources/market_data.md
+    ("MV_XSM_CARE", "Bảo hiểm tai nạn hành khách theo chuyến xe công nghệ (Green SM Care)", "SINH_MANG", "A.1", 0, "PER_PERSON", 0, 20, VAT0),
+    ("MV_FOOD_CARE", "Bảo hiểm đơn giao đồ ăn (Food Care)", "SINH_MANG", "A.1", 0, "PER_PERSON", 0, 20, VAT0),
+    ("MV_DELAYCARE", "Bảo hiểm trễ chuyến bay (DelayCare)", "DU_LICH", "A.2", 0, "PER_PERSON", 0, 20, VAT0),
+    ("MV_TBDT_TMDT", "Bảo hiểm thiết bị điện tử mua trên sàn TMĐT", "TAI_SAN", "B.1b", 0, "RATE_ON_SI", 10, 5, None),
 ]
 PROD = {p[0]: p for p in PRODUCTS}
 # Đối chiếu quốc tế — Solvency II non-life LoB (Delegated Reg. 2015/35 Annex I). (*) = suy luận theo bản chất rủi ro
@@ -118,6 +144,8 @@ SOLVENCY2 = {
     "NG_SM_CN": S2_INC + " (*)", "NG_NVV": S2_INC + " (*)", "NG_TN24": S2_INC + " (*)",
     "NG_SK_CN": S2_MED, "NG_SK_NHOM": S2_MED, "NG_SK_BHN": S2_INC + " (*)",
     "TS_NHA": S2_FIRE, "TS_MRR": S2_FIRE, "TS_MRRCN": S2_FIRE, "CHN_BB": S2_FIRE, "CHN_TN": S2_FIRE,
+    "MV_XSM_CARE": S2_INC + " (*)", "MV_FOOD_CARE": S2_INC + " (*)", "MV_DELAYCARE": "12 Miscellaneous financial loss (*)",
+    "MV_TBDT_TMDT": S2_FIRE + " (*)",
 }
 # Đối chiếu ACORD P&C BusinessPurposeTypeCd
 ACORD_TXN = {"NEW": "NBS", "RENEW": "RWL", "END_INC": "PCH", "END_DEC": "PCH", "REFUND": "PCH", "CANCEL": "XLC", "END_NOCHG": "PCH"}
@@ -145,6 +173,10 @@ PARTNERS = (
     + [(f"VI_{x}", f"Ví điện tử {x}", "VI_DIEN_TU", "DIEN_TU") for x in "AB"]
     + [("TMDT_A", "Sàn thương mại điện tử A", "SAN_TMDT", "DIEN_TU"), ("HK_A", "Hãng hàng không A", "HANG_HANG_KHONG", "DIEN_TU"),
        ("VT_A", "Nhà mạng viễn thông A", "VIEN_THONG", "DIEN_TU")]
+    # Đối tác số có công bố hợp tác với Bảo hiểm PVI (tên thật, nguồn trong sources/market_data.md); số liệu giao dịch là giả lập
+    + [("GREEN_SM", "Green SM (Xanh SM) – nền tảng gọi xe, giao đồ ăn", "NEN_TANG_DI_CHUYEN", "DIEN_TU"),
+       ("ATADI", "ATADI.vn – đại lý vé máy bay trực tuyến", "OTA_VE_MAY_BAY", "DIEN_TU"),
+       ("FUSE", "Fuse – nền tảng phân phối bảo hiểm trên Shopee, Lazada", "INSURTECH", "DIEN_TU")]
 )
 PARTNERS_BY_TYPE = defaultdict(list)
 for p in PARTNERS:
