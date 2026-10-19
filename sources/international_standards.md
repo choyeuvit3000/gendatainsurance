@@ -60,12 +60,21 @@ Tài liệu tra cứu ngày 07/10/2026. Mục nào ghi **(chưa xác minh)** là
 - Ví dụ PAA của IFRS Foundation: https://www.ifrs.org/content/dam/ifrs/supporting-implementation/ifrs-17/premium-allocation-approach-example.pdf
 - Solvency II Annex I: https://www.legislation.gov.uk/eur/2015/35/annex/I/adopted
 
-## Dataset public tham khảo
+## Dataset mẫu public
 
-Các dataset này **không** dùng để hiệu chỉnh số. Số liệu được hiệu chỉnh theo thị trường Việt Nam, xem [market_data.md](market_data.md).
+Đây là các dataset mẫu của dự án. Chúng chỉ dùng để **chứng minh cấu trúc**, tức dữ liệu bảo hiểm thật trông ra sao. Chúng **không** dùng để lấy hay hiệu chỉnh số; mọi con số đều lấy theo thị trường Việt Nam, xem [market_data.md](market_data.md). Chi tiết từng tham số xem `docs/Logic_Sinh_Du_Lieu.html`, mục "Dataset mẫu".
 
-| Dataset | Nội dung | License |
+| Dataset | Cấu trúc đã đọc (tra ngày 16/10/2026) | Chứng minh cho |
 |---|---|---|
-| CASdatasets `freMTPL2`, `fremotor1prem0304` | Motor Pháp; có phí theo từng quyền lợi, kênh, vùng | GPL |
-| CAS Loss Reserving DB | NAIC Schedule P; earned premium Direct / Ceded / Net | — |
-| Kaggle Travel Insurance | Agency type, distribution channel, net sales, commission | ODbL |
+| CASdatasets `fremotor1prem0304a/b/c` (GPL) — https://github.com/dutangc/CASdatasets/blob/master/man-md/fremotor1prem0304a.md | 30 cột. Phí năm theo từng quyền lợi trên cùng hợp đồng: `PremTPLM` (TNDS bắt buộc), `PremTPLV` (TNDS tự nguyện), `PremDamAll` (thiệt hại vật chất), `PremFire`, `PremTheft`… và `PremTot`. Có thêm `Channel`, `Region`, `Year` | Một hợp đồng có nhiều dòng phí theo sản phẩm (`core.transaction_coverage`). Bán kèm vật chất xe + TNDS bắt buộc. TNDS tự nguyện tách riêng. Kênh là chiều của hợp đồng |
+| Kaggle Travel Insurance (ODbL) — https://www.kaggle.com/datasets/mhdzahier/travel-insurance | `Agency Type` (Airlines / Travel Agency), `Distribution Channel` (Online / Offline), `Duration`, `Net Sales` (có giá trị âm), `Commision (in value)`. Cấu trúc được đọc trên bản trích 100 dòng công khai trên GitHub | Đối tác du lịch là hãng bay / đại lý du lịch. Hoàn phí là số âm. Hoa hồng là cột riêng, có dòng bằng 0. Thời hạn tính theo ngày chuyến đi |
+| CAS Loss Reserving Database — https://www.casact.org/publications-research/research/research-resources/loss-reserving-data-pulled-naic-schedule-p | 6 nghiệp vụ × công ty × năm. `EarnedPremDIR` (direct & assumed), `EarnedPremCeded`, `EarnedPremNet` | Phí toàn bộ khác phần công ty giữ lại, nên phải tách phần của công ty. Phí tổng hợp theo nghiệp vụ × năm |
+| CASdatasets `freMTPL2freq` / `freMTPL2sev` — https://dutangc.github.io/CASdatasets/reference/freMTPL.html | 677.991 hợp đồng TNDS xe, phần lớn quan sát trong 1 năm. `IDpol`, `Exposure` (năm), `ClaimNb`, `Region`, `Area`, `Density` | TNDS là nghiệp vụ "rất nhiều đơn nhỏ", thời hạn 1 năm. Vùng là thuộc tính của hợp đồng |
+| UCI Insurance Company Benchmark (COIL 2000) — https://archive.ics.uci.edu/dataset/125/insurance+company+benchmark+coil+2000 | Mỗi khách hàng có phân khúc (`MOSHOOFD` / `MOSTYPE`), cùng mức phí và số hợp đồng theo từng loại sản phẩm (`PPERSAUT` xe, `PBRAND` cháy, `PPERSONG` tai nạn, `PLEVEN` nhân thọ…) | Phân khúc khách hàng. Một khách giữ nhiều sản phẩm (bán chéo) |
+| Synthea — https://github.com/synthetichealth/synthea/wiki/CSV-File-Data-Dictionary | Bộ sinh dữ liệu "realistic but not real" theo cấu hình thống kê công khai. `payer_transitions` có `Start_Year` / `End_Year` và `Ownership` (Self / Guardian / Spouse) | Tiền lệ phương pháp sinh dữ liệu. Bên mua có thể khác người được bảo hiểm. Quyền lợi bảo hiểm nối tiếp theo năm |
+| CMS Medicare DE-SynPUF — https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files | Dữ liệu giả lập giữ nguyên định dạng và tên biến của dữ liệu thật; CMS nói rõ giá trị suy luận rất hạn chế | Tiền lệ: giữ cấu trúc thật, nhưng số không dùng để suy luận |
+
+**Đã xem xét nhưng không dùng:**
+- SOA 2015 VBT: bảng tử vong cho bảo hiểm nhân thọ, không thuộc phạm vi.
+- RAA ChainLadder: tam giác bồi thường dùng để ước tính dự phòng; POC không có bồi thường.
+- Phần bồi thường của freMTPL2sev, CMS và Synthea: ngoài phạm vi doanh thu phí.

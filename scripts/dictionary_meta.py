@@ -120,8 +120,8 @@ COLUMNS = {
     ("core.policy", "policy_no"): ("Số hợp đồng: <năm>-<đơn vị>-<nhóm SP>-<số thứ tự>", ""),
     ("core.policy", "issuing_company_code"): ("Đơn vị cấp đơn → ref.company", ""),
     ("core.policy", "customer_code"): ("Bên mua bảo hiểm → ref.customer", ""),
-    ("core.policy", "channel_code"): ("Kênh bán → ref.channel. NULL = chưa khai báo (~0,5%, dữ liệu bẩn có chủ đích)", ""),
-    ("core.policy", "partner_code"): ("Đối tác phân phối → ref.partner (NULL = không qua đối tác)", ""),
+    ("core.policy", "channel_code"): ("Kênh bán → ref.channel. Bắt buộc theo nghiệp vụ; NULL = nguồn không khai báo (~0,5%, dữ liệu bẩn có chủ đích) — lớp phân tích gán 'CHUA_XD'", f"{TT67} Mẫu 3-PNT (báo cáo theo kênh)"),
+    ("core.policy", "partner_code"): ("Đối tác phân phối → ref.partner. Không bắt buộc: NULL = không qua đối tác (bán trực tiếp, đại lý cá nhân, đấu thầu, website/app công ty) — hợp lệ; lớp phân tích gán 'WEB_APP' (kênh điện tử) / 'KHONG_QUA_DT' (kênh khác)", "Quy ước dự án 13/10/2026"),
     ("core.policy", "currency_code"): ("Loại tiền của hợp đồng → ref.currency", ""),
     ("core.policy", "issue_date"): ("Ngày cấp đơn / giao kết hợp đồng", ""),
     ("core.policy", "effective_date"): ("Ngày bắt đầu thời hạn bảo hiểm", ""),
@@ -162,11 +162,13 @@ COLUMNS = {
 }
 
 BUSINESS_RULES = [
+    ("Quy ước NULL & tham chiếu danh mục", "Lớp nguồn giữ NULL đúng nghiệp vụ: partner_code NULL = không qua đối tác (hợp lệ); channel_code NULL = nguồn thiếu kênh (lỗi dữ liệu). Mọi mã khác NULL đều có khóa ngoại đã kiểm chứng. Lớp phân tích (view) gán thành viên CHUA_XD / WEB_APP / KHONG_QUA_DT để dòng fact luôn tham chiếu được danh mục", "Quy ước dự án 13/10/2026"),
     ("Đồng bảo hiểm", "Mỗi hợp đồng có ≥ 1 dòng core.coinsurance_share; tổng share_pct = 100. Đơn không đồng BH: 1 dòng insurer_code = 'OWN', role = 'SOLE', 100%", f"{LAW} Điều 4 k29; {TT232} Điều 19"),
     ("Phân bổ doanh thu", "Mỗi hợp đồng có ≥ 1 dòng core.revenue_allocation; tổng allocation_pct = 100", "Thông lệ quản trị Tổng công ty – công ty thành viên"),
     ("Thời điểm ghi nhận doanh thu", "accounting_date = max(ngày cấp, ngày bắt đầu hiệu lực) với cấp mới/tái tục; = ngày chứng từ với SĐBS/hoàn/hủy", f"{TT67} Điều 41 k1 (phát sinh trách nhiệm bảo hiểm)"),
     ("Khoản giảm thu", "Hoàn phí, giảm phí, hủy đơn có premium_orig âm; hạch toán TK 5311/5321 (ref.transaction_type.gl_account)", f"{ND46} Điều 49 k3; {TT232}"),
-    ("Trạng thái chứng từ", "status: APPROVED / PENDING / VOID — chỉ APPROVED là chứng từ hợp lệ để tính doanh thu", "Kiểm soát nội bộ (giả định POC)"),
+    ("Trạng thái chứng từ", "status: APPROVED / PENDING / VOID — chỉ APPROVED là chứng từ hợp lệ để tính doanh thu", "Quy ước chuẩn: chỉ chứng từ đã duyệt là căn cứ ghi nhận; PENDING / VOID là kịch bản kiểm thử"),
+    ("Doanh thu Tổng công ty", "= tổng doanh thu hợp nhất mọi đơn vị; Khối Trụ sở (company_type = HEAD_OFFICE) là một đơn vị ngang cấp Công ty", "Quy ước chuẩn theo cấp phân tích của đề bài"),
     ("Quy đổi ngoại tệ", "premium_vnd = premium_orig × fx_rate; fx_rate = tỷ giá hạch toán của tháng accounting_date (ref.fx_rate)", "Tỷ giá hạch toán KBNN"),
     ("Thuế GTGT", "vat_vnd = premium_vnd × ref.product.vat_rate; BH con người 0% (không chịu thuế), xe/tài sản/cháy nổ 10%", "Luật GTGT 48/2024 Điều 5 k8, Điều 9"),
     ("Hoa hồng", "commission_rate_pct ≤ ref.product.max_commission_pct; = 0 với bán trực tiếp và đấu thầu", f"{TT67} Điều 51"),
@@ -188,4 +190,23 @@ SCENARIOS = [
     ("Tái tục", "core.policy.renewal_of_policy_id", "Liên kết hợp đồng năm trước"),
     ("Kênh chưa khai báo (~0,5%)", "core.policy.channel_code IS NULL", "Gán 'Chưa xác định'"),
     ("Đơn vị không gắn địa bàn", "ref.company.province_code IS NULL (Trung tâm Kinh doanh số)", "Vùng miền để trống"),
+]
+
+
+# ---------------------------------------------------------------------------
+# Bổ sung cho bộ dữ liệu KHỐI LƯỢNG LỚN (gen_volume.py → reportapi.bronze.ins_*)
+# Tách riêng: các cột này không có trong DDL v2 nên không được ghi vào 01b_column_comments.sql
+# ---------------------------------------------------------------------------
+VOLUME_COLUMNS = {
+    ("ref.customer", "gender"): ("Giới tính M / F — chỉ khách cá nhân, hộ gia đình (NULL với tổ chức)", "Dữ liệu sinh ngẫu nhiên"),
+    ("ref.customer", "birth_year"): ("Năm sinh — chỉ khách cá nhân, hộ gia đình; bên mua ≥ 18 tuổi", "Dữ liệu sinh ngẫu nhiên"),
+    ("core.policy", "prev_policy_no"): ("Số hợp đồng năm trước được tái tục (hợp đồng ngoài kỳ dữ liệu nên lưu text; NULL = cấp mới)", ""),
+}
+VOLUME_BUSINESS_RULES = [
+    ("Thời điểm ghi nhận (bản khối lượng lớn)", "accounting_date = max(ngày chứng từ, ngày hiệu lực) cho MỌI giao dịch, kể cả SĐBS / hoàn / hủy (hủy chuyến du lịch trước ngày đi được ghi nhận cùng ngày với doanh thu gốc)", f"{TT67} Điều 41 k1"),
+    ("Mức theo tháng [CHÍNH THỨC]", "Phí/ngày tháng 9 = 1,479 × tháng 8, theo phí gốc phi nhân thọ 2025 của Bộ Tài chính (7T 50.784 · 8T 56.376 · 9T 64.378 tỷ). Trong tháng phân bố đều — không có hiệu ứng cuối tháng", "Bản tin thị trường bảo hiểm tháng 8–10/2025, Bộ Tài chính"),
+    ("Ngày hiệu lực [QUY ƯỚC]", "Đơn không phải du lịch hiệu lực ngay ngày cấp (không có nguồn về độ trễ); học sinh hiệu lực từ khai giảng 5/9", "Khung kế hoạch năm học Bộ GD&ĐT"),
+    ("Du lịch [DATASET] / [NGUỒN THAY THẾ]", "Số ngày mua trước chuyến đi và độ dài chuyến đi trong nước lấy phân bố thực nghiệm từ Hotel booking demand (Data in Brief 2019); thời hạn chuyến đi quốc tế, cơ cấu kênh trung gian, tỷ lệ hoa hồng từ dataset Travel Insurance (hoa hồng cắt ở trần 20%)", "calibration/README.md"),
+    ("Ngày làm việc [QUY ƯỚC]", "Kênh văn phòng giảm thứ 7, chủ nhật, lễ 01–02/9; kênh số hoạt động đều mọi ngày", "BLLĐ 2019 Điều 112"),
+    ("Kiểm tra toàn vẹn", "41 quy tắc nghiệp vụ (audit/consistency_checks.sql): hợp đồng, khách hàng, giao dịch, dòng phí, đồng BH, phân bổ, tham chiếu danh mục — kết quả mong đợi 0 vi phạm", "audit/run_audit.py"),
 ]

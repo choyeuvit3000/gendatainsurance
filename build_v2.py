@@ -236,8 +236,8 @@ PRODUCT_MIX = {
     "CHAY_NO": [("CHN_BB", .7), ("CHN_TN", .3)],
 }
 # (channel, trọng số, [loại đối tác]); [] = không qua đối tác; None trong list = kênh điện tử của chính công ty
-# Định hướng: kênh TMĐT PVI ≈ 6% phí gốc 2024 (≈800 tỷ, BCTN 2024) → ≈10% năm 2025 ("gần gấp đôi", BCTN 2025);
-# bancassurance của PVI còn nhỏ (Nam A Bank, Woori Bank, PVI Link thành lập 2025) [ƯỚC TÍNH ≈5–8%];
+# Định hướng: kênh TMĐT PVI ≈ 6% phí gốc 2024 (≈800 tỷ, BCTN 2024) → ≈10% năm 2025 (suy ra: TMĐT quý I/2025 tăng 1,8 lần, pvn.vn);
+# bancassurance của PVI mới mở rộng (hợp tác Nam A Bank, pvi.com.vn) [ƯỚC TÍNH ≈5–8%];
 # môi giới cao hơn thị trường (13,5%) do PVI thiên về khách hàng doanh nghiệp lớn [ƯỚC TÍNH ≈15–20%]
 CHANNEL_MIX = {
     "TNDS_BB": [("TRUC_TIEP", 18, []), ("DAI_LY_CN", 27, []), ("DAI_LY_TC", 28, ["DANG_KIEM", "SHOWROOM_OTO", "GARAGE"]),
@@ -255,7 +255,7 @@ CHANNEL_MIX = {
     "TAI_SAN": [("TRUC_TIEP", 40, []), ("MOI_GIOI", 25, ["CTY_MOI_GIOI"]), ("BANCA", 4, ["NGAN_HANG"]),
                 ("DAI_LY_CN", 10, []), ("DIEN_TU", 15, [None, "SAN_TMDT"]), ("DAU_THAU", 3, [])],
 }
-DIGITAL_FACTOR = {2024: 0.5, 2025: 1.0}  # tăng trưởng kênh điện tử 2024 → 2025 (BCTN PVI 2024, 2025)
+DIGITAL_FACTOR = {2024: 0.5, 2025: 1.0}  # tăng trưởng kênh điện tử 2024 → 2025 (TMĐT quý I/2025 tăng 1,8 lần, pvn.vn)
 GROUP_ABBR = {"TNDS_BB": "XTN", "VCX": "XVC", "HOC_SINH": "HSS", "DU_LICH": "DLC",
               "SINH_MANG": "SMG", "SUC_KHOE": "SKH", "TAI_SAN": "TSN", "CHAY_NO": "CNO"}
 ANNUAL_GROUPS = {"TNDS_BB", "VCX", "SINH_MANG", "SUC_KHOE", "TAI_SAN", "CHAY_NO"}

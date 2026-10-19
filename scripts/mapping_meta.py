@@ -6,9 +6,9 @@ một số phép thử chạy trên mẫu 01–07/06/2025 (23.379 chứng từ �
 Trạng thái:
   OK   khớp trực tiếp, đã kiểm chứng
   TF   biến đổi theo quy tắc, đã kiểm chứng
-  CHK  cần BA xác nhận
+  STD  quy ước chuẩn do dự án chốt khi nguồn mơ hồ — có căn cứ dữ liệu / quy định, áp dụng làm chuẩn
   GAP  PIAS không có — v2 sinh mới / suy ra
-  NEW  PIAS có nhưng v2 chưa có — đề xuất bổ sung
+  OUT  PIAS có nhưng v2 không dùng (ngoài phạm vi)
 """
 
 SAMPLE = "Chứng từ tháng 06/2025: 99.454 chứng từ (85.568 đơn gốc, 13.886 SĐBS); 98.773 đã duyệt"
@@ -18,7 +18,7 @@ TABLE_MAP = {
     "core.policy": ("nvu_bht_ctu (dòng ma_sdbs = '')", "PIAS không tách hợp đồng / giao dịch: hợp đồng = chứng từ đơn gốc", [
         ("policy_id", "nvu_bht_ctu.pr_key", "pr_key của chứng từ đơn gốc", "OK", ""),
         ("policy_no", "nvu_bht_ctu.so_donbh", "Giữ nguyên", "OK", "Duy nhất ở 100% trong 85.568 đơn gốc"),
-        ("issuing_company_code", "nvu_bht_ctu.ma_donvi", "Giữ nguyên; nếu rỗng lấy đoạn 2 của so_donbh", "CHK",
+        ("issuing_company_code", "nvu_bht_ctu.ma_donvi", "Giữ nguyên. Nếu rỗng: lấy đoạn 2 của so_donbh; nếu mã đó không có trong dm_donvi (vd 'FE' — đơn đối tác số) → đơn vị kinh doanh số (DIGITAL)", "STD",
          "682 chứng từ đã duyệt có ma_donvi rỗng — đơn đối tác dạng 25/FE/18/SMCN/…; mã 'FE' không có trong dm_donvi"),
         ("customer_code", "nvu_bht_ctu.ma_kh", "Giữ nguyên", "OK", "1 / 99.454 không có trong dm_khach"),
         ("channel_code", "ma_kthac + ma_nhkenhbh + dm_khach.to_chuc (của ma_daily)", "Theo bảng mã 'Kênh'", "TF",
@@ -32,7 +32,7 @@ TABLE_MAP = {
         ("is_group_policy", "nvu_bht_seri (đếm GCN theo fr_key) / nvu_bht_ct.so_tvien", "TRUE nếu > 1 GCN hoặc > 1 thành viên", "TF",
          "Đơn xe: 3.462 đơn mô tô ↔ 68.386 GCN; 34.779 đơn ô tô ↔ 79.892 GCN"),
         ("renewal_of_policy_id", "(không có liên kết tường minh)", "Suy ra: cùng khách + cùng loại đơn, cấp trước 300–430 ngày", "GAP",
-         "so_donbh_tt và rtinh_trang_taituc luôn rỗng. Cờ tái tục có ở rloai_don (xem dòng txn_type_code) nhưng không có khóa nối về đơn cũ"),
+         "so_donbh_tt và rtinh_trang_taituc luôn rỗng. Quy ước: chỉ nối khi rloai_don = '01' (tái tục) — lấy đơn gốc gần nhất cùng ma_kh + ma_donbh"),
     ]),
     "core.policy_transaction": ("nvu_bht_ctu (mọi dòng)", "Mỗi chứng từ (đơn gốc hoặc SĐBS) = 1 giao dịch", [
         ("txn_id", "nvu_bht_ctu.pr_key", "Giữ nguyên", "OK", ""),
@@ -41,10 +41,10 @@ TABLE_MAP = {
         ("txn_type_code", "nvu_bht_ctu.ma_sdbs + ma_sdbs_ct; đơn gốc: rloai_don", "Theo bảng mã 'Loại giao dịch' — dùng mã chi tiết ma_sdbs_ct; đơn gốc rloai_don '01' → RENEW, '02' → NEW", "TF",
          "Procedure GuiMail_Taituc_1Thang nhận diện đơn bị hủy bằng ma_sdbs_ct IN ('0401','0302'). rloai_don: hàng hóa / giải thưởng (không bao giờ tái tục) 100% '02'; sức khỏe nhóm 48%, cháy nổ 45%, ô tô 26% là '01'"),
         ("txn_date", "nvu_bht_ctu.ngay_ctu", "Giữ nguyên", "OK", ""),
-        ("accounting_date", "nvu_bht_ktu.ngay_ctu_kt (nối nvu_bht_kt.pr_key_nvu_bht_ct = nvu_bht_ct.pr_key, kt.fr_key = ktu.pr_key)",
-         "Nếu chưa hạch toán: max(ngay_ctu, ngay_dau) theo TT 67/2023 Đ41", "CHK",
+        ("accounting_date", "nvu_bht_ctu.ngay_ctu, ngay_dau (đối soát: nvu_bht_ktu.ngay_ctu_kt qua nvu_bht_kt.pr_key_nvu_bht_ct = nvu_bht_ct.pr_key)",
+         "Quy ước: đơn gốc / tái tục = max(ngay_ctu, ngay_dau) — thời điểm phát sinh trách nhiệm (TT 67/2023 Đ41); SĐBS = ngay_ctu. Ngày hạch toán chỉ dùng đối soát", "STD",
          "90% chứng từ có dòng hạch toán; cùng ngày 26%, trễ 1–31 ngày 67%, > 31 ngày 6%. LƯU Ý: kt.pr_key_nvu KHÔNG nối được ctu.pr_key (trùng dải khóa)"),
-        ("status", "nvu_bht_ctu.trang_thai (+ tam_tinh)", "02 → APPROVED; 01 → PENDING", "TF",
+        ("status", "nvu_bht_ctu.trang_thai (+ tam_tinh)", "02 → APPROVED; 01 → PENDING; VOID không phát sinh từ PIAS", "TF",
          "02: 98.773 · 01: 681 · tam_tinh luôn 0. Procedure nghiệp vụ lọc trang_thai = '02'. Chưa thấy mã tương ứng VOID"),
         ("fx_rate", "nvu_bht_ctu.tygia_ht", "Giữ nguyên", "OK", "VND = 1 ở 100%; USD khớp dm_tygia (loai_ht = 'HT') 65%, phần còn lại tỷ giá riêng theo hợp đồng"),
         ("created_by", "nvu_bht_ctu.ma_user", "Giữ nguyên", "OK", ""),
@@ -55,8 +55,9 @@ TABLE_MAP = {
         ("txn_id", "nvu_bht_ct.fr_key", "", "OK", ""),
         ("product_code", "nvu_bht_ct.ma_sp", "Theo bảng mã 'Sản phẩm'", "TF", "0 mã không có trong dm_sp; 0 mã tổng hợp (tong_hop = 1)"),
         ("sum_insured", "nvu_bht_ct.so_tienbh", "", "OK", ""),
-        ("premium_rate_pct", "nvu_bht_ct.tyle_phi", "", "CHK", "Chưa kiểm chứng đơn vị (% hay phân số)"),
-        ("insured_count", "nvu_bht_ct.so_tvien / số GCN (nvu_bht_seri)", "", "CHK", "Chưa kiểm chứng độ đầy đủ của so_tvien"),
+        ("premium_rate_pct", "nvu_bht_ct.tyle_phi", "Đơn vị %: dùng nguyên giá trị", "OK", "75% dòng khớp so_tienbh × tyle_phi / 100; tính như phân số chỉ khớp 1%"),
+        ("insured_count", "COUNT(nvu_bht_seri) theo chứng từ; nếu không có: COUNT(nvu_bht_the); mặc định 1", "Quy ước: đếm giấy chứng nhận / thẻ", "STD",
+         "nvu_bht_ct.so_tvien luôn = 0 ở mọi nhóm sản phẩm (mẫu 01–07/06/2025) → không dùng"),
         ("premium_orig", "nvu_bht_ct.nguyen_tep", "Phí 100% hợp đồng, nguyên tệ", "OK", "27% dòng có nguyen_tep = 0 (thành phần gói / không phí)"),
         ("premium_vnd", "nvu_bht_ct.so_tienp", "", "OK", "so_tienp = nguyen_tep × tygia_ht ở 99,4% dòng"),
         ("vat_vnd", "nvu_bht_ct.tien_vat", "", "OK", "Đúng công thức ở 99,5%; muc_vat ∈ {0, 10} (1 dòng = 100 — lỗi nhập liệu)"),
@@ -69,7 +70,7 @@ TABLE_MAP = {
          "Đối tác: Bảo hiểm BIDV, Bảo Việt, MIC, PTI, PJICO… — không có dòng của chính công ty"),
         ("role", "nvu_bht_dbh.vai_tro", "Có dòng 'Đồng chính' → công ty là FOLLOWER; chỉ có 'Đồng phụ' → công ty là LEADER; không có dòng → SOLE", "TF",
          "'Đồng chính': 469 dòng / 469 đơn (TB 47,5%); 'Đồng phụ': 4.219 dòng / 1.885 đơn (TB 18%)"),
-        ("share_pct", "nvu_bht_dbh.tyle_tg; OWN = 100 − Σtyle_tg", "Khuyến nghị đối chiếu theo số tiền: OWN = (Σct.nguyen_tep − Σdbh.nguyen_tep) / Σct.nguyen_tep", "CHK",
+        ("share_pct", "nvu_bht_dbh.nguyen_tep, nvu_bht_ct.nguyen_tep", "Quy ước theo số tiền: OWN = (Σct − Σdbh) / Σct × 100; DN khác = dbh / Σct × 100 (tyle_tg chỉ tham chiếu)", "STD",
          "Theo số tiền khớp nvu_bht_pbo 99,5%; theo tỷ lệ chỉ khớp 86%"),
     ]),
     "core.revenue_allocation": ("nvu_bht_pbo", "fr_key → nvu_bht_ctu.pr_key; mỗi chứng từ ≥ 1 dòng", [
@@ -77,13 +78,13 @@ TABLE_MAP = {
         ("company_code", "nvu_bht_pbo.ma_donvi_pbo", "", "OK", "80% dòng phân bổ cho chính đơn vị cấp đơn"),
         ("allocation_type_code", "nvu_bht_pbo.ma_kieupbo", "Theo bảng mã 'Loại phân bổ'", "TF", "02.02: 135.137 · 02.01: 7.471 · 01: 114 · rỗng: 60"),
         ("allocation_pct", "nvu_bht_pbo.tyle_pbo", "", "OK", "Σtyle_pbo = 100 ở 100% chứng từ đã duyệt"),
-        ("(đề xuất) producer_code", "nvu_bht_pbo.ma_khpbo", "Người / phòng hưởng doanh thu", "NEW",
+        ("(không dùng)", "nvu_bht_pbo.ma_khpbo", "Người / phòng hưởng doanh thu — ngoài 6 chiều phân tích", "OUT",
          "100% có trong dm_khach; không trùng đại lý (ma_daily) → là cán bộ / phòng khai thác"),
         ("(không dùng)", "nvu_bht_pbo.ky_pbo", "", "OK", "Luôn = 0"),
     ]),
     "ref.company": ("dm_donvi (52 đơn vị) + cấp Tổng công ty bổ sung", "dm_donvi không có cấp cha", [
         ("company_code / name", "dm_donvi.ma_donvi / ten_donvi", "", "OK", ""),
-        ("company_type", "(suy ra)", "'00' Trụ sở → HEAD_OFFICE; 'PVI Digital' → DIGITAL; trung tâm (27, 31, 32) → ?; còn lại → MEMBER", "CHK", "v2 chưa có loại 'trung tâm'"),
+        ("company_type", "(suy ra từ dm_donvi)", "'00' Trụ sở và các trung tâm trực thuộc (27 bảo lãnh viện phí, 31/32 CSKH) → HEAD_OFFICE; PVI Digital + mã đối tác số → DIGITAL; còn lại → MEMBER", "STD", "Trung tâm là đơn vị trực thuộc trụ sở, không phải công ty thành viên"),
         ("parent_company_code", "(không có)", "Gán Tổng công ty", "GAP", ""),
         ("province_code", "dm_donvi.ma_tinh (VIxx, 63 tỉnh cũ)", "Map 63 → 34 tỉnh theo NQ 202/2025", "TF", "Một số đơn vị mới không có ma_tinh"),
     ]),
@@ -110,7 +111,7 @@ TABLE_MAP = {
         ("txn_type_code", "nvu_dm_sdbs", "Theo bảng mã 'Loại giao dịch'", "TF", ""),
         ("insurer_code", "dm_khach (các DNBH xuất hiện trong nvu_bht_dbh)", "", "TF", "Nhóm khách N21 'Nhà Đồng Bảo hiểm' chưa được dùng nhất quán"),
         ("allocation_type_code", "nvu_dm_kieupbo", "", "TF", ""),
-        ("rate_to_vnd", "dm_tygia.ty_gia (loai_ht = 'HT')", "", "CHK", "loai_ht: HT (hạch toán, 19 dòng), TT (5.199), BA (484); 65% giao dịch USD khớp HT"),
+        ("rate_to_vnd", "dm_tygia.ty_gia (loai_ht = 'HT')", "Quy ước: ref.fx_rate lấy loại HT; giao dịch luôn dùng tygia_ht của chính chứng từ", "STD", "loai_ht: HT (hạch toán, 19 dòng), TT (5.199), BA (484); 65% giao dịch USD khớp HT"),
     ]),
 }
 
@@ -119,27 +120,26 @@ CODE_MAPS = {
     "Loại giao dịch": ("ma_sdbs / ma_sdbs_ct → txn_type_code. Số chứng từ T6/2025.", ["ma_sdbs", "ma_sdbs_ct", "Ý nghĩa (nvu_dm_sdbs)", "Số CT", "→ v2", "TT"], [
         ("'' (rloai_don = '02')", "''", "Đơn gốc — cấp mới", "≈ 70.000", "NEW", "TF"),
         ("'' (rloai_don = '01')", "''", "Đơn gốc — tái tục", "≈ 12.100", "RENEW", "TF"),
-        ("'' (rloai_don = '' / '1' / 'txtMa_rl')", "''", "Đơn gốc — cờ rỗng hoặc rác", "≈ 3.500", "NEW (mặc định)", "CHK"),
+        ("'' (rloai_don = '' / '1' / 'txtMa_rl')", "''", "Đơn gốc — cờ rỗng hoặc rác", "≈ 3.500", "NEW (mặc định)", "STD"),
         ("01", "0101 / 0102 / 0103 / 0104 / ''", "Tăng phí (chỉ tăng phí; tăng phí + tăng/giảm STBH; đổi tỷ lệ đồng BH)", "3.005 / 685 / 8 / 1 / 7", "END_INC", "TF"),
         ("02", "0201 / 0202 / 0203 / ''", "Giảm phí", "2.319 / 1.235 / 1 / 12", "END_DEC", "TF"),
         ("03", "0301 / ''", "Hoàn phí", "346 / 6", "REFUND", "TF"),
         ("03", "0302", "Hoàn phí hủy đơn", "767", "CANCEL", "TF"),
         ("04", "0401", "Hủy đơn", "2.042", "CANCEL", "TF"),
         ("05", "0501 / 0502 / 0503 / ''", "Thay đổi khác (không đổi phí / chỉ đổi STBH)", "3.293 / 30 / 49 / 13", "END_NOCHG", "TF"),
-        ("06", "0601", "Đơn BH có phí đặt cọc, theo kỳ", "67", "(v2 chưa có — thu phí nhiều kỳ)", "CHK"),
+        ("06", "0601", "Đơn BH có phí đặt cọc, theo kỳ", "67", "Theo dấu phí: > 0 END_INC, < 0 END_DEC, = 0 END_NOCHG", "STD"),
     ]),
     "Trạng thái": ("trang_thai → status", ["trang_thai", "Số CT", "→ v2", "TT"], [
-        ("02", "98.773", "APPROVED", "TF"), ("01", "681", "PENDING", "TF"), ("(không thấy)", "—", "VOID", "CHK"),
+        ("02", "98.773", "APPROVED", "TF"), ("01", "681", "PENDING", "TF"), ("(không có trong PIAS)", "—", "VOID — không phát sinh", "STD"),
     ]),
-    "Kênh": ("ma_kthac (dm_kthac) × ma_nhkenhbh (dm_nhkenhkt) × loại đại lý → channel_code. Số chứng từ T6/2025.", ["ma_kthac", "ma_nhkenhbh", "Điều kiện thêm", "Số CT", "→ v2", "TT"], [
+    "Kênh": ("Áp dụng theo THỨ TỰ ƯU TIÊN từ trên xuống: môi giới → ngân hàng → điện tử → đại lý → trực tiếp. Số chứng từ T6/2025.", ["ma_kthac", "ma_nhkenhbh", "Điều kiện thêm", "Số CT", "→ v2", "TT"], [
         ("2 Qua môi giới", "bất kỳ", "", "2.603", "MOI_GIOI", "TF"),
-        ("1 Qua đại lý", "003 Ngân hàng & TCTC", "", "7.796", "BANCA", "TF"),
-        ("1 Qua đại lý", "006 Trực tuyến", "", "—", "DIEN_TU", "TF"),
-        ("1 Qua đại lý", "008 Điện thoại di động", "92% đại lý là cá nhân", "472", "DIEN_TU hoặc DAI_LY_CN?", "CHK"),
+        ("bất kỳ (1 hoặc 32)", "003 Ngân hàng & TCTC", "ma_kenhbh là chi nhánh ngân hàng (99,7% khớp dm_bancas)", "10.500", "BANCA — Mẫu 3-PNT xếp 'qua TCTD' theo đối tác", "STD"),
+        ("bất kỳ", "006 Trực tuyến", "", "—", "DIEN_TU", "TF"),
+        ("bất kỳ", "008 Điện thoại di động (app MyPVI)", "", "≈ 790", "DIEN_TU — giao dịch điện tử (Luật KDBH Đ87 k4 điểm d)", "STD"),
         ("1 Qua đại lý", "999 / 007 / 012 / 004 / N08xx / 016", "dm_khach.to_chuc(ma_daily) = 1", "≈ 35.300", "DAI_LY_TC", "TF"),
         ("1 Qua đại lý", "999 / 007 / 012 / 004 / N08xx / 016", "dm_khach.to_chuc(ma_daily) = 0", "≈ 23.000", "DAI_LY_CN", "TF"),
         ("3 / 31 / 32 Trực tiếp", "999 và các nhóm khác", "", "≈ 25.000", "TRUC_TIEP", "TF"),
-        ("32 Trực tiếp", "003 Ngân hàng", "Bán trực tiếp nhưng gắn nhóm kênh ngân hàng", "2.704", "TRUC_TIEP hay BANCA?", "CHK"),
         ("—", "—", "Đấu thầu", "—", "DAU_THAU (PIAS không có mã)", "GAP"),
     ]),
     "Vai trò đồng BH": ("nvu_bht_dbh.vai_tro → role của công ty", ["Dòng trong nvu_bht_dbh", "Vai trò của công ty", "Số đơn", "TT"], [
@@ -151,7 +151,7 @@ CODE_MAPS = {
         ("02.02", "Tự khai thác có tính hiệu quả", "135.137", "TU_KHAI_THAC (cùng đơn vị) / HO_TRO_CHEO (khác đơn vị, 20%)", "TF"),
         ("02.01", "Tự khai thác không tính hiệu quả", "7.471", "HO_TRO_CHEO (99,9% khác đơn vị)", "TF"),
         ("01", "Chuyển giao doanh thu", "114", "CHUYEN_GIAO", "TF"),
-        ("''", "(rỗng)", "60", "?", "CHK"),
+        ("''", "(rỗng)", "60", "TU_KHAI_THAC nếu cùng đơn vị cấp đơn, HO_TRO_CHEO nếu khác", "STD"),
     ]),
     "Sản phẩm": ("dm_sp.ma_sp (6 ký tự) → product_code. Số đơn có phát sinh T6/2025.", ["Sản phẩm v2", "Mã dm_sp", "Ghi chú", "TT"], [
         ("XE_TNDS_OTO", "050101", "≈ 23.900 đơn", "TF"),
@@ -164,16 +164,18 @@ CODE_MAPS = {
         ("NG_SM_CN", "010401", "", "TF"),
         ("NG_NVV", "010402 (An tâm tín dụng), 010405", "", "TF"),
         ("NG_TN24", "010201, 010202, 010205, 010206, 010208, 010209, 010210", "PIAS nhóm 0102 'Tai nạn con người'", "TF"),
-        ("NG_SK_CN", "010101, 010701, 010704, 010706, 010715, 010718", "", "TF"),
-        ("NG_SK_NHOM", "010702, 010703, 010713, 010714, 010719", "010702 PVI Care có cả cá nhân và nhóm", "CHK"),
+        ("NG_SK_NHOM / NG_SK_CN", "010101, 010701–010706, 010713–010719", "Theo dm_khach.to_chuc của bên mua: tổ chức → NHOM, cá nhân → CN. 010702: 100% tổ chức; 010713: 99,6%; 010704: 78% cá nhân", "STD"),
         ("NG_SK_BHN", "010707, 010708, 010711, 010712", "", "TF"),
         ("TS_NHA", "020108, 020113, 020115, 020118, 020123, 020124, 020125, 020127", "8 mã", "TF"),
         ("TS_MRR", "020102, 020107, 020109, 020111, 020116", "", "TF"),
         ("TS_MRRCN", "020103, 020120", "", "TF"),
-        ("CHN_BB", "060101, 060104; 060103, 060105 (kèm gián đoạn kinh doanh)", "060103/060105 gộp BB + GĐKD", "CHK"),
+        ("CHN_BB", "060101, 060104, 060103, 060105", "060103/060105 = cháy nổ bắt buộc kèm gián đoạn kinh doanh → theo thành phần bắt buộc", "STD"),
         ("CHN_TN", "020101", "Cháy nổ tự nguyện nằm trong nhóm 0201 của PIAS", "TF"),
-        ("(chưa có chỗ trong v2)", "050102, 050103, 050105, 050202, 050204; 0105xx; 0108xx; 020104, 020105, 020106, 020112, 020121", "Tai nạn người ngồi trên xe, TNDS tự nguyện, trợ cấp nằm viện, bồi thường NLĐ, máy móc thiết bị", "CHK"),
-        ("(loại trừ)", "060102 'Phí PCCC'", "Không phải phí bảo hiểm", "CHK"),
+        ("NG_TN24", "050103 (tai nạn người ngồi trên xe), 0108xx (bồi thường người lao động)", "Bản chất là tai nạn con người — dòng A.1 Mẫu 2-PNT", "STD"),
+        ("NG_SK_CN", "0105xx (trợ cấp nằm viện – phẫu thuật)", "Bản chất bảo hiểm sức khỏe", "STD"),
+        ("TS_MRRCN", "020104, 020105, 020106, 020112, 020121 (máy móc, thiết bị)", "Tài sản kỹ thuật thuộc nhóm 0201 của PIAS", "STD"),
+        ("(ngoài phạm vi POC)", "050102, 050105, 050202, 050204 (TNDS tự nguyện, TNDS hàng hóa trên xe)", "POC nhóm Xe chỉ gồm TNDS bắt buộc và vật chất xe (đề bài)", "OUT"),
+        ("(loại trừ)", "060102 'Phí PCCC'", "Không phải phí bảo hiểm", "OUT"),
     ]),
 }
 
@@ -189,15 +191,20 @@ CORRECTIONS = [
     ("Đối tác ngân hàng", "Không xác định", "ma_kenhbh → dm_bancas (3 ký tự đầu = ngân hàng)", "Khớp 99,7%"),
 ]
 
-BA_QUESTIONS = [
-    "Doanh thu ghi nhận theo ngày nào: ngày chứng từ (nvu_bht_ctu.ngay_ctu), ngày hạch toán (nvu_bht_ktu.ngay_ctu_kt) hay ngày bắt đầu hiệu lực?",
-    "trang_thai: ngoài 01 / 02 còn mã nào? Chứng từ hủy nhập sai được thể hiện thế nào (tương ứng VOID)?",
-    "Xác nhận rloai_don '01' = tái tục, '02' = cấp mới (suy ra từ dữ liệu). Giá trị '', '1', 'txtMa_rl' xử lý thế nào? Có cách nối đơn tái tục với đơn năm trước?",
-    "Phần của công ty khi đồng bảo hiểm: lấy theo tỷ lệ (tyle_tg) hay theo số tiền (nvu_bht_dbh.nguyen_tep)?",
-    "Kênh 008 'Điện thoại di động' là kênh số hay đại lý cá nhân? Đơn ma_kthac = 32 gắn nhóm 003 có tính là bancassurance?",
-    "Đơn có ma_donvi rỗng (đơn đối tác 25/FE/…): thuộc đơn vị nào?",
-    "Các mã chưa có chỗ trong v2 (tai nạn người ngồi trên xe, máy móc thiết bị, trợ cấp nằm viện…) có thuộc phạm vi POC không? 060103 / 060105 xếp vào cháy nổ bắt buộc?",
-    "ma_khpbo (người / phòng hưởng doanh thu) có cần đưa vào phân tích không?",
+DECISIONS = [  # (vấn đề, quy ước chuẩn, căn cứ)
+    ("Định nghĩa doanh thu", "Doanh thu phí bảo hiểm gốc phần của công ty, chưa VAT, sau đồng BH và theo đơn vị được phân bổ (không dùng doanh thu kế toán phân bổ theo kỳ)", "TT 232/2012 Đ19; dữ liệu: nvu_bht_pbo = ct − dbh ở 99,5% đơn"),
+    ("Ngày ghi nhận doanh thu", "Đơn gốc / tái tục: max(ngay_ctu, ngay_dau). SĐBS: ngay_ctu. Ngày hạch toán (nvu_bht_ktu) chỉ để đối soát", "TT 67/2023 Đ41 (phát sinh trách nhiệm); ngày hạch toán chỉ có ở 90% chứng từ"),
+    ("Trạng thái chứng từ", "02 → APPROVED (tính doanh thu); 01 → PENDING; PIAS không có VOID", "Procedure nghiệp vụ lọc trang_thai = '02'"),
+    ("Tái tục", "rloai_don '01' → RENEW, '02' → NEW, giá trị khác → NEW; nối đơn cũ cùng khách + cùng loại đơn, cấp trước 300–430 ngày", "Hàng hóa / giải thưởng 100% '02'; sức khỏe nhóm 48% '01'"),
+    ("Phần của công ty khi đồng BH", "Tính theo số tiền: (Σct − Σdbh) / Σct", "Khớp nvu_bht_pbo 99,5% (theo tỷ lệ chỉ 86%)"),
+    ("Kênh bán", "Thứ tự ưu tiên: môi giới (ma_kthac 2) → ngân hàng (nhóm 003) → điện tử (006, 008) → đại lý tổ chức / cá nhân (theo to_chuc của ma_daily) → trực tiếp", "Luật KDBH Đ87 k4; TT 67/2023 Mẫu 3-PNT"),
+    ("Đơn vị rỗng", "Lấy đoạn 2 của so_donbh; không có trong dm_donvi → đơn vị kinh doanh số", "682 chứng từ dạng 25/FE/… (đối tác số)"),
+    ("Doanh thu Tổng công ty", "= Tổng doanh thu hợp nhất mọi đơn vị. Khối Trụ sở (gồm các trung tâm trực thuộc) là một đơn vị ngang cấp Công ty", "Cấp phân tích của đề bài: Tổng DT → Tổng công ty → Công ty"),
+    ("Sức khỏe nhóm / cá nhân", "Theo to_chuc của bên mua", "010702: 100% tổ chức; 010704: 78% cá nhân"),
+    ("Số người / xe được bảo hiểm", "Đếm GCN (nvu_bht_seri) hoặc thẻ (nvu_bht_the), mặc định 1", "nvu_bht_ct.so_tvien luôn = 0"),
+    ("Sản phẩm biên", "Tai nạn người ngồi trên xe, bồi thường NLĐ → tai nạn; trợ cấp nằm viện → sức khỏe; máy móc thiết bị → mọi rủi ro công nghiệp; TNDS tự nguyện và phí PCCC → loại", "Bản chất rủi ro theo NĐ 46/2023 Đ4–5 và Mẫu 2-PNT"),
+    ("Người hưởng phân bổ (ma_khpbo)", "Không đưa vào v2", "Ngoài 6 chiều phân tích của đề bài"),
+    ("Kênh / đối tác để trống", "Lớp nguồn (bronze, landing) giữ NULL như hệ thống lõi: đối tác NULL = không qua đối tác (hợp lệ), kênh NULL = thiếu dữ liệu. Lớp staging / phân tích gán: kênh NULL → CHUA_XD; đối tác NULL → WEB_APP (kênh điện tử) hoặc KHONG_QUA_DT (kênh khác) để mọi dòng fact tham chiếu được danh mục", "Đối tác không bắt buộc theo nghiệp vụ; kênh bắt buộc (TT 67/2023 Mẫu 3-PNT) nhưng nguồn có thể thiếu — chốt 13/10/2026"),
 ]
 
 # Sơ đồ luồng nguồn → đích (mermaid flowchart)

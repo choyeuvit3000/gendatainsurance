@@ -1,106 +1,153 @@
-# POC Doanh thu bảo hiểm v2: dữ liệu nguồn dummy có căn cứ public
+# POC Doanh thu bảo hiểm: dữ liệu khối lượng lớn cho dashboard
 
-**Phạm vi:** sinh **dữ liệu nguồn** giả lập, gồm danh mục và giao dịch bảo hiểm, đủ thông tin để phân tích doanh thu theo 6 chiều: Thời gian, Kênh bán, Nghiệp vụ, Sản phẩm, Đơn vị, Khách hàng.
+Bộ sinh [gen_volume.py](gen_volume.py) dùng **nguyên mô hình v2** (danh mục, cột, quy tắc doanh thu: xem [DESIGN_RATIONALE.md](DESIGN_RATIONALE.md)). Điểm khác là sinh giao dịch ở **quy mô vận hành**:
 
-Mọi danh mục, quy tắc và con số đều có căn cứ từ **nguồn public**: luật, nghị định, thông tư, số liệu IAV và MOF, sản phẩm công khai của các DNBH, các chuẩn mô hình dữ liệu ngành. Bộ dữ liệu **không** chứa dữ liệu nội bộ của khách hàng.
+- thời gian: **01/08/2026 – 30/09/2026** (61 ngày);
+- mỗi ngày **> 50.000 giao dịch** (tháng 8 khoảng 53–66 nghìn, tháng 9 khoảng 80–99 nghìn), tổng khoảng 5 triệu;
+- **cơ cấu doanh thu theo BCTC PVI** (cùng tỷ trọng với v2); doanh thu tuyệt đối = quy mô PVI tháng 8–9 × hệ số k ≈ 3,93 (khoảng 6.300 tỷ cho 2 tháng).
 
-## Các file
+Số liệu chính xác sau mỗi lần nạp: xem phần "Kiểm tra sau khi nạp" trong log và `audit/run_audit.py`.
 
-Mọi file SQL đều viết cho **PostgreSQL ≥ 12**. Đã chạy thử trên PostgreSQL 16.2.
+Mọi tham số theo thời gian đều có nhãn căn cứ ([CHÍNH THỨC] / [DATASET] / [NGUỒN THAY THẾ] / [QUY ƯỚC] / [ƯỚC TÍNH]), xem [calibration/README.md](calibration/README.md). Hiệu chỉnh lần gần nhất: 14/10/2026.
+
+## Tài liệu
 
 | File | Nội dung |
 |---|---|
-| [01_ddl.sql](01_ddl.sql) | Tạo 2 schema: `ref` (16 bảng danh mục) và `core` (5 bảng giao dịch) |
-| [01b_column_comments.sql](01b_column_comments.sql) | `COMMENT ON TABLE/COLUMN` tiếng Việt cho 21 bảng, 114 cột. Không bắt buộc, nhưng giúp các công cụ như DBeaver hay pgAdmin hiển thị mô tả |
-| [02_data.sql](02_data.sql) | Dữ liệu dummy 2024–2025 dạng INSERT, gói trong một transaction |
-| [build_v2.py](build_v2.py) | Script sinh dữ liệu. Seed cố định, không cần kết nối DB |
-| [docs/POC_Doanh_thu_BH_v2.html](docs/POC_Doanh_thu_BH_v2.html) | **Tài liệu tổng hợp trong 1 file HTML**: tổng quan, căn cứ thiết kế, data dictionary (có ô lọc), nguồn, phụ lục DDL |
-| [docs/Data_Dictionary_v2.xlsx](docs/Data_Dictionary_v2.xlsx) | **Data dictionary Excel**. Mỗi bảng có 1 sheet riêng (tên = `schema.bảng`) gồm thông tin bảng, danh sách cột, khóa ngoại vào/ra và 5 dòng mẫu. Kèm các sheet tổng quan bảng, quan hệ FK, quy tắc nghiệp vụ, kịch bản dữ liệu, danh mục mã |
-| [docs/build_docs.py](docs/build_docs.py) + [docs/dictionary_meta.py](docs/dictionary_meta.py) | Script sinh lại HTML, Excel và file comment từ catalog PostgreSQL. Mô tả cột sửa duy nhất ở `dictionary_meta.py` |
-| [DESIGN_RATIONALE.md](DESIGN_RATIONALE.md) | **Căn cứ của từng bảng, quy tắc, tham số** và bộ hỏi đáp "Tại sao…" |
-| [GENERATION_LOGIC.md](GENERATION_LOGIC.md) | **Logic sinh dữ liệu**: mỗi nghiệp vụ bao nhiêu % doanh thu, bao nhiêu đơn, mỗi đơn bao nhiêu tiền — neo theo BCTC công khai của PVI |
-| [docs/Mapping_v2_PIAS.html](docs/Mapping_v2_PIAS.html) | **Mapping v2 ↔ PIAS** có bằng chứng kiểm chứng từng dòng, bảng đối chiếu mã, câu hỏi BA. **Tài liệu nội bộ dự án.** Sinh lại: `python docs/build_mapping.py` (nội dung ở `docs/mapping_meta.py`) |
-| [sources/](sources/) | Nguồn pháp lý, số liệu thị trường, chuẩn quốc tế (kèm URL) |
+| [docs/POC_Doanh_thu_BH_volume.html](docs/POC_Doanh_thu_BH_volume.html) | Tài liệu tổng hợp trong 1 file: tổng quan, căn cứ tham số, căn cứ mô hình, data dictionary có ô lọc, quy tắc nghiệp vụ, mô phỏng thay đổi schema |
+| [docs/Data_Dictionary_volume.xlsx](docs/Data_Dictionary_volume.xlsx) | Data dictionary Excel: mỗi bảng 1 sheet, có số dòng, % NULL, giá trị mẫu đo trên dữ liệu thật ở `reportapi` |
+| [calibration/README.md](calibration/README.md) | Căn cứ từng tham số và nguồn |
+| [audit/consistency_checks.sql](audit/consistency_checks.sql) | 41 quy tắc kiểm tra toàn vẹn nghiệp vụ |
 
-## Cách chạy (PostgreSQL)
-
-Chạy trong thư mục `v2`. Tạo database:
+Hai file trong `docs/` được sinh từ catalog thật của `bronze.ins_*`. Mô tả cột lấy từ `scripts/dictionary_meta.py`; các cột chỉ có ở bản này nằm trong `VOLUME_COLUMNS`. Sinh lại khi tunnel đang mở:
 
 ```bash
-createdb ins_revenue_poc
+DOCS_TARGET=volume PG_URI=postgresql://report:<mật khẩu>@127.0.0.1:15432/reportapi python scripts/build_docs.py
 ```
 
-Tạo bảng:
+## Nơi nạp
 
-```bash
-psql -d ins_revenue_poc -v ON_ERROR_STOP=1 -f 01_ddl.sql
-```
+PostgreSQL `reportapi` tại `192.168.18.101:5432`, schema **`bronze`**. Mọi bảng mang tiền tố **`ins_`** để không lẫn với các bảng sẵn có (`customer_tiering`, `transaction`…).
 
-Thêm mô tả bảng và cột (không bắt buộc):
+| v2 | Trên `bronze` |
+|---|---|
+| `ref.<bảng>` (16 danh mục + khách hàng) | `bronze.ins_<bảng>` (ví dụ `bronze.ins_product`, `bronze.ins_customer`) |
+| `core.policy`, `core.policy_transaction`, `core.transaction_coverage`, `core.coinsurance_share`, `core.revenue_allocation` | `bronze.ins_policy`, `bronze.ins_policy_transaction`, `bronze.ins_transaction_coverage`, `bronze.ins_coinsurance_share`, `bronze.ins_revenue_allocation` |
+| (mới) view doanh thu | `bronze.v_ins_revenue_line`, `bronze.mv_ins_revenue_daily`, `bronze.mv_ins_txn_hourly` |
 
-```bash
-psql -d ins_revenue_poc -v ON_ERROR_STOP=1 -f 01b_column_comments.sql
-```
+Ngoài v2 có thêm 3 cột: `ins_customer.gender`, `ins_customer.birth_year`, `ins_policy.prev_policy_no`. Cột `prev_policy_no` là số hợp đồng năm trước được tái tục; hợp đồng đó nằm ngoài kỳ dữ liệu nên lưu dạng text.
 
-Nạp dữ liệu:
+Muốn đổi đích thì đặt biến `TARGET_SCHEMA` và `TABLE_PREFIX`.
 
-```bash
-psql -d ins_revenue_poc -v ON_ERROR_STOP=1 -f 02_data.sql
-```
+## Quy ước NULL và tham chiếu danh mục
 
-Muốn dựng lại từ đầu thì bỏ comment dòng `DROP SCHEMA … CASCADE` ở đầu `01_ddl.sql`.
+Lớp `bronze` mô phỏng **hệ thống nguồn**, nên giữ NULL đúng nghiệp vụ. Mọi mã khác NULL đều có khóa ngoại đã kiểm chứng.
 
-> Lưu ý trên Windows: với `psql` bản Windows, đặt các option (`-d`, `-f`, `-v`) **trước** mọi tham số khác. Option đặt sau chuỗi kết nối có thể bị bỏ qua.
-
-Sinh lại dữ liệu:
-
-```bash
-python build_v2.py
-```
-
-Sinh lại tài liệu HTML, Excel và file comment. Script dùng PostgreSQL nhúng tạm thời, không cài gì vào máy. Muốn dùng Postgres có sẵn thì đặt biến `PG_URI` trước khi chạy.
-
-```bash
-uv run --python 3.11 --with pgserver --with "psycopg[binary]" --with markdown --with openpyxl python docs/build_docs.py
-```
-
-## Đặc điểm bộ dữ liệu
-
-Đã chạy thử trên PostgreSQL 16.2. Các kiểm tra toàn vẹn sau đều bằng 0:
-- hợp đồng có tỷ lệ đồng bảo hiểm cộng khác 100%;
-- hợp đồng có tỷ lệ phân bổ doanh thu cộng khác 100%;
-- dòng phí có hoa hồng vượt trần.
-
-| Bảng | Số dòng |
-|---|---:|
-| `core.policy` (hợp đồng) | 28.902 |
-| `core.policy_transaction` (giao dịch; gồm 1.719 SĐBS, hoàn phí, hủy) | 30.621 |
-| `core.transaction_coverage` (dòng phí theo sản phẩm) | 34.605 |
-| `ref.customer` (khách hàng) | 15.953 |
-
-Quy mô và cơ cấu được hiệu chỉnh theo **số liệu công khai của PVI** (BCTC kiểm toán 2025). Cách làm từng bước xem [GENERATION_LOGIC.md](GENERATION_LOGIC.md). Doanh thu dưới đây tính trên dữ liệu nguồn theo công thức ở mục "Quy tắc doanh thu" của DESIGN_RATIONALE.
-
-| Chỉ tiêu 2025 | Dữ liệu dummy | Mốc công khai |
-|---|---:|---|
-| Doanh thu phí gốc phạm vi POC | 10.237 tỷ | ≈ 10.378 tỷ (BCTC PVI 2025, 4 nhóm nghiệp vụ POC) |
-| Tài sản (gồm cháy nổ) / Con người / Xe | 51,4% / 31,1% / 17,6% | 51,5% / 31,0% / 17,6% |
-| Theo quý Q1 / Q2 / Q3 / Q4 | 28,3 / 23,0 / 26,4 / 22,3% | 29,7 / 24,1 / 24,8 / 21,4% (phí gốc PVI 2025) |
-| Kênh điện tử / Bancassurance / Môi giới | 8,4% / 8,0% / 17,5% | ≈ 10% (BCTN PVI) / ước tính 5–8% / ước tính 15–20% |
-| Khối Trụ sở trực tiếp khai thác | 1.370 tỷ | Mô hình Tổng công ty |
-| 10% hợp đồng lớn nhất chiếm | 74% doanh thu | Dáng "ít đơn – nhiều tiền" của cháy nổ, tài sản, sức khỏe nhóm |
-
-## Tình huống có sẵn trong dữ liệu
-
-| Tình huống | Nhận diện | Lưu ý khi sử dụng |
+| Cột | NULL khi | Bản chất |
 |---|---|---|
-| Đồng bảo hiểm (đứng đầu hoặc tham gia) | `core.coinsurance_share` có > 1 dòng / hợp đồng | Chỉ phần `OWN` là doanh thu của công ty |
-| Phân bổ doanh thu cho nhiều đơn vị (hợp tác, Trụ sở, kênh số) | `core.revenue_allocation` | Doanh thu theo đơn vị được phân bổ |
-| SĐBS tăng/giảm phí, hoàn phí, hủy | `txn_type_code` | Số âm/dương ghi vào kỳ phát sinh; tài khoản 5111 / 5311 / 5321 |
-| Giao dịch `PENDING` / `VOID` | `status` | Không phải chứng từ hợp lệ |
-| Hiệu lực sau ngày cấp (cả sang năm sau) | `accounting_date` > `txn_date` | Ghi nhận theo `accounting_date` |
-| Đơn USD | `currency_code = 'USD'` | Quy đổi theo `fx_rate` của giao dịch |
-| Đơn nhiều sản phẩm (vật chất xe + TNDS; cháy nổ + tài sản) | > 1 dòng `transaction_coverage` / giao dịch | Tách theo sản phẩm |
-| Đơn lô giấy chứng nhận, "khách lẻ theo bảng kê" | `is_aggregated_retail` | Loại khi phân tích khách hàng định danh |
-| Tái tục | `renewal_of_policy_id` | Liên kết hợp đồng năm trước |
-| Kênh để trống (~0,5%) | `channel_code IS NULL` | Gán về "Chưa xác định" |
-| Trung tâm Kinh doanh số không có tỉnh | `province_code IS NULL` | Vùng miền để trống |
+| `ins_policy.partner_code` | Kênh không qua đối tác: trực tiếp, đại lý cá nhân, đấu thầu, web/app công ty (kênh điện tử không có đối tác) | Hợp lệ (không áp dụng) |
+| `ins_policy.channel_code` | ~0,5% hợp đồng nguồn không khai báo kênh | Lỗi dữ liệu có chủ đích |
+| `prev_policy_no`, `renewal_of_policy_id` | Hợp đồng cấp mới | Hợp lệ |
+| `premium_rate_pct` | Sản phẩm tính theo biểu phí cố định hoặc theo đầu người | Hợp lệ |
+| `ins_customer.tax_code` / `gender`, `birth_year` | Khách cá nhân / khách tổ chức | Hợp lệ |
+
+Quy tắc "dòng fact luôn tham chiếu danh mục" áp dụng ở **lớp phân tích**. View `v_ins_revenue_line` và các `mv_ins_*` gán:
+
+| Giá trị NULL ở `bronze` | Gán thành |
+|---|---|
+| Kênh NULL | `CHUA_XD` |
+| Đối tác NULL, kênh điện tử | `WEB_APP` |
+| Đối tác NULL, kênh khác | `KHONG_QUA_DT` |
+| Đối tác NULL, kênh NULL | `CHUA_XD` |
+
+Kiểm tra toàn bộ ràng buộc nghiệp vụ (41 quy tắc: hợp đồng, khách hàng, giao dịch, dòng phí, đồng bảo hiểm, phân bổ, tham chiếu):
+
+```bash
+PG_URI=postgresql://report:<mật khẩu>@127.0.0.1:15432/reportapi python audit/run_audit.py
+```
+
+Lịch sử sửa dữ liệu đã nạp nằm trong `audit/`:
+- `fix_in_place_2026-10-13.sql`: đối tác TNDS xe máy, SĐBS trên hợp đồng chưa duyệt, tỷ lệ phí.
+- `revert_na_members_2026-10-13.sql`: trả NULL về `bronze`.
+
+## Dùng cho dashboard
+
+Công thức doanh thu không đổi so với v2:
+
+```
+doanh thu = premium_vnd × share_pct(OWN) / 100 × allocation_pct / 100
+```
+
+Chỉ tính chứng từ `APPROVED`, theo `accounting_date`.
+
+| Đối tượng | Grain | Dùng cho |
+|---|---|---|
+| `bronze.v_ins_revenue_line` | 1 dòng phí × đơn vị được phân bổ | Drill-down chi tiết; đã join đủ 6 chiều và tên danh mục |
+| `bronze.mv_ins_revenue_daily` | ngày ghi nhận × đơn vị × kênh × đối tác × sản phẩm × phân khúc × vùng khách × loại giao dịch | Biểu đồ doanh thu (nhanh). Join thêm `ins_product`, `ins_product_group`, `ins_line_of_business`, `ins_company`, `ins_channel` để lấy tên |
+| `bronze.mv_ins_txn_hourly` | ngày chứng từ × giờ × kênh × đơn vị cấp × loại × trạng thái (mọi trạng thái) | Vận hành: số giao dịch/ngày, heatmap theo giờ, tỷ lệ PENDING/VOID |
+
+Sau khi nạp lại dữ liệu bằng cách khác, nhớ chạy:
+
+```sql
+REFRESH MATERIALIZED VIEW bronze.mv_ins_revenue_daily;
+REFRESH MATERIALIZED VIEW bronze.mv_ins_txn_hourly;
+```
+
+Ví dụ: doanh thu theo tuần và nhóm sản phẩm.
+
+```sql
+SELECT date_trunc('week', m.accounting_date) AS tuan, pg.product_group_name, sum(m.revenue_vnd) / 1e9 AS ty_dong
+FROM bronze.mv_ins_revenue_daily m
+JOIN bronze.ins_product p USING (product_code)
+JOIN bronze.ins_product_group pg USING (product_group_code)
+GROUP BY 1, 2 ORDER BY 1, 3 DESC;
+```
+
+## Hình dạng dữ liệu (để biểu đồ có câu chuyện)
+
+| Chiều | Đặc điểm |
+|---|---|
+| Thời gian | Tháng 9 cao hơn tháng 8 khoảng 1,48 lần mỗi ngày, theo phí gốc phi nhân thọ của Bộ Tài chính 2025 [CHÍNH THỨC]. Trong tháng phân bố đều, **không** có hiệu ứng cuối tháng (không có nguồn). Kênh văn phòng giảm cuối tuần và lễ 01–02/9; kênh số chạy đều [QUY ƯỚC] |
+| Mùa vụ | Học sinh đỉnh quanh khai giảng 5/9 (thời điểm [QUY ƯỚC], độ lớn [ƯỚC TÍNH]). Du lịch **không** có mùa vụ riêng trong kỳ (không có nguồn Việt Nam) |
+| Giờ | Kênh điện tử đỉnh 20–22h; kênh văn phòng 9–11h và 14–16h |
+| Kênh | TNDS xe máy, du lịch, tai nạn 24/24 chủ yếu qua kênh điện tử (ví điện tử, nhà mạng, hãng bay, OTA). Người vay vốn và nhà tư nhân qua bancassurance. Rủi ro lớn qua trực tiếp và môi giới. ~0,5% thiếu kênh (dữ liệu bẩn có chủ đích) |
+| Số đơn vs doanh thu | TNDS và du lịch chiếm phần lớn **số giao dịch** nhưng ít **doanh thu**. Cháy nổ và tài sản ít đơn nhưng chiếm khoảng 40% doanh thu |
+| Trạng thái | 0,4% VOID. PENDING dồn vào 5 ngày cuối kỳ (chứng từ chưa kịp duyệt) |
+| Ngày ghi nhận | Đơn không phải du lịch hiệu lực ngay ngày cấp [QUY ƯỚC]. Du lịch hiệu lực khi bắt đầu chuyến đi; số ngày mua trước lấy theo dataset Hotel booking (trung vị khoảng 70 ngày) [NGUỒN THAY THẾ], nên doanh thu du lịch rơi một phần sang tháng 10/2026 – 2028 |
+| SĐBS | Tăng/giảm phí, hoàn phí, hủy; hủy chuyến du lịch trước ngày đi. Ghi nhận theo max(ngày chứng từ, ngày hiệu lực) |
+
+**Quy mô doanh thu (từ 16/10/2026).** Cơ cấu theo BCTC kiểm toán PVI 2025 như v2: mục tiêu năm 10.377,9 tỷ × tỷ trọng tháng 8, 9 của Bộ Tài chính = khoảng 1.602 tỷ ở quy mô PVI. Để đạt > 50.000 giao dịch/ngày với đơn giá niêm yết, mọi nhóm được nhân cùng hệ số k ≈ 3,93, nên doanh thu tuyệt đối khoảng 6.300 tỷ nhưng **cơ cấu** tài sản + cháy nổ / con người / xe vẫn ≈ 51 / 31 / 17%. Bản trước (09–15/10) có cơ cấu lệch (35–40 / 38–42 / 22–24%) và doanh thu ≈ 8 lần PVI; đã thay. Chi tiết: [calibration/README.md](calibration/README.md).
+
+## Cách chạy
+
+Máy local không tới thẳng được `192.168.18.101`, còn các node k8s thì tới được. Có 2 cách.
+
+**Cách 1 (nhanh): chạy trong cluster.** Pod nằm cùng mạng LAN với DB nên nạp hết khoảng 15–20 phút. Manifest ở [F:\Project\k8s\ins-datagen-pod.yaml](../../../k8s/ins-datagen-pod.yaml). Copy vào `/work` các file `gen_volume.py`, `v2/01_ddl.sql`, `v2/01b_column_comments.sql` và phần danh mục của `v2/02_data.sql`. Sau đó chạy:
+
+```bash
+pip install numpy pandas "psycopg[binary]"
+PG_URI="postgresql://report:<mật khẩu>@192.168.18.101:5432/reportapi" V2_DIR=/work/v2 python gen_volume.py --reset --chunk-days 7
+```
+
+**Cách 2: qua tunnel `kubectl port-forward`.** Chậm, khoảng 0,4 MB/s, nên phù hợp để truy vấn hơn là nạp. Manifest ở [F:\Project\k8s\pg-proxy-reportapi.yaml](../../../k8s/pg-proxy-reportapi.yaml) (socat → 192.168.18.101:5432).
+
+```bash
+kubectl --kubeconfig F:/Project/k8s/kube_config.yaml -n cdc-test port-forward deploy/pg-proxy-reportapi 15432:5432
+```
+
+Sau đó kết nối DBeaver, Superset hoặc psql tới `127.0.0.1:15432`, db `reportapi`, user `report`.
+
+**Tùy chọn**
+
+| Tùy chọn | Tác dụng |
+|---|---|
+| `--dry-run` | Chỉ sinh và in thống kê |
+| `--days N` | Chỉ sinh N ngày đầu |
+| `--chunk-days N` | Sinh và nạp theo đợt N ngày (giới hạn RAM) |
+| `--reset` | Xóa các đối tượng `ins_*`, `v_ins_*`, `mv_ins_*` trong schema đích rồi nạp lại. **Không** đụng bảng khác trong `bronze` |
+
+Seed cố định (`SEED`), nên chạy lại cho ra cùng dữ liệu.
+
+## Lưu ý vận hành
+
+DB có 2 replication slot Debezium **đang không hoạt động**: `dbz_customer_tiering_eks` và `dbz_transaction_eks`. Hai slot này giữ khoảng 7,7 GB WAL mỗi slot, và `max_slot_wal_keep_size = -1`. Việc nạp bộ dữ liệu này sinh thêm vài GB WAL, cũng sẽ bị giữ lại. Ổ đĩa còn hơn 200 GB nên chưa đáng lo. Tuy vậy, nếu không còn dùng hai slot này thì nên xóa, hoặc đặt giới hạn `max_slot_wal_keep_size`.

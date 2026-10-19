@@ -5,8 +5,13 @@ Sinh tài liệu cho mô hình v2 từ CATALOG PostgreSQL thật (không gõ tay
   01b_column_comments.sql           COMMENT ON TABLE/COLUMN cho PostgreSQL
 
 Chạy (cần Python 3.11 cho pgserver — Postgres nhúng, không cài vào máy):
-  uv run --python 3.11 --with pgserver --with "psycopg[binary]" --with markdown --with openpyxl python docs/build_docs.py
+  uv run --python 3.11 --with pgserver --with "psycopg[binary]" --with markdown --with openpyxl python scripts/build_docs.py
 Hoặc trỏ tới Postgres có sẵn:  set PG_URI=postgresql://user:pass@host:5432/postgres
+
+Bộ dữ liệu KHỐI LƯỢNG LỚN (gen_volume.py → bronze.ins_* trên reportapi), đọc trực tiếp, không tạo DB:
+  set DOCS_TARGET=volume
+  set PG_URI=postgresql://report:<pw>@127.0.0.1:15432/reportapi     (tunnel k8s)
+  → docs/Data_Dictionary_volume.xlsx, docs/POC_Doanh_thu_BH_volume.html
 """
 import datetime as dt
 import html
@@ -25,12 +30,44 @@ from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.hyperlink import Hyperlink
 
 sys.path.insert(0, str(Path(__file__).parent))
-from dictionary_meta import BUSINESS_RULES, COLUMNS, SCENARIOS, TABLES  # noqa: E402
+from dictionary_meta import BUSINESS_RULES, COLUMNS, SCENARIOS, TABLES, VOLUME_BUSINESS_RULES, VOLUME_COLUMNS  # noqa: E402
 
-DOCS = Path(__file__).parent
-V2 = DOCS.parent
+SCRIPTS = Path(__file__).parent
+V2 = SCRIPTS.parent
+DOCS = V2 / "docs"
 DB = "ins_revenue_poc_docs"
 TODAY = dt.date.today()
+
+# Chế độ: v2 (mặc định, DB dựng từ 01_ddl + 02_data) | volume (đọc bronze.ins_* có sẵn — tên vật lý ref.X/core.X → bronze.ins_X)
+VOLUME = os.getenv("DOCS_TARGET", "v2") == "volume"
+VOL_DIR = V2                       # repo đã gộp: nội dung bộ volume nằm ngay trong thư mục gốc
+OUT_DIR = VOL_DIR / "docs" if VOLUME else DOCS
+SRC_DIR = VOL_DIR if VOLUME else V2
+XLSX_NAME = "Data_Dictionary_volume.xlsx" if VOLUME else "Data_Dictionary_v2.xlsx"
+HTML_NAME = "POC_Doanh_thu_BH_volume.html" if VOLUME else "POC_Doanh_thu_BH_v2.html"
+DOC_TITLE = "POC Doanh thu bảo hiểm — dữ liệu khối lượng lớn" if VOLUME else "POC Doanh thu bảo hiểm v2"
+PHYS_SCHEMA, PHYS_PREFIX = "bronze", "ins_"
+if VOLUME:
+    COLUMNS = {**COLUMNS, **VOLUME_COLUMNS}
+    BUSINESS_RULES = BUSINESS_RULES + VOLUME_BUSINESS_RULES
+
+
+def phys(t):
+    """Tên logic ref.X / core.X → tên vật lý (chế độ volume: bronze.ins_X)."""
+    return f"{PHYS_SCHEMA}.{PHYS_PREFIX}{t.split('.', 1)[1]}" if VOLUME else t
+
+
+def rw(sql):
+    return re.sub(r"\b(?:ref|core)\.\w+", lambda m: phys(m.group(0)), sql) if VOLUME else sql
+
+
+LOGICAL = {t.split(".", 1)[1]: t for t in TABLES}   # tên bảng gốc → ref.X / core.X
+WHERE_COLS = (f"c.table_schema = '{PHYS_SCHEMA}' AND c.table_name LIKE '{PHYS_PREFIX}%'" if VOLUME
+              else "c.table_schema IN ('ref','core')")
+WHERE_CONS = (f"n.nspname = '{PHYS_SCHEMA}' AND cl.relname LIKE '{PHYS_PREFIX}%'" if VOLUME else "n.nspname IN ('ref','core')")
+KPI_WHERE = ("t.accounting_date BETWEEN '2026-08-01' AND '2026-09-30'" if VOLUME
+             else "extract(year FROM t.accounting_date) = 2025")
+KPI_LABEL = "Doanh thu 08–09/2026 (tỷ VND)" if VOLUME else "Doanh thu 2025 (tỷ VND)"
 
 
 # ============================================================================
@@ -71,8 +108,10 @@ def read_catalog(conn):
         FROM information_schema.columns c
         JOIN information_schema.tables t USING (table_schema, table_name)
         JOIN pg_attribute a ON a.attrelid = format('%I.%I', c.table_schema, c.table_name)::regclass AND a.attname = c.column_name
-        WHERE c.table_schema IN ('ref','core') AND t.table_type = 'BASE TABLE'
-        ORDER BY 1, 2, 3""")
+        WHERE {WHERE_COLS} AND t.table_type = 'BASE TABLE'
+        ORDER BY 1, 2, 3""".replace("{WHERE_COLS}", WHERE_COLS))
+    if VOLUME:   # bronze.ins_X → (ref|core, X); bỏ bảng không thuộc mô hình
+        cols = [(*LOGICAL[t[len(PHYS_PREFIX):]].split("."), *r) for s, t, *r in cols if t[len(PHYS_PREFIX):] in LOGICAL]
     cons = q("""
         SELECT n.nspname || '.' || cl.relname, a.attname, co.contype,
                fn.nspname || '.' || fcl.relname, fa.attname
@@ -82,7 +121,11 @@ def read_catalog(conn):
         JOIN pg_attribute a ON a.attrelid = cl.oid AND a.attnum = k.a1
         LEFT JOIN pg_class fcl ON fcl.oid = co.confrelid LEFT JOIN pg_namespace fn ON fn.oid = fcl.relnamespace
         LEFT JOIN pg_attribute fa ON fa.attrelid = fcl.oid AND fa.attnum = k.a2
-        WHERE n.nspname IN ('ref','core') AND co.contype IN ('p','f','u')""")
+        WHERE {WHERE_CONS} AND co.contype IN ('p','f','u')""".replace("{WHERE_CONS}", WHERE_CONS))
+    if VOLUME:
+        def to_log(x):
+            return x and LOGICAL.get(x.split(".", 1)[1][len(PHYS_PREFIX):])
+        cons = [(to_log(tb), c, ct, to_log(ft), fc) for tb, c, ct, ft, fc in cons if to_log(tb)]
     pk, fk, uq = defaultdict(set), {}, defaultdict(set)
     for tbl, col, ct, ftbl, fcol in cons:
         if ct == "p":
@@ -93,14 +136,14 @@ def read_catalog(conn):
             uq[tbl].add(col)
     tables = sorted({f"{s}.{t}" for s, t, *_ in cols}, key=lambda x: (["ref", "core"].index(x.split(".")[0]), list(TABLES).index(x) if x in TABLES else 99))
     cols.sort(key=lambda r: (tables.index(f"{r[0]}.{r[1]}"), r[2]))  # cùng thứ tự với sheet tổng quan: ref → core
-    rows = {t: conn.execute(f"SELECT count(*) FROM {t}").fetchone()[0] for t in tables}
+    rows = {t: conn.execute(f"SELECT count(*) FROM {phys(t)}").fetchone()[0] for t in tables}
     stats = {}
     for s, t, _, c, *_ in cols:
         tbl = f"{s}.{t}"
-        n_null, n_dist = conn.execute(f'SELECT count(*) FILTER (WHERE "{c}" IS NULL), count(DISTINCT "{c}") FROM {tbl}').fetchone()
-        samples = [r[0] for r in conn.execute(f'SELECT DISTINCT "{c}"::text FROM {tbl} WHERE "{c}" IS NOT NULL ORDER BY 1 LIMIT 3').fetchall()]
+        n_null, n_dist = conn.execute(f'SELECT count(*) FILTER (WHERE "{c}" IS NULL), count(DISTINCT "{c}") FROM {phys(tbl)}').fetchone()
+        samples = [r[0] for r in conn.execute(f'SELECT DISTINCT "{c}"::text FROM {phys(tbl)} WHERE "{c}" IS NOT NULL ORDER BY 1 LIMIT 3').fetchall()]
         stats[(tbl, c)] = (n_null / rows[tbl] if rows[tbl] else 0, n_dist, " | ".join(x[:40] for x in samples))
-    codes = {name: (lambda r: ([d.name for d in r.description], r.fetchall()))(conn.execute(sql)) for name, sql in {
+    codes = {name: (lambda r: ([d.name for d in r.description], r.fetchall()))(conn.execute(rw(sql))) for name, sql in {
         "DM Sản phẩm": """SELECT p.product_code, p.product_name, g.product_group_name, l.lob_name, l.poc_group_name, p.report_line_code,
                                  p.is_compulsory, p.pricing_basis, p.vat_rate, p.max_commission_pct, p.solvency2_lob, p.legal_basis
                           FROM ref.product p JOIN ref.product_group g USING (product_group_code) JOIN ref.line_of_business l USING (lob_code)
@@ -113,7 +156,7 @@ def read_catalog(conn):
                         ORDER BY c.parent_company_code NULLS FIRST, c.company_type, c.company_code""",
         "DM Dòng báo cáo": "SELECT * FROM ref.regulatory_line ORDER BY report_line_code",
     }.items()}
-    kpi = conn.execute("""
+    kpi = conn.execute(rw("""
         SELECT (SELECT count(*) FROM core.policy), (SELECT count(*) FROM core.policy_transaction),
                (SELECT count(*) FROM core.transaction_coverage),
                (SELECT round(sum(cv.premium_vnd * own.share_pct / 100 * ra.allocation_pct / 100) / 1e9)
@@ -121,11 +164,11 @@ def read_catalog(conn):
                 JOIN core.policy_transaction t  ON t.txn_id = cv.txn_id AND t.status = 'APPROVED'
                 JOIN core.coinsurance_share own ON own.policy_id = t.policy_id AND own.insurer_code = 'OWN'
                 JOIN core.revenue_allocation ra ON ra.policy_id = t.policy_id
-                WHERE extract(year FROM t.accounting_date) = 2025),
-               (SELECT count(*) FROM ref.customer)""").fetchone()
+                WHERE {KPI_WHERE}),
+               (SELECT count(*) FROM ref.customer)""".replace("{KPI_WHERE}", KPI_WHERE))).fetchone()
     samples = {}
     for t in tables:
-        cur = conn.execute(f"SELECT * FROM {t} ORDER BY 1 LIMIT 5")
+        cur = conn.execute(f"SELECT * FROM {phys(t)} ORDER BY 1 LIMIT 5")
         samples[t] = ([d.name for d in cur.description], cur.fetchall())
     return cols, pk, fk, uq, tables, rows, stats, codes, kpi, samples
 
@@ -135,7 +178,7 @@ def read_catalog(conn):
 # ============================================================================
 def write_comments():
     lit = lambda s: "'" + s.replace("'", "''") + "'"  # noqa: E731
-    out = ["/* COMMENT ON TABLE/COLUMN — sinh bởi docs/build_docs.py từ docs/dictionary_meta.py. Chạy sau 01_ddl.sql */"]
+    out = ["/* COMMENT ON TABLE/COLUMN — sinh bởi scripts/build_docs.py từ scripts/dictionary_meta.py. Chạy sau 01_ddl.sql */"]
     for t, (_, desc, grain, basis) in TABLES.items():
         out.append(f"COMMENT ON TABLE {t} IS {lit(f'{desc}. Grain: {grain}. Căn cứ: {basis}')};")
     for (t, c), (desc, basis) in COLUMNS.items():
@@ -204,7 +247,9 @@ def xl_value(v):
 
 def write_excel(cols, pk, fk, uq, tables, rows, stats, codes, samples):
     wb = Workbook()
-    src = f"Sinh tự động từ catalog PostgreSQL (docs/build_docs.py) ngày {TODAY:%d/%m/%Y}. Số dòng / giá trị mẫu đếm trên bộ dữ liệu dummy sau khi chạy 01 → 03."
+    src = (f"Sinh tự động từ catalog PostgreSQL reportapi — bronze.ins_* (scripts/build_docs.py, DOCS_TARGET=volume) ngày {TODAY:%d/%m/%Y}. "
+           "Tên bảng ghi theo mô hình logic: ref.X / core.X = bronze.ins_X." if VOLUME else
+           f"Sinh tự động từ catalog PostgreSQL (scripts/build_docs.py) ngày {TODAY:%d/%m/%Y}. Số dòng / giá trị mẫu đếm trên bộ dữ liệu dummy sau khi chạy 01 → 03.")
     formula_cells = set()   # (sheet, coordinate) là công thức thật — mọi ô khác ép về văn bản
     sheet_of = {t: t for t in tables}  # tên sheet = schema.bảng (≤ 31 ký tự)
     link_font = Font(name=FONT, size=10, color="0563C1", underline="single")
@@ -216,7 +261,7 @@ def write_excel(cols, pk, fk, uq, tables, rows, stats, codes, samples):
     # ---- Hướng dẫn
     ws = wb.active
     ws.title = "Hướng dẫn"
-    title(ws, "DATA DICTIONARY — POC Doanh thu bảo hiểm v2 (PostgreSQL)", src)
+    title(ws, f"DATA DICTIONARY — {DOC_TITLE} (PostgreSQL)", src)
     guide = [
         ("Mục đích", "Mô tả chi tiết các bảng/cột của DỮ LIỆU NGUỒN được sinh ra cho POC doanh thu bảo hiểm (đủ thông tin cho 6 chiều phân tích: Thời gian, Kênh bán, Nghiệp vụ, Sản phẩm, Đơn vị, Khách hàng)."),
         ("Lớp 'Danh mục' (schema ref)", "Danh mục chuẩn hóa theo nguồn public: Luật KDBH 2022, NĐ 46/2023, NĐ 67/2023, TT 67/2023, TT 232/2012, NQ 202/2025, số liệu IAV/MOF."),
@@ -408,7 +453,8 @@ def write_excel(cols, pk, fk, uq, tables, rows, stats, codes, samples):
                 if cell.data_type == "f" and (wsx.title, cell.coordinate) not in formula_cells:
                     cell.data_type = "s"
     wb.calculation.fullCalcOnLoad = True  # Excel tự tính lại công thức khi mở
-    out = Path(os.getenv("DD_OUT", DOCS / "Data_Dictionary_v2.xlsx"))  # DD_OUT: ghi ra file khác khi bản chính đang mở trong Excel
+    out = Path(os.getenv("DD_OUT", OUT_DIR / XLSX_NAME))
+    out.parent.mkdir(parents=True, exist_ok=True)  # DD_OUT: ghi ra file khác khi bản chính đang mở trong Excel
     wb.save(out)
     return out
 
@@ -416,18 +462,35 @@ def write_excel(cols, pk, fk, uq, tables, rows, stats, codes, samples):
 # ============================================================================
 # 4. HTML
 # ============================================================================
-SECTIONS = [  # id, tiêu đề, file nguồn
+SECTIONS_V2 = [  # id, tiêu đề, file nguồn (tương đối với SRC_DIR)
     ("tong-quan", "Tổng quan & cách chạy", "README.md"),
     ("can-cu", "Căn cứ thiết kế", "DESIGN_RATIONALE.md"),
     ("logic-sinh", "Logic sinh dữ liệu", "GENERATION_LOGIC.md"),
+    ("hoi-dap", "Hỏi đáp: Tại sao?", "HOI_DAP_TAI_SAO.md"),
     ("phap-ly", "Nguồn pháp lý", "sources/regulations.md"),
     ("thi-truong", "Số liệu thị trường", "sources/market_data.md"),
     ("quoc-te", "Chuẩn quốc tế", "sources/international_standards.md"),
 ]
-LINK_MAP = {"README.md": "#tong-quan", "DESIGN_RATIONALE.md": "#can-cu", "GENERATION_LOGIC.md": "#logic-sinh", "sources/regulations.md": "#phap-ly",
+SECTIONS_VOL = [
+    ("tong-quan", "Tổng quan & cách chạy", "README.md"),
+    ("can-cu-tham-so", "Căn cứ tham số", "calibration/README.md"),
+    ("can-cu", "Căn cứ thiết kế mô hình (v2)", "DESIGN_RATIONALE.md"),
+    ("schema-change", "Mô phỏng thay đổi schema", "schema_change/README.md"),
+    ("phap-ly", "Nguồn pháp lý", "sources/regulations.md"),
+]
+SECTIONS = SECTIONS_VOL if VOLUME else SECTIONS_V2
+LINK_MAP_VOL = {"README.md": "#tong-quan", "calibration/README.md": "#can-cu-tham-so", "schema_change/README.md": "#schema-change",
+                "DESIGN_RATIONALE.md": "#can-cu", "sources/": "#phap-ly",
+                "sources/regulations.md": "#phap-ly", "regulations.md": "#phap-ly",
+                "GENERATION_LOGIC.md": "../GENERATION_LOGIC.md", "../GENERATION_LOGIC.md": "../GENERATION_LOGIC.md"}
+LINK_MAP = {"README.md": "#tong-quan", "DESIGN_RATIONALE.md": "#can-cu", "GENERATION_LOGIC.md": "#logic-sinh", "HOI_DAP_TAI_SAO.md": "#hoi-dap", "sources/regulations.md": "#phap-ly",
             "sources/market_data.md": "#thi-truong", "sources/international_standards.md": "#quoc-te",
             "regulations.md": "#phap-ly", "market_data.md": "#thi-truong", "international_standards.md": "#quoc-te",
             "sources/": "#phap-ly"}
+
+
+if VOLUME:
+    LINK_MAP = LINK_MAP_VOL
 
 
 def md_to_html(text):
@@ -453,7 +516,7 @@ def write_html(cols, pk, fk, uq, tables, rows, stats, kpi):
     n_policy, n_txn, n_fact, rev25, n_cust = kpi
     sec_html, toc = [], []
     for sid, ttl, f in SECTIONS:
-        sec_html.append(f'<section id="{sid}"><h2>{ttl}</h2>{md_to_html((V2 / f).read_text(encoding="utf-8"))}</section>')
+        sec_html.append(f'<section id="{sid}"><h2>{ttl}</h2>{md_to_html((SRC_DIR / f).read_text(encoding="utf-8"))}</section>')
         toc.append((sid, ttl))
 
     # sơ đồ quan hệ lớp giao dịch (core) và các danh mục được tham chiếu — dựng từ FK thật
@@ -491,7 +554,7 @@ def write_html(cols, pk, fk, uq, tables, rows, stats, kpi):
     rules = "".join(f"<tr><td><b>{html.escape(a)}</b></td><td>{html.escape(b)}</td><td>{html.escape(c)}</td></tr>" for a, b, c in BUSINESS_RULES)
     scen = "".join(f"<tr><td><b>{html.escape(a)}</b></td><td>{html.escape(b)}</td><td>{html.escape(c)}</td></tr>" for a, b, c in SCENARIOS)
     dd = f"""<section id="data-dictionary"><h2>Data dictionary</h2>
-<p>Sinh tự động từ catalog PostgreSQL ngày {TODAY:%d/%m/%Y}; bản Excel chi tiết: <a href="Data_Dictionary_v2.xlsx">Data_Dictionary_v2.xlsx</a>.</p>
+<p>Sinh tự động từ catalog PostgreSQL ngày {TODAY:%d/%m/%Y}{PHYS_NOTE}; bản Excel chi tiết: <a href="{XLSX_NAME}">{XLSX_NAME}</a>.</p>
 <h3 class="h2">Sơ đồ quan hệ lớp giao dịch (core)</h3><pre class="mermaid">{html.escape(star)}</pre>
 <h3 class="h2">Danh sách bảng</h3>
 <div class="tw"><table><thead><tr><th>Lớp</th><th>Bảng</th><th>Mô tả</th><th>Grain</th><th>Cột</th><th>Dòng</th></tr></thead><tbody>{overview}</tbody></table></div>
@@ -506,24 +569,35 @@ def write_html(cols, pk, fk, uq, tables, rows, stats, kpi):
     appendix = "".join(
         f'<details class="code"><summary><code>{f}</code></summary><pre><code>{html.escape((V2 / f).read_text(encoding="utf-8"))}</code></pre></details>'
         for f in ("01_ddl.sql",))
+    if VOLUME:
+        appendix = ("<p>Trên <code>reportapi</code>: mọi bảng <code>ref.X</code> / <code>core.X</code> của DDL dưới đây nằm ở "
+                    "<code>bronze.ins_X</code>; thêm 3 cột <code>ins_customer.gender</code>, <code>ins_customer.birth_year</code>, "
+                    "<code>ins_policy.prev_policy_no</code> (gen_volume.py · EXTRA_DDL).</p>" + appendix)
     sec_html.insert(3, dd)
     sec_html.append(f'<section id="phu-luc"><h2>Phụ lục SQL (PostgreSQL)</h2><p>Dữ liệu (<code>02_data.sql</code>) không nhúng vì dung lượng.</p>{appendix}</section>')
     toc.append(("phu-luc", "Phụ lục SQL"))
     nav = "".join(f'<a href="#{i}">{t}</a>' for i, t in toc)
 
     page = TEMPLATE.format(
-        date=f"{TODAY:%d/%m/%Y}", nav=nav, body="".join(sec_html),
+        date=f"{TODAY:%d/%m/%Y}", nav=nav, body="".join(sec_html), doc_title=DOC_TITLE, intro=INTRO,
         kpis="".join(f'<div class="kpi"><b>{v}</b><span>{k}</span></div>' for k, v in [
-            ("Doanh thu 2025 (tỷ VND)", f"{rev25:,.0f}"), ("Hợp đồng", f"{n_policy:,}"), ("Giao dịch", f"{n_txn:,}"),
+            (KPI_LABEL, f"{rev25:,.0f}"), ("Hợp đồng", f"{n_policy:,}"), ("Giao dịch", f"{n_txn:,}"),
             ("Dòng phí theo SP", f"{n_fact:,}"), ("Khách hàng", f"{n_cust:,}"), ("Bảng / cột", f"{len(tables)} / {len(cols)}")]))
-    out = DOCS / "POC_Doanh_thu_BH_v2.html"
+    out = OUT_DIR / HTML_NAME
+    out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8")
     return out
 
 
+PHYS_NOTE = " (reportapi · bronze.ins_*; tên bảng ghi theo mô hình logic ref.X / core.X)" if VOLUME else ""
+INTRO = ("Dữ liệu nguồn giả lập ở quy mô vận hành (&gt; 50.000 giao dịch/ngày, 01/08 – 30/09/2026) trên PostgreSQL "
+         "<code>reportapi</code>, schema <code>bronze</code>, bảng <code>ins_*</code> — dùng nguyên mô hình v2; mọi tham số thời gian có nhãn căn cứ "
+         "([CHÍNH THỨC] / [DATASET] / [NGUỒN THAY THẾ] / [QUY ƯỚC] / [ƯỚC TÍNH])." if VOLUME else
+         "Dữ liệu nguồn giả lập cho POC doanh thu bảo hiểm (đủ 6 chiều: Thời gian · Kênh bán · Nghiệp vụ · Sản phẩm · Đơn vị · Khách hàng). "
+         "Mô hình 2 lớp <code>ref</code> (danh mục) → <code>core</code> (giao dịch) trên PostgreSQL; mọi quy tắc và con số có căn cứ public.")
 TEMPLATE = """<!doctype html>
 <html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>POC Doanh thu bảo hiểm v2</title>
+<title>{doc_title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -570,10 +644,10 @@ code.ty{{white-space:nowrap}}details.code{{margin:8px 0}}details.code summary{{c
 @media print{{nav,.tools{{display:none}}.wrap{{display:block}}section{{break-inside:auto}}details{{border:0}}body{{font-size:12px}}}}
 @media (prefers-reduced-motion:reduce){{html{{scroll-behavior:auto}}}}
 </style></head><body><div class="wrap">
-<nav aria-label="Mục lục"><div class="brand">POC Doanh thu bảo hiểm v2</div><div class="sub">Tài liệu tổng hợp · {date}</div>{nav}
+<nav aria-label="Mục lục"><div class="brand">{doc_title}</div><div class="sub">Tài liệu tổng hợp · {date}</div>{nav}
 <button type="button" id="theme" aria-label="Đổi giao diện sáng/tối">Sáng / Tối</button></nav>
 <main><header><h1>Dữ liệu nguồn dummy — POC Doanh thu bảo hiểm</h1>
-<p>Dữ liệu nguồn giả lập cho POC doanh thu bảo hiểm (đủ 6 chiều: Thời gian · Kênh bán · Nghiệp vụ · Sản phẩm · Đơn vị · Khách hàng). Mô hình 2 lớp <code>ref</code> (danh mục) → <code>core</code> (giao dịch) trên PostgreSQL; mọi quy tắc và con số có căn cứ public.</p>
+<p>{intro}</p>
 <div class="kpis">{kpis}</div><p class="note">Số liệu tính trên bộ dữ liệu dummy (doanh nghiệp giả lập "DEMO").</p></header>
 {body}
 </main></div>
@@ -600,8 +674,11 @@ code.ty{{white-space:nowrap}}details.code{{margin:8px 0}}details.code summary{{c
 
 
 if __name__ == "__main__":
-    write_comments()
-    srv, uri = start_db()
+    if VOLUME:
+        srv, uri = None, os.environ["PG_URI"]          # đọc trực tiếp, không tạo DB / không ghi 01b
+    else:
+        write_comments()
+        srv, uri = start_db()
     with psycopg.connect(uri) as conn:
         cols, pk, fk, uq, tables, rows, stats, codes, kpi, samples = read_catalog(conn)
     missing = [f"{s}.{t}.{c}" for s, t, _, c, *_ in cols if (f"{s}.{t}", c) not in COLUMNS]

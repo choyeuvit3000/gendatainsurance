@@ -1,0 +1,391 @@
+"""Tài liệu học: logic sinh dữ liệu, cơ chế, và căn cứ của TỪNG tham số trong build_v2.py.
+
+Chỉ dùng căn cứ PUBLIC. Dữ liệu nội bộ của bất kỳ doanh nghiệp nào KHÔNG được dùng làm căn cứ.
+Sinh HTML: python scripts/build_learning.py
+
+Quy tắc ghi:
+  - Mỗi tham số có >= 1 nhãn căn cứ (TAGS). Một tham số có thể vừa có căn cứ vừa có phần giả định
+    (vd biểu phí TNDS là LAW, nhưng trọng số loại xe là ASSUME) -> ghi cả hai, phần giả định nói rõ ở cột 'why'.
+  - Mọi dòng có ASSUME phải có 'impact' = (mức, giải thích ảnh hưởng nếu giả định sai).
+  - 'code' = số dòng trong build_v2.py.
+"""
+
+TAGS = {  # mã -> (nhãn, mô tả)
+    "LAW": ("Văn bản pháp luật", "Luật, nghị định, thông tư — đọc toàn văn trên vbpl.vn"),
+    "FIN": ("Số liệu công bố", "BCTC kiểm toán, số liệu IAV / Bộ Tài chính / Kho bạc"),
+    "PUB": ("Thông tin công khai", "Giá niêm yết trên website DNBH, báo cáo thường niên, báo chí, báo cáo phân tích"),
+    "STD": ("Chuẩn ngành", "ACORD, Solvency II, Kimball, IBM IIW, OMG, Microsoft CDM"),
+    "SAMPLE": ("Dataset mẫu", "Dataset public trên internet (CASdatasets, Kaggle, CAS) — chứng minh cấu trúc, không lấy số"),
+    "BRIEF": ("Đề bài", "Yêu cầu POC: 6 chiều, cây phân cấp, danh sách nghiệp vụ"),
+    "DERIVED": ("Suy ra / tính toán", "Tính từ số đã có nguồn, hoặc thuật toán của bộ sinh"),
+    "ASSUME": ("Giả định", "Dự án tự đặt vì không có số công bố — đã chốt làm chuẩn"),
+}
+
+# id, nhãn, tên nguồn, URL (None nếu không có), ghi chú
+SOURCES = [
+    ("S1", "LAW", "Luật Kinh doanh bảo hiểm 08/2022/QH15", "https://vbpl.vn/van-ban/chi-tiet/luat-kinh-doanh-bao-hiem-so-08-2022-qh15--163515", "Đ4 k14, k15, k29; Đ7 k1; Đ87 k4; Đ124, Đ125"),
+    ("S3", "LAW", "Nghị định 46/2023/NĐ-CP", "https://vbpl.vn/van-ban/chi-tiet/nghi-dinh-so-46-2023-nd-cp-quy-dinh-chi-tiet-thi-hanh-mot-so-dieu-cua-luat-kinh-doanh-bao-hiem--163441", "Đ4, Đ5 (nghiệp vụ); Đ49 (doanh thu, khoản giảm thu); Đ62 (bancassurance)"),
+    ("S5", "LAW", "Thông tư 67/2023/TT-BTC (Phụ lục VI mẫu báo cáo)", "https://vbpl.vn/van-ban/chi-tiet/thong-tu-so-67-2023-tt-btc-huong-dan-mot-so-dieu-cua-luat-kinh-doanh-bao-hiem-nghi-dinh-so-46-2023-nd-cp-ngay-01-thang-7-nam-2023-cua-chinh-phu-quy-dinh-chi-tiet-thi-hanh-mot-so-dieu-cua-luat-kinh-doanh-bao-hiem--163439", "Mẫu 1/2/3-PNT"),
+    ("S6", "LAW", "VBHN 44/2026/VBHN-TT-BTC (hợp nhất TT 67/2023 và TT 96/2026)", "https://vbpl.vn/van-ban/chi-tiet/van-ban-hop-nhat-huong-dan-mot-so-dieu-cua-luat-kinh-doanh-bao-hiem-va-nghi-dinh-so-46-2023-nd-cp-so-44-2026-vbhn-tt-btc--035153a0-be3d-11f1-adb4-c9ac1aadd258", "Đ4–5 (bán trên mạng); Đ41 (ghi nhận phí gốc); Đ51 k3 (trần hoa hồng); Đ53"),
+    ("S8", "LAW", "Nghị định 67/2023/NĐ-CP", "https://vbpl.vn/van-ban/chi-tiet/nghi-dinh-so-67-2023-nd-cp-quy-dinh-ve-bao-hiem-bat-buoc-trach-nhiem-dan-su-cua-chu-xe-co-gioi-bao-hiem-chay-no-bat-buoc-bao-hiem-bat-buoc-trong-hoat-dong-dau-tu-xay-dung--163442", "Phụ lục I biểu phí TNDS; Phụ lục II tỷ lệ phí cháy nổ bắt buộc; mức trách nhiệm TNDS 150 triệu/người/vụ"),
+    ("S9", "LAW", "Nghị định 105/2025/NĐ-CP (PCCC)", "https://vbpl.vn/van-ban/chi-tiet/nghi-dinh-so-105-2025-nd-cp-quy-dinh-chi-tiet-mot-so-dieu-va-bien-phap-thi-hanh-luat-phong-chay-chua-chay-va-cuu-nan-cuu-ho--177733", "Phụ lục VI thay Phụ lục II của NĐ 67 từ 01/7/2025 (chỉ có bản scan)"),
+    ("S11", "LAW", "Thông tư 232/2012/TT-BTC (kế toán DNBH phi nhân thọ)", "https://vbpl.vn/van-ban/chi-tiet/thong-tu-so-232-2012-tt-btc-huong-dan-ke-toan-ap-dung-doi-voi-doanh-nghiep-bao-hiem-phi-nhan-tho-doanh-nghiep-tai-bao-hiem-va-chi-nhanh-doanh-nghiep-bao-hiem-phi-nhan-tho-nuoc-ngoai--30429", "TK 5111 / 5311 / 5321 / 005; Đ19 đồng bảo hiểm"),
+    ("S12", "LAW", "Nghị quyết 202/2025/QH15 (sắp xếp ĐVHC cấp tỉnh)", "https://vbpl.vn/van-ban/chi-tiet/nghi-quyet-so-202-2025-qh15-ve-viec-sap-xep-don-vi-hanh-chinh-cap-tinh--179501", "34 tỉnh/thành từ 01/7/2025"),
+    ("S14", "LAW", "Luật Thuế GTGT 48/2024/QH15 (VBHN 12/VBHN-VPQH 2026)", "https://vbpl.vn/van-ban/chi-tiet/van-ban-hop-nhat-so-12-vbhn-vpqh-2026-hop-nhat-luat-thue-gia-tri-gia-tang-so-48-2024-qh15--8ca5f9c0-9625-11f1-9b37-1f0c0efba979", "Đ5 k8: bảo hiểm con người không chịu thuế"),
+    ("F1", "FIN", "BCTC kiểm toán 2025 Tổng công ty Bảo hiểm PVI — thuyết minh 21 (phí gốc theo nghiệp vụ 2024, 2025)", "https://adminweb.pvi.com.vn/wp-content/uploads/2026/05/2025Q4_Audited_FSs_En.pdf", "Căn cứ hiệu chỉnh chính"),
+    ("F2", "FIN", "BCTC hợp nhất quý PVI Holdings — thuyết minh 21, phí gốc theo quý (link: quý 4/2025)", "https://pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/ce6f18e2-7a79-42f3-b6ab-2b79ea1e4077.pdf", "2025: 29,7 / 24,1 / 24,8 / 21,4%; 2024: 31,5 / 21,5 / 26,6 / 20,5%. Các quý khác cùng dạng link, đổi id: Q2/2025 bc5a7b1d-f3d3-4e54-a2a1-d468bc2f27a6, Q3/2025 2bcdd91c-1c7d-4b5a-a2d7-ab35989f0968, Q1/2026 b4b85186-5797-411f-b68b-2f8d0face687"),
+    ("F3", "FIN", "IAV — số liệu thị trường 2024", "https://iav.vn/tong-quan,-so-lieu-thi-truong-bao-hiem/254773-254773-mot-so-hoat-dong-noi-bat-cua-thi-truong-bao-hiem-viet-nam-ca-nam-2024", "TNDS bắt buộc 4.537 / xe cơ giới 18.693 tỷ"),
+    ("F4", "FIN", "Bộ Tài chính — Bản tin thị trường bảo hiểm 01/2026", "https://mof.gov.vn/quan-ly-giam-sat-bao-hiem/ban-tin-thi-truong-bao-hiem-toan-cau/ban-tin-thi-truong-bao-hiem-thang-12026", "Phí qua môi giới 11.905 / 88.054 tỷ ≈ 13,5%"),
+    ("F5", "FIN", "Kho bạc Nhà nước — thông báo tỷ giá hạch toán hằng tháng 2025 (link: tháng 01/2025, TB 7727/TB-KBNN)", "https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Thong-bao-7727-TB-KBNN-2024-ty-gia-hach-toan-ngoai-te-thang-01-nam-2025-641872.aspx", "Mỗi tháng một thông báo trên thuvienphapluat.vn, vd tháng 02: TB 444/TB-KBNN, tháng 03: TB 989/TB-KBNN"),
+    ("P1", "PUB", "PVI Annual Report 2024", "https://static2.vietstock.vn/vietstock/2025/3/19/3_pvi_2025_3_19_fb26c59_en_annualreport_2024.pdf", "Kênh TMĐT/API ≈ 800 tỷ (≈ 6% phí gốc); đối tác hãng bay, nhà mạng, sàn TMĐT"),
+    ("P2", "PUB", "pvn.vn — Bảo hiểm PVI khởi đầu vững chắc năm 2025", "https://pvn.vn/khoi-dau-vung-chac-bao-hiem-pvi-huong-toi-moc-doanh-thu-ty-do-la-my-nam-2025-28459", "Doanh thu kênh thương mại điện tử quý I/2025 tăng 1,8 lần so với cùng kỳ 2024"),
+    ("P3", "PUB", "FPTS — báo cáo định giá lần đầu PVI (14/04/2025)", "https://file.fpts.com.vn/FileStore2/File/2025/04/14/DuyenNTM14042025Bao_cao_dinh_gia_lan_dau_PVI_0bef673f.pdf", "Mảng sức khỏe PVI chủ yếu là bảo hiểm nhóm doanh nghiệp (định tính)"),
+    ("P4", "PUB", "online.pvi.com.vn — kiến thức bảo hiểm ô tô", "https://online.pvi.com.vn/kien-thuc/bao-hiem-o-to-bao-nhieu-tien", "Vật chất xe 0,5–3,5% giá trị xe/năm"),
+    ("P5", "PUB", "Giá niêm yết: online.pvi.com.vn/san-pham và baovietonline.com.vn", "https://online.pvi.com.vn/san-pham", "Du lịch từ 17.000 đ; du lịch quốc tế từ 100.000 đ; sức khỏe từ 1,445 triệu; nhà 220–270 nghìn/năm"),
+    ("P6", "PUB", "CafeF 23/9/2024 — bảo hiểm học sinh", "https://cafef.vn/dau-nam-hoc-bo-100000-dong-mua-bao-hiem-than-the-cho-con-hang-trieu-phu-huynh-co-the-bo-qua-dieu-nay-188240923103450415.chn", "Phổ biến 100.000 đ/em, thu đầu năm học"),
+    ("P7", "PUB", "fireant.vn — gói bảo hiểm hàng không Vietnam Airlines", "https://fireant.vn/bai-viet/nha-thau-trung-goi-bao-hiem-hon-500-ty-co-nang-luc-the-nao/29752615", "Liên danh Bảo Việt – PVI – Bảo Minh trúng thầu 540,209 tỷ đồng; gói mời thầu khoảng 600 tỷ (vietnambusinessinsider.vn)"),
+    ("P11", "PUB", "tinnhanhchungkhoan.vn — Bảo hiểm bán buôn trước cơ hội lớn", "https://www.tinnhanhchungkhoan.vn/bao-hiem-ban-buon-truoc-co-hoi-lon-post368348.html", "Nhà máy nhiệt điện Quảng Trạch I: tổng giá trị bảo hiểm gần 28.000 tỷ đồng"),
+    ("P12", "PUB", "baodauthau.vn — Liên danh 6 thành viên trúng gói thầu bảo hiểm cảng HKQT Long Thành", "https://baodauthau.vn/lien-danh-6-thanh-vien-trung-goi-thau-bao-hiem-cang-hkqt-long-thanh-post136014.html", "Liên danh 6 DN. Trang chặn tải tự động — chưa kiểm lại được nội dung"),
+    ("P13", "PUB", "pvn.vn — Bảo hiểm PVI ký thỏa thuận khung với Vinalines", "https://www.pvn.vn/bao-hiem-pvi-ky-thoa-thuan-khung-voi-vinalines-5860", "Bảo hiểm thân tàu 76 tàu của 9 DN thuộc Vinalines, tổng giá trị bảo hiểm hơn 565 triệu USD"),
+    ("P8", "PUB", "pvi.com.vn — mạng lưới Bảo hiểm PVI", "https://www.pvi.com.vn/vi/services/mang-luoi", "PVI 47 công ty thành viên"),
+    ("P14", "PUB", "Bảo Việt Holdings — Integrated Report 2024", "https://static2.vietstock.vn/vietstock/2025/4/22/20250422_bvh_250422_integrated_report_2024.pdf", "Bảo hiểm Bảo Việt có 79 công ty thành viên"),
+    ("P9", "PUB", "pvi.com.vn — Bảo hiểm PVI và Nam A Bank khởi động hợp tác bancassurance", "https://www.pvi.com.vn/vi/news/bao-hiem-pvi-va-nam-a-bank-khoi-dong-hop-tac-kinh-doanh-tai-khu-vuc-mien-tay", "PVI mở rộng bancassurance; không công bố doanh thu kênh này"),
+    ("P10", "PUB", "bic.vn — danh mục sản phẩm bancassurance", "https://bic.vn/vi/san-pham/bancassurance.html", "Xác nhận bảo hiểm con người bán qua ngân hàng. Cách tính phí theo dư nợ / bảng kê người vay KHÔNG có trong nguồn này"),
+    ("T1", "STD", "ACORD P&C — BusinessPurposeTypeCd, Coverage NetChangeAmt", "https://modelviewers.pilotfishtechnology.com/modelviewers/ACORD-PCS/model/codelists/CycleBusinessPurpose.html", "NBS / RWL / PCH / XLC"),
+    ("T2", "STD", "Solvency II — Delegated Regulation 2015/35 Annex I", "https://www.legislation.gov.uk/eur/2015/35/annex/I/adopted", "LoB 1, 2, 4, 5, 7"),
+    ("T3", "STD", "Kimball — Insurance case, Multiple currencies", "https://www.kimballgroup.com/data-warehouse-business-intelligence-resources/kimball-techniques/dimensional-modeling-techniques/multiple-currencies/", "Lưu nguyên tệ + tiền chuẩn"),
+    ("T4", "STD", "IBM IIW / OMG P&C / Microsoft CDM P&C", "https://learn.microsoft.com/en-us/common-data-model/schema/core/industrycommon/financialservices/propertyandcasualtydatamodel/overview", "Policy → PolicyTransaction → Coverage; OMG Policy Amount (Direct / Assumed / Ceded)"),
+    ("D1", "SAMPLE", "CASdatasets fremotor1prem0304a/b/c — danh mục xe cá nhân Pháp 2003–2004 (R package CASdatasets)", "https://github.com/dutangc/CASdatasets/blob/master/man-md/fremotor1prem0304a.md", "30 cột: phí năm theo từng quyền lợi (PremTPLM, PremTPLV, PremDamAll, PremFire, PremTheft…), PremTot, Channel, Region, Year"),
+    ("D2", "SAMPLE", "Kaggle Travel Insurance (mhdzahier)", "https://www.kaggle.com/datasets/mhdzahier/travel-insurance", "Agency, Agency Type (Airlines / Travel Agency), Distribution Channel (Online / Offline), Product Name, Duration, Destination, Net Sales (có giá trị âm), Commision (in value). Cấu trúc đã đọc trên bản trích 100 dòng công khai trên GitHub"),
+    ("D3", "SAMPLE", "CAS Loss Reserving Database (NAIC Schedule P)", "https://www.casact.org/publications-research/research/research-resources/loss-reserving-data-pulled-naic-schedule-p", "6 nghiệp vụ × công ty × năm; EarnedPremDIR (direct & assumed), EarnedPremCeded, EarnedPremNet"),
+    ("D4", "SAMPLE", "CASdatasets freMTPL2freq / freMTPL2sev — TNDS xe Pháp", "https://dutangc.github.io/CASdatasets/reference/freMTPL.html", "677.991 hợp đồng TNDS xe, phần lớn quan sát trong 1 năm; IDpol, Exposure (năm), ClaimNb, Region, Area, Density; bồi thường liên kết qua IDpol"),
+    ("D5", "SAMPLE", "UCI Insurance Company Benchmark (COIL 2000)", "https://archive.ics.uci.edu/dataset/125/insurance+company+benchmark+coil+2000", "Mỗi khách: phân khúc (MOSHOOFD / MOSTYPE) + mức phí và số hợp đồng theo từng loại sản phẩm (xe, mô tô, cháy, tai nạn, nhân thọ…); từ điển: kdd.ics.uci.edu/databases/tic/dictionary.txt"),
+    ("D6", "SAMPLE", "Synthea — bộ sinh dữ liệu bệnh nhân giả lập", "https://github.com/synthetichealth/synthea/wiki/CSV-File-Data-Dictionary", "Sinh dữ liệu 'realistic but not real' theo cấu hình thống kê (mặc định số liệu điều tra dân số); payers, payer_transitions (Start_Year / End_Year, Ownership: Self / Guardian / Spouse), claims_transactions (CHARGE / PAYMENT / ADJUSTMENT)"),
+    ("D7", "SAMPLE", "CMS Medicare DE-SynPUF 2008–2010", "https://www.cms.gov/data-research/statistics-trends-and-reports/medicare-claims-synthetic-public-use-files", "Dữ liệu giả lập giữ nguyên định dạng và tên biến của dữ liệu thật để phát triển phần mềm, nhưng 'very limited inferential research value'"),
+    ("B1", "BRIEF", "Đề bài POC Doanh thu bảo hiểm", None, "6 chiều; Tổng DT → Tổng công ty → Công ty → Kênh → Nghiệp vụ → Sản phẩm → Tháng; 8 nhóm sản phẩm"),
+]
+
+# Dataset mẫu public: (id, chứng minh được gì [(điều, tham số)], không dùng vào)
+DATASETS = {
+    "D1": ([
+        ("Một hợp đồng có nhiều dòng phí theo quyền lợi / sản phẩm", "core.transaction_coverage; P59"),
+        ("TNDS bắt buộc (PremTPLM) và vật chất xe (PremDamAll) nằm trên cùng hợp đồng → bán kèm VCX + TNDS", "P59"),
+        ("TNDS tự nguyện (PremTPLV) là quyền lợi riêng, tách khỏi TNDS bắt buộc", "P07"),
+        ("Kênh (Channel), vùng (Region), năm (Year) là chiều của hợp đồng", "P13"),
+    ], "Thị trường Pháp, phí theo bonus-malus — không dùng mức phí hay tỷ lệ nào."),
+    "D2": ([
+        ("Bảo hiểm du lịch bán qua 2 loại đại lý: hãng bay và đại lý du lịch", "P14"),
+        ("Kênh Online / Offline là thuộc tính của giao dịch", "P13"),
+        ("Hoàn phí ghi thành doanh số âm", "P16, P71"),
+        ("Hoa hồng là cột riêng, nhiều giao dịch có hoa hồng = 0", "P73"),
+        ("Thời hạn du lịch tính theo ngày chuyến đi", "P61"),
+    ], "Bản trích 100 dòng không đại diện; dữ liệu nước ngoài — không dùng mức phí, tỷ lệ kênh hay tỷ lệ hoàn phí."),
+    "D3": ([
+        ("Phí toàn bộ (direct & assumed) khác phần công ty giữ lại (net) → phải tách phần của công ty", "P63"),
+        ("Phí được tổng hợp theo nghiệp vụ × doanh nghiệp × năm", "P05"),
+    ], "Thị trường Mỹ, nghiệp vụ trách nhiệm; tách theo tái bảo hiểm chứ không phải đồng bảo hiểm — chỉ dùng như nguyên tắc."),
+    "D4": ([
+        ("Một danh mục TNDS xe có hàng trăm nghìn hợp đồng, phần lớn thời hạn 1 năm → dáng 'rất nhiều đơn nhỏ' của TNDS", "P24, P61"),
+        ("Vùng (Region) là thuộc tính của hợp đồng", "P01"),
+    ], "Không dùng số hợp đồng, tần suất hay bồi thường (bồi thường ngoài phạm vi POC doanh thu)."),
+    "D5": ([
+        ("Khách hàng được phân khúc theo loại chính / loại phụ", "P15"),
+        ("Một khách giữ nhiều loại sản phẩm (xe, cháy, tai nạn, nhân thọ…) → bán chéo", "P38"),
+    ], "Dữ liệu Hà Lan năm 2000, nhân khẩu học — không dùng tỷ lệ nào."),
+    "D6": ([
+        ("Tiền lệ phương pháp: bộ sinh có cấu hình, neo vào thống kê công khai, ra dữ liệu 'giống thật nhưng không thật'", "P00"),
+        ("Bên mua bảo hiểm có thể khác người được bảo hiểm (Ownership: Self / Guardian / Spouse)", "P39"),
+        ("Quyền lợi bảo hiểm nối tiếp theo năm (Start_Year / End_Year)", "P69"),
+    ], "Dữ liệu y tế Mỹ, phần lớn về khám chữa bệnh và bồi thường — không dùng số."),
+    "D7": ([
+        ("Tiền lệ của cơ quan nhà nước: dữ liệu giả lập giữ đúng cấu trúc và tên biến thật, nhưng không dùng để suy luận thống kê", "P00"),
+    ], "Dữ liệu bồi thường Medicare — ngoài phạm vi doanh thu phí."),
+}
+
+# Nguồn được đề xuất nhưng KHÔNG dùng: (tên, URL, lý do)
+NOT_USED = [
+    ("SOA 2015 Valuation Basic Tables", "https://www.soa.org/resources/experience-studies/2015/2015-valuation-basic-tables/", "Bảng tử vong cho bảo hiểm nhân thọ Mỹ. POC là phi nhân thọ + sức khỏe; phí sinh mạng – tai nạn ở Việt Nam định theo tỷ lệ trên STBH, không theo bảng tử vong."),
+    ("RAA — ChainLadder", "https://mages.github.io/ChainLadder/reference/RAA.html", "Tam giác bồi thường 10 × 10 năm để ước tính dự phòng. POC chỉ sinh doanh thu phí, không có bồi thường."),
+    ("freMTPL2sev, phần claims của CMS DE-SynPUF và Synthea", None, "Dữ liệu bồi thường — ngoài phạm vi. Chỉ dùng phần cấu trúc hợp đồng / người tham gia / phương pháp."),
+]
+
+# Các bước của bộ sinh: id, tiêu đề, vị trí code, mô tả (list đoạn)
+STEPS = [
+    ("M", "Phương pháp chung", "1–19, 181–261", [
+        "Bộ sinh dựa trên quy tắc và có cấu hình. Mỗi tham số là một hằng số đặt tên trong code, neo vào nguồn public hoặc ghi rõ là giả định. Seed cố định nên chạy lại ra đúng bộ dữ liệu.",
+        "Mục tiêu là dữ liệu 'giống thật về cấu trúc và dáng phân bố, nhưng không phải dữ liệu thật'. Đây cũng là cách làm của Synthea và CMS DE-SynPUF."]),
+    ("B0", "Dựng danh mục", "21–179", [
+        "Tỉnh, đơn vị, nghiệp vụ, dòng báo cáo, sản phẩm, kênh, đối tác, phân khúc khách, loại giao dịch, đồng BH, loại phân bổ, tỷ giá.",
+        "Hầu hết danh mục lấy từ văn bản pháp luật. Tên đơn vị, đối tác, DN đồng BH được ẩn danh."]),
+    ("B1", "Đặt doanh thu mục tiêu cho 8 nhóm sản phẩm", "187–209 (group_targets)", [
+        "Lấy phí gốc 4 nghiệp vụ của PVI (BCTC kiểm toán), rồi chia xuống 8 nhóm sản phẩm của đề bài.",
+        "Đây là 'đích' mà bước hiệu chỉnh B5 sẽ kéo dữ liệu về."]),
+    ("B2", "Quyết định số hợp đồng và rải theo tháng", "214–227, 615–621", [
+        "Số hợp đồng 2025 cố định theo nhóm (POLICIES_2025). Năm 2024 co theo tỷ lệ mục tiêu 2024/2025 của từng nhóm.",
+        "Năm 2025 trừ đi số đơn tái tục đã sinh. Phần còn lại rải 12 tháng theo hệ số mùa vụ SEASON."]),
+    ("B3", "Sinh từng hợp đồng", "450–588 (make_policy)", [
+        "Chọn sản phẩm → chế độ đơn (lẻ / nhóm / lô GCN) → kênh và đối tác → đơn vị cấp → khách hàng → định phí → bán kèm → chuyển Trụ sở nếu rủi ro lớn → ngày hiệu lực → đồng BH → phân bổ doanh thu.",
+        "Định phí theo cách tính của từng sản phẩm: biểu phí × số lượng (TARIFF), phí/người × số người (PER_PERSON), hoặc tỷ lệ % × STBH (RATE_ON_SI)."]),
+    ("B4", "Sinh giao dịch gốc và trạng thái", "590–626", [
+        "Mỗi hợp đồng có 1 giao dịch NEW hoặc RENEW, với trạng thái APPROVED / PENDING / VOID.",
+        "Ngày ghi nhận = max(ngày cấp, ngày hiệu lực). Tỷ giá lấy theo tháng của ngày ghi nhận."]),
+    ("B5", "Hiệu chỉnh về mục tiêu", "631–657 (calibrate)", [
+        "Tính doanh thu phần công ty của các đơn đã duyệt trong năm. Tách phần 'cố định' (đơn lẻ theo biểu phí) và phần 'co giãn được' (đơn nhóm/lô, tài sản, cháy nổ).",
+        "Hệ số f = (mục tiêu − cố định) / co giãn. Nhân f vào số người/xe/GCN của đơn nhóm/lô, hoặc vào STBH của đơn tài sản, cháy nổ."]),
+    ("B6", "Tái tục sang năm sau", "607–610, 451–455, 507–514", [
+        "55% hợp đồng năm 2024 (sản phẩm năm, không phải đơn lô) được tái tục. Đơn tái tục giữ khách, kênh, đơn vị, đồng BH, phân bổ; phí điều chỉnh 0,95–1,12 lần."]),
+    ("B7", "Sửa đổi bổ sung, hoàn phí, hủy", "659–678 (endorsements)", [
+        "Chọn 7% hợp đồng đã duyệt (trừ du lịch). Mỗi hợp đồng được sinh 1 giao dịch: tăng phí, giảm phí, hoàn phí, hủy hoặc không đổi phí."]),
+    ("B8", "Xuất bảng", "681–738 (tables)", [
+        "premium_vnd = phí nguyên tệ × tỷ giá giao dịch. VAT theo thuế suất sản phẩm. Hoa hồng chỉ cho kênh trung gian, không vượt trần.",
+        "Ghi 02_data.sql (INSERT, 1 transaction). Seed cố định 2026, nên chạy lại ra đúng bộ dữ liệu."]),
+]
+
+# Sổ tham số. impact bắt buộc khi có ASSUME: (Cao | Vừa | Thấp, giải thích)
+PARAMS = [
+    # ---------------- M Phương pháp ----------------
+    dict(id="P00", step="M", name="Phương pháp sinh dữ liệu giả lập", value="Quy tắc + tham số cấu hình neo vào nguồn public; seed cố định; giữ cấu trúc thật, số không dùng để suy luận về doanh nghiệp thật", code="1–19, 181–261",
+         tags=["SAMPLE", "DERIVED"], src=["D6", "D7"],
+         why="Synthea sinh dữ liệu 'realistic but not real' theo cấu hình thống kê công khai (mặc định số liệu điều tra dân số). CMS DE-SynPUF giữ đúng định dạng và tên biến của dữ liệu thật để phát triển phần mềm, đồng thời nói rõ dữ liệu có giá trị suy luận rất hạn chế. Bộ sinh của dự án theo đúng hai nguyên tắc này."),
+    # ---------------- B0 Danh mục ----------------
+    dict(id="P01", step="B0", name="Danh sách 34 tỉnh/thành", value="34 tỉnh, dùng cho cả dữ liệu 2024", code="27–40",
+         tags=["LAW", "SAMPLE", "ASSUME"], src=["S12", "D4"], why="NQ 202/2025. Dùng ĐVHC hiện hành cho cả 2024 để so sánh được giữa các năm — đây là quy ước của dự án. Dataset freMTPL2 cũng gắn vùng (Region) vào từng hợp đồng.",
+         impact=("Thấp", "Chỉ ảnh hưởng chiều địa bàn của năm 2024.")),
+    dict(id="P02", step="B0", name="Chia 3 miền", value="Bắc 15 / Trung 11 / Nam 8 tỉnh", code="24, 27–40",
+         tags=["ASSUME"], src=[], why="Không có văn bản pháp lý nào chia 3 miền sau sáp nhập. Dự án chia theo địa lý thông thường.",
+         impact=("Thấp", "Chỉ ảnh hưởng báo cáo theo vùng.")),
+    dict(id="P03", step="B0", name="Mô hình tổ chức", value="Tổng công ty → Khối Trụ sở + Trung tâm Kinh doanh số + 18 công ty thành viên", code="42–57",
+         tags=["PUB", "BRIEF", "ASSUME"], src=["P8", "P14", "P1", "B1"],
+         why="Mô hình Tổng công ty → công ty thành viên là công khai (PVI 47, Bảo Việt 79 công ty). Đề bài có cấp Tổng công ty → Công ty. Mảng TMĐT/API là mảng kinh doanh riêng theo BCTN PVI; dự án mô hình hóa thành Trung tâm Kinh doanh số. Khối Trụ sở, con số 18 công ty và tên theo địa bàn là thu nhỏ của dự án.",
+         impact=("Thấp", "Đủ để thể hiện cấp Công ty. Số đơn vị không ảnh hưởng tổng doanh thu.")),
+    dict(id="P04", step="B0", name="Trọng số khai thác của từng công ty", value="HN1, HC1 = 10; HN2, HC2 = 7; … tỉnh nhỏ = 2", code="44–56",
+         tags=["ASSUME"], src=[], why="Hà Nội và TP.HCM là hai thị trường lớn nhất; các tỉnh nhỏ giảm dần.",
+         impact=("Vừa", "Quyết định phân bố doanh thu theo chiều Đơn vị.")),
+    dict(id="P05", step="B0", name="Nghiệp vụ và loại hình", value="4 nghiệp vụ: sức khỏe, xe cơ giới, cháy nổ, tài sản", code="62–69",
+         tags=["LAW", "BRIEF", "SAMPLE"], src=["S1", "S3", "B1", "D3"], why="Luật KDBH Đ7 k1 (3 loại hình); NĐ 46 Đ4–5 (danh mục nghiệp vụ). Đề bài chọn 4 nghiệp vụ này. CAS Schedule P cũng tổng hợp phí theo nghiệp vụ × doanh nghiệp × năm."),
+    dict(id="P06", step="B0", name="Dòng báo cáo Bộ Tài chính", value="A.1, A.2, B.1b, B.4a.1/2, B.4b, B.5a, B.5b", code="70–79",
+         tags=["LAW"], src=["S5"], why="TT 67/2023 Phụ lục VI, Mẫu 1-PNT / 2-PNT."),
+    dict(id="P07", step="B0", name="8 nhóm sản phẩm POC", value="TNDS BB, VCX, học sinh, du lịch, sinh mạng, sức khỏe, tài sản, cháy nổ", code="80–85",
+         tags=["BRIEF", "LAW", "SAMPLE"], src=["B1", "S3", "D1"], why="Đúng danh sách của đề bài, gắn vào nghiệp vụ theo NĐ 46. Nhóm Xe chỉ có TNDS bắt buộc + vật chất. Dataset fremotor cũng tách TNDS bắt buộc (PremTPLM) khỏi TNDS tự nguyện (PremTPLV)."),
+    dict(id="P08", step="B0", name="19 sản phẩm và cách tính phí", value="TARIFF / PER_PERSON / RATE_ON_SI", code="90–110",
+         tags=["PUB", "LAW"], src=["P5", "S3", "S8"], why="Tên theo cách gọi phổ biến trên website DNBH; xếp vào nghiệp vụ theo NĐ 46 Đ4–5. Cách tính phí theo bản chất sản phẩm: biểu phí bắt buộc (NĐ 67), phí/người, hoặc tỷ lệ × STBH."),
+    dict(id="P09", step="B0", name="Cờ bắt buộc", value="TNDS ô tô, TNDS mô tô, cháy nổ bắt buộc", code="91–108",
+         tags=["LAW"], src=["S8"], why="NĐ 67/2023."),
+    dict(id="P10", step="B0", name="Thuế suất VAT", value="0% con người; 10% xe, tài sản, cháy nổ", code="90–110, 724",
+         tags=["LAW"], src=["S14"], why="Luật GTGT 48/2024 Đ5 k8."),
+    dict(id="P11", step="B0", name="Trần hoa hồng", value="TNDS ô tô 5%, mô tô 20%; VCX 10%; con người 20%; tài sản 5%; cháy nổ BB 5%, tự nguyện 10%", code="90–110",
+         tags=["LAW"], src=["S6"], why="TT 67/2023 Đ51 k3."),
+    dict(id="P12", step="B0", name="Mã Solvency II", value="TNDS → 4; VCX → 5; sức khỏe → 1; tài sản, cháy nổ → 7; tai nạn, sinh mạng, du lịch → 1 hoặc 2 (*)", code="113–121",
+         tags=["STD", "ASSUME"], src=["T2"], why="Phần có dấu (*) là suy luận theo rủi ro chính, vì Solvency II không có dòng riêng cho du lịch / tai nạn kiểu Việt Nam.",
+         impact=("Thấp", "Chỉ là cột đối chiếu quốc tế, không vào công thức doanh thu.")),
+    dict(id="P13", step="B0", name="7 kênh và 3 nhóm kênh báo cáo", value="Trực tiếp, đại lý CN, đại lý TC, bancassurance, môi giới, đấu thầu, điện tử", code="125–134",
+         tags=["LAW", "SAMPLE"], src=["S1", "S5", "S3", "D1", "D2"], why="Luật KDBH Đ87 k4; Đ125 k2 và NĐ 46 Đ62 (banca); 3 nhóm kênh của Mẫu 3-PNT. Các dataset public đều có kênh là một chiều của hợp đồng (fremotor: Channel; Kaggle: Distribution Channel Online / Offline)."),
+    dict(id="P14", step="B0", name="Loại đối tác", value="Ngân hàng, công ty tài chính, đăng kiểm, showroom, garage, OTA, lữ hành, môi giới, ví, sàn TMĐT, hãng bay, nhà mạng", code="136–151",
+         tags=["PUB", "SAMPLE"], src=["P1", "P9", "D2"], why="BCTN PVI nêu đối tác API là hãng bay, nhà mạng, sàn TMĐT; đối tác bancassurance là ngân hàng. Dataset Kaggle du lịch: bảo hiểm du lịch bán qua 2 loại đại lý Airlines và Travel Agency, khớp với đối tác hãng bay, OTA, lữ hành. Tên được ẩn danh (A, B, C…)."),
+    dict(id="P15", step="B0", name="6 phân khúc khách hàng", value="Cá nhân, hộ gia đình, DN trong nước, DN FDI, cơ quan nhà nước, cơ sở giáo dục", code="153–155",
+         tags=["SAMPLE", "ASSUME"], src=["D5"], why="Dataset COIL 2000 phân khúc khách theo loại chính / loại phụ — phân khúc là thuộc tính chuẩn của khách hàng. Sáu phân khúc theo loại chủ thể giao kết hợp đồng ở Việt Nam là do dự án đặt; 'Cơ sở giáo dục' để phục vụ bảo hiểm học sinh mua theo trường.",
+         impact=("Thấp", "Chỉ ảnh hưởng chiều Khách hàng; có thể gộp hoặc tách khi làm ETL.")),
+    dict(id="P16", step="B0", name="7 loại giao dịch, dấu và tài khoản", value="NEW, RENEW, END_INC (+, 5111); END_DEC (−, 5321); REFUND, CANCEL (−, 5311); END_NOCHG (0)", code="157–165",
+         tags=["LAW", "STD", "SAMPLE"], src=["S3", "S11", "T1", "D2"], why="NĐ 46 Đ49 k3 (hoàn phí, giảm phí là khoản giảm thu); TK theo TT 232/2012; mã ACORD NBS / RWL / PCH / XLC. Dataset Kaggle du lịch ghi hoàn phí thành Net Sales âm — cùng cách v2 ghi số âm."),
+    dict(id="P17", step="B0", name="Tỷ giá USD 2025", value="24.283 … 25.118 theo tháng", code="176–179",
+         tags=["FIN"], src=["F5"], why="Tỷ giá hạch toán do KBNN công bố."),
+    dict(id="P18", step="B0", name="Tỷ giá USD 2024", value="23.880 … 24.260 theo tháng", code="177",
+         tags=["ASSUME"], src=[], why="Nội suy theo tỷ giá trung tâm NHNN; chưa tra được số KBNN 2024.",
+         impact=("Thấp", "Đơn USD chiếm khoảng 4% số hợp đồng; tỷ giá có thể sai vài trăm đồng.")),
+    dict(id="P19", step="B0", name="Loại phân bổ doanh thu", value="Tự khai thác / Hợp tác khai thác / Chuyển giao", code="169–173",
+         tags=["ASSUME", "PUB"], src=["P8"], why="DN nhiều đơn vị (Tổng công ty → công ty thành viên) cần gán doanh thu cho đơn vị thực sự khai thác. Đây là thông lệ quản trị, không phải quy định pháp lý. Ba kiểu phân bổ do dự án đặt.",
+         impact=("Vừa", "Nếu khách dùng cách phân bổ khác, chỉ cần đổi danh mục; công thức doanh thu không đổi.")),
+
+    # ---------------- B1 Mục tiêu ----------------
+    dict(id="P20", step="B1", name="Phí gốc 4 nghiệp vụ của PVI", value="2025: Con người 3.213,4; Xe 1.822,7; Cháy nổ 3.451,2; Tài sản & thiệt hại 3.781,2 tỷ", code="187–190",
+         tags=["FIN"], src=["F1"], why="BCTC kiểm toán 2025, thuyết minh 21; có cả số 2024."),
+    dict(id="P21", step="B1", name="Phần tài sản thuần trong 'Tài sản & thiệt hại'", value="50%", code="192",
+         tags=["ASSUME"], src=["F1"], why="BCTC gộp tài sản với kỹ thuật, năng lượng, trong khi POC chỉ cần tài sản thuần. Không có số tách.",
+         impact=("Cao", "Quyết định khoảng 1.891 tỷ — 18% doanh thu mục tiêu 2025.")),
+    dict(id="P22", step="B1", name="Chia trong nhóm Con người", value="Sức khỏe 75 / sinh mạng–tai nạn 15 / du lịch 5 / học sinh 5%", code="194–196",
+         tags=["ASSUME", "PUB"], src=["P3"], why="PVI không công bố tỷ lệ này. FPTS cho biết sức khỏe PVI chủ yếu là nhóm doanh nghiệp, nên sức khỏe chiếm phần lớn. Du lịch, học sinh là bán lẻ phí nhỏ.",
+         impact=("Cao", "Tổng Con người đúng số công bố, nhưng doanh thu của 4 nhóm con phụ thuộc hoàn toàn vào tỷ lệ này.")),
+    dict(id="P23", step="B1", name="Chia trong nhóm Xe", value="TNDS bắt buộc 24 / vật chất xe 76%", code="197–198",
+         tags=["FIN", "DERIVED", "ASSUME"], src=["F3"], why="Tính từ số toàn thị trường IAV 2024 (4.537 / 18.693). Áp tỷ lệ của thị trường cho một doanh nghiệp là giả định ngầm.",
+         impact=("Vừa", "Ảnh hưởng cách tách TNDS / VCX; tổng Xe vẫn đúng số công bố.")),
+
+    # ---------------- B2 Số đơn, thời gian ----------------
+    dict(id="P24", step="B2", name="Số hợp đồng 2025 theo nhóm", value="TNDS 2.500; VCX 3.800; học sinh 350; du lịch 1.600; sinh mạng 1.500; sức khỏe 2.600; cháy nổ 2.200; tài sản 1.200", code="214–215",
+         tags=["ASSUME", "SAMPLE"], src=["D4"], why="PVI không công bố số hợp đồng. Dự án chọn quy mô khoảng 29 nghìn hợp đồng / 2 năm để dữ liệu vừa phải. Tỷ lệ giữa các nhóm theo nguyên tắc tần suất × độ lớn: nhóm bán lẻ nhiều đơn, nhóm doanh nghiệp ít đơn. Một hợp đồng lô/nhóm đại diện cho nhiều GCN. Dataset freMTPL2 (677.991 hợp đồng TNDS của một danh mục) cho thấy TNDS đúng là nghiệp vụ 'rất nhiều đơn nhỏ'.",
+         impact=("Vừa", "Không ảnh hưởng doanh thu (đã hiệu chỉnh), nhưng ảnh hưởng mọi chỉ số 'theo số đơn' như phí bình quân. KHÔNG dùng số đơn dummy để nói về số đơn thật.")),
+    dict(id="P25", step="B2", name="Số hợp đồng 2024", value="= số 2025 × (mục tiêu 2024 / mục tiêu 2025) của từng nhóm", code="616–617",
+         tags=["DERIVED", "ASSUME"], src=["F1"], why="Giả định phí bình quân mỗi đơn không đổi giữa hai năm.",
+         impact=("Thấp", "Doanh thu vẫn được hiệu chỉnh về đúng mục tiêu 2024.")),
+    dict(id="P26", step="B2", name="Tỷ trọng doanh thu theo quý (đích)", value="29,7 / 24,1 / 24,8 / 21,4%", code="216–217",
+         tags=["FIN", "ASSUME"], src=["F2"], why="Số của PVI Holdings, gồm mọi nghiệp vụ. Giả định 4 nghiệp vụ POC có mùa vụ giống toàn công ty.",
+         impact=("Vừa", "Ảnh hưởng chiều Thời gian.")),
+    dict(id="P27", step="B2", name="Hệ số mùa vụ theo tháng (SEASON)", value="Sức khỏe tháng 1 = 1,9; tài sản, cháy nổ tháng 1 = 1,6; …", code="218–227",
+         tags=["ASSUME"], src=["F2"], why="Dự án tự tinh chỉnh để tổng theo quý gần với số PVI. Q1 cao vì chương trình bảo hiểm doanh nghiệp tái tục đầu năm.",
+         impact=("Vừa", "Tỷ trọng theo quý lệch tối đa khoảng 1,6 điểm % so với đích (xem mục Kết quả).")),
+    dict(id="P28", step="B2", name="Mùa vụ học sinh", value="Đỉnh tháng 8–10", code="221",
+         tags=["PUB"], src=["P6"], why="Thu phí đầu năm học."),
+    dict(id="P29", step="B2", name="Mùa vụ du lịch", value="Cao vào Tết (tháng 1–2) và hè (tháng 6–8)", code="222",
+         tags=["ASSUME"], src=[], why="Theo mùa du lịch phổ biến; chưa có số công bố theo tháng.",
+         impact=("Thấp", "Du lịch chỉ khoảng 1,6% doanh thu.")),
+
+    # ---------------- B3 Hợp đồng ----------------
+    dict(id="P30", step="B3", name="Cơ cấu sản phẩm trong nhóm (theo số đơn)", value="TNDS ô tô 55 / mô tô 45; VCX ô tô 85 / xe máy 15; sinh mạng CN 35 / người vay 45 / TN24 20; sức khỏe CN 45 / nhóm 45 / BHN 10; nhà 45 / MRR 35 / MRR CN 20; cháy nổ BB 70 / TN 30 …", code="228–237",
+         tags=["ASSUME"], src=[], why="Không có số công bố theo sản phẩm. Đặt theo mức phổ biến của từng sản phẩm.",
+         impact=("Vừa", "Quyết định chiều Sản phẩm bên trong mỗi nhóm.")),
+    dict(id="P31", step="B3", name="Chế độ đơn: lẻ / nhóm / lô GCN", value="TNDS lô 60%; VCX ô tô nhóm 20%; xe máy lô 50%; học sinh nhóm 85%; du lịch 60 / 25 / 15; sinh mạng, TN24 nhóm 25%; sức khỏe nhóm luôn là nhóm; người vay qua banca lô 85%", code="461–469, 477–478",
+         tags=["PUB", "ASSUME"], src=["P10", "P6"], why="Đơn nhóm có thật trên thị trường: trường học mua cho cả trường (CafeF), bảo hiểm con người bán qua ngân hàng (BIC). Hình thức bảng kê / lô và các tỷ lệ % là giả định.",
+         impact=("Vừa", "Ảnh hưởng tỷ lệ đơn nhóm/lô và phí bình quân mỗi đơn.")),
+    dict(id="P32", step="B3", name="Cỡ nhóm / lô ban đầu", value="TNDS ô tô 20–300 xe; mô tô 50–1.500; học sinh 150–3.000; sức khỏe nhóm 20–1.500 người; người vay 20–400 …", code="383–422",
+         tags=["ASSUME"], src=[], why="Mức hợp lý cho bảng kê đăng kiểm, danh sách trường, bảng kê ngân hàng. Bước B5 sẽ co giãn lại.",
+         impact=("Thấp", "Chỉ là giá trị khởi đầu, bước hiệu chỉnh sẽ thay đổi.")),
+    dict(id="P33", step="B3", name="Trọng số kênh theo nhóm (CHANNEL_MIX)", value="Vd cháy nổ: trực tiếp 50, môi giới 22, đại lý CN 21, banca 4, đấu thầu 3", code="242–257",
+         tags=["ASSUME", "FIN", "PUB"], src=["P1", "P2", "F4", "P9"], why="Tự đặt theo định hướng. Điện tử ≈ 6% năm 2024 (≈ 800 tỷ, BCTN PVI 2024) → ≈ 10% năm 2025 (suy ra từ mức tăng 1,8 lần của quý I/2025, pvn.vn). Môi giới toàn thị trường 13,5% (Bộ Tài chính); PVI thiên về doanh nghiệp lớn nên đặt cao hơn (15–20%). Banca của PVI mới mở rộng (5–8%).",
+         impact=("Vừa", "Quyết định chiều Kênh. Không hiệu chỉnh theo kênh, nên kết quả chỉ gần định hướng.")),
+    dict(id="P34", step="B3", name="Hệ số kênh điện tử 2024", value="0,5 (2025 = 1,0)", code="258, 473",
+         tags=["PUB", "DERIVED"], src=["P1", "P2"], why="Doanh thu kênh thương mại điện tử của PVI quý I/2025 tăng 1,8 lần so với cùng kỳ (pvn.vn). Hệ số 0,5 cho năm 2024 tương ứng mức tăng gần gấp đôi."),
+    dict(id="P35", step="B3", name="Đơn lô luôn qua đại lý tổ chức", value="Lô GCN ở kênh trực tiếp / đại lý CN được chuyển sang đại lý tổ chức (đăng kiểm hoặc OTA)", code="479–481",
+         tags=["ASSUME"], src=[], why="Lô GCN thường đến từ trung tâm đăng kiểm, OTA…, không từ cá nhân.",
+         impact=("Thấp", "Chỉ đổi kênh của một phần đơn lô.")),
+    dict(id="P36", step="B3", name="Đơn vị cấp đơn", value="Kênh điện tử: 70% Trung tâm KD số; còn lại theo trọng số công ty", code="483–486",
+         tags=["ASSUME"], src=["P1"], why="Đơn bán qua kênh số do đơn vị kinh doanh số cấp; một phần do công ty địa bàn cấp trên nền tảng chung. Tỷ lệ 70% là giả định.",
+         impact=("Thấp", "Chỉ ảnh hưởng doanh thu của Trung tâm KD số.")),
+    dict(id="P37", step="B3", name="Phân khúc khách theo nhóm", value="TNDS 85% cá nhân; VCX 78 / 18 / 4; sức khỏe nhóm 65 DN trong nước / 25 FDI / 10 nhà nước; cháy nổ 68 / 17 / 7 / 8 …", code="491–500",
+         tags=["ASSUME", "PUB"], src=["P3"], why="Sức khỏe nhóm do doanh nghiệp mua cho nhân viên (FPTS: sức khỏe PVI chủ yếu là nhóm doanh nghiệp). Các tỷ lệ % là giả định.",
+         impact=("Vừa", "Quyết định chiều Khách hàng.")),
+    dict(id="P38", step="B3", name="Khách hàng quay lại", value="20% đơn mới dùng lại khách cũ cùng đơn vị, cùng phân khúc", code="357–361",
+         tags=["ASSUME", "SAMPLE"], src=["D5"], why="Dataset COIL 2000 ghi phí theo từng loại sản phẩm cho mỗi khách, tức là một khách giữ nhiều sản phẩm (bán chéo). Vì tập khách dùng chung giữa các nhóm sản phẩm, dummy tự có khách mua nhiều nhóm (xem mục Kết quả). Tỷ lệ 20% là giả định.",
+         impact=("Thấp", "Ảnh hưởng số khách hàng và tỷ lệ bán chéo.")),
+    dict(id="P39", step="B3", name="'Khách lẻ theo bảng kê' cho đơn lô", value="1 khách gộp mỗi đơn vị, cờ is_aggregated_retail", code="363–374, 488–489",
+         tags=["ASSUME", "PUB", "SAMPLE"], src=["P10", "D6"], why="Bên mua bảo hiểm có thể khác người được bảo hiểm (Synthea: Ownership = Self / Guardian / Spouse). Với đơn lô, dự án giả định bên giao kết là đối tác (ngân hàng, đăng kiểm, OTA), còn danh sách người / xe được bảo hiểm nằm trong bảng kê. Dự án gom thành 1 'khách lẻ theo bảng kê' mỗi đơn vị và gắn cờ để loại khi phân tích khách định danh.",
+         impact=("Thấp", "Chỉ ảnh hưởng phân tích theo khách hàng định danh.")),
+    dict(id="P40", step="B3", name="Biểu phí TNDS ô tô", value="437.000 / 794.000 / 1.270.000 / … / 3.200.000 đ (chưa VAT)", code="380–382",
+         tags=["LAW", "ASSUME"], src=["S8"], why="Mức phí theo NĐ 67/2023 Phụ lục I. Trọng số loại xe (xe dưới 6 chỗ không kinh doanh chiếm 50%) là giả định.",
+         impact=("Thấp", "TNDS chỉ khoảng 4% doanh thu.")),
+    dict(id="P41", step="B3", name="Biểu phí TNDS mô tô", value="55.000 / 60.000 / 290.000 đ", code="384–386",
+         tags=["LAW", "ASSUME"], src=["S8"], why="Mức phí theo NĐ 67/2023 Phụ lục I. Trọng số 24 / 75 / 1 là giả định.", impact=("Thấp", "TNDS chỉ khoảng 4% doanh thu.")),
+    dict(id="P42", step="B3", name="STBH TNDS", value="150 triệu đ", code="383, 386",
+         tags=["LAW"], src=["S8"], why="Mức trách nhiệm về sức khỏe, tính mạng theo NĐ 67/2023."),
+    dict(id="P43", step="B3", name="Vật chất xe ô tô", value="Giá xe 0,4–3 tỷ (lệch phải); tỷ lệ 1,1–2,0%", code="387–390",
+         tags=["PUB", "ASSUME"], src=["P4"], why="PVI công bố 0,5–3,5% giá trị xe; dự án chọn khoảng giữa. Phân phối giá xe là giả định.",
+         impact=("Vừa", "VCX chiếm khoảng 13% doanh thu; tổng vẫn hiệu chỉnh về mục tiêu.")),
+    dict(id="P44", step="B3", name="Vật chất xe máy", value="Giá xe 15–90 triệu; 1,5–2,5%", code="391–393",
+         tags=["ASSUME"], src=[], why="Không tìm được giá niêm yết đáng tin.", impact=("Thấp", "Xe máy chỉ 15% số đơn VCX, phí nhỏ.")),
+    dict(id="P45", step="B3", name="Học sinh — tai nạn", value="100 / 120 / 150 nghìn đ/em (60 / 25 / 15%)", code="394–396",
+         tags=["PUB", "ASSUME"], src=["P6"], why="Mức phổ biến 100.000 đ/em; hai mức cao hơn và trọng số là giả định.", impact=("Thấp", "Học sinh khoảng 1,6% doanh thu.")),
+    dict(id="P46", step="B3", name="Học sinh — sức khỏe toàn diện", value="200–520 nghìn đ/em", code="397–399",
+         tags=["ASSUME"], src=[], why="Đặt cao hơn mức tai nạn vì có thêm quyền lợi y tế.", impact=("Thấp", "Học sinh khoảng 1,6% doanh thu.")),
+    dict(id="P47", step="B3", name="Du lịch trong nước", value="17–80 nghìn đ/người", code="400–402",
+         tags=["PUB"], src=["P5"], why="Giá niêm yết từ 17.000 đ/chuyến."),
+    dict(id="P48", step="B3", name="Du lịch quốc tế", value="4–45 USD/người; 70% hợp đồng tính bằng USD", code="403–408",
+         tags=["PUB", "ASSUME"], src=["P5"], why="Giá niêm yết từ 100.000 đ (≈ 4 USD). Tỷ lệ 70% USD là giả định.", impact=("Thấp", "Du lịch khoảng 1,6% doanh thu.")),
+    dict(id="P49", step="B3", name="Sinh mạng cá nhân, tai nạn 24/24", value="STBH 50–500 triệu × 0,25–0,5%; 20–200 triệu × 0,1–0,3%", code="409–417",
+         tags=["ASSUME"], src=[], why="Không có biểu phí công bố thống nhất.", impact=("Thấp", "Bị hiệu chỉnh về mục tiêu nhóm sinh mạng.")),
+    dict(id="P50", step="B3", name="Người vay vốn", value="Dư nợ 0,1–3 tỷ × 0,3–1%; bảng kê 20–400 người", code="412–414, 477–478",
+         tags=["PUB", "ASSUME"], src=["P10"], why="Bán qua ngân hàng có nguồn (danh mục bancassurance của BIC). Tính phí theo dư nợ, bảng kê người vay và tỷ lệ phí là giả định.", impact=("Thấp", "Bị hiệu chỉnh về mục tiêu nhóm sinh mạng.")),
+    dict(id="P51", step="B3", name="Sức khỏe cá nhân", value="1,45–15 triệu đ/người", code="418–419",
+         tags=["PUB", "ASSUME"], src=["P5"], why="Giá niêm yết từ 1,445 triệu; gói cao cấp khoảng 6,2 triệu. Mức trần 15 triệu là giả định.", impact=("Thấp", "Đơn lẻ, không quyết định tổng nhóm sức khỏe.")),
+    dict(id="P52", step="B3", name="Sức khỏe nhóm doanh nghiệp", value="2–8 triệu đ/người × 20–1.500 người", code="420–422",
+         tags=["ASSUME"], src=["P5"], why="Neo theo giá cá nhân. Đây là nhóm lớn nhất của Con người.",
+         impact=("Vừa", "Ảnh hưởng 'dáng' nhóm sức khỏe (ít đơn, phí lớn); tổng vẫn hiệu chỉnh.")),
+    dict(id="P53", step="B3", name="Bệnh hiểm nghèo – ung thư", value="135 nghìn – 3 triệu đ/người", code="423–424",
+         tags=["ASSUME"], src=[], why="Mức phổ biến của các gói bán lẻ; chưa ghi nguồn cụ thể.", impact=("Thấp", "Chỉ 10% số đơn sức khỏe, phí nhỏ.")),
+    dict(id="P54", step="B3", name="Nhà tư nhân", value="Giá trị nhà 0,3–5 tỷ × 0,05–0,1%", code="425–426",
+         tags=["PUB", "ASSUME"], src=["P5"], why="Giá niêm yết 220–270 nghìn/năm nằm ở đầu dưới của khoảng này.", impact=("Thấp", "Phí nhỏ so với nhóm tài sản.")),
+    dict(id="P55", step="B3", name="Mọi rủi ro tài sản / công nghiệp", value="STBH 10–2.000 tỷ / 50–5.000 tỷ (lệch phải); 0,07–0,2% / 0,05–0,15%; 20% / 40% bằng USD", code="427–436",
+         tags=["ASSUME"], src=[], why="Rủi ro công nghiệp lớn có STBH hàng nghìn tỷ và hay định giá bằng USD.",
+         impact=("Vừa", "Tạo 'đuôi dài' của doanh thu; tổng vẫn hiệu chỉnh về mục tiêu.")),
+    dict(id="P56", step="B3", name="Tỷ lệ phí cháy nổ bắt buộc", value="Tối thiểu 0,05% (chung cư) … 0,5% (chợ, kho gỗ) theo nhóm cơ sở", code="166–167, 430–432",
+         tags=["LAW", "ASSUME"], src=["S8", "S9"], why="Tỷ lệ tối thiểu theo NĐ 67/2023 Phụ lục II (bản 2023). Từ 01/7/2025 phụ lục này được thay bằng Phụ lục VI NĐ 105/2025, nhưng bản đó chỉ có dạng scan. Trọng số nhóm cơ sở và hệ số thu cao hơn mức tối thiểu (×1,0–1,25; tự nguyện ×1,0–1,6) là giả định.",
+         impact=("Vừa", "Cháy nổ là nhóm lớn nhất (33% doanh thu) nhưng tổng đã hiệu chỉnh; tỷ lệ phí chỉ ảnh hưởng STBH sau hiệu chỉnh.")),
+    dict(id="P57", step="B3", name="STBH cháy nổ", value="Bắt buộc 3–800 tỷ; tự nguyện 2–500 tỷ (lệch phải)", code="428–429",
+         tags=["ASSUME"], src=[], why="Từ cơ sở nhỏ đến nhà máy lớn.", impact=("Thấp", "Bị co giãn ở bước B5.")),
+    dict(id="P58", step="B3", name="Phân phối lệch phải (log-uniform)", value="Áp cho giá xe, dư nợ, STBH tài sản / cháy nổ", code="284–285",
+         tags=["ASSUME"], src=[], why="Mô phỏng 'ít đơn rất lớn, nhiều đơn nhỏ'. Kết quả: 10% hợp đồng lớn nhất chiếm khoảng 3/4 doanh thu.",
+         impact=("Vừa", "Ảnh hưởng độ tập trung doanh thu theo khách hàng / hợp đồng.")),
+    dict(id="P59", step="B3", name="Bán kèm sản phẩm", value="VCX ô tô đơn lẻ kèm TNDS 70%; cháy nổ BB kèm mọi rủi ro tài sản 15% (0,03–0,08%)", code="516–520",
+         tags=["SAMPLE", "ASSUME"], src=["D1"], why="Dataset fremotor1prem0304: một hợp đồng xe tách phí theo từng quyền lợi, có cả TNDS bắt buộc (PremTPLM) và vật chất xe (PremDamAll) trên cùng hợp đồng. Vì vậy v2 có 1 dòng transaction_coverage cho mỗi sản phẩm. Tỷ lệ bán kèm là giả định.",
+         impact=("Vừa", "Gây lệch giữa nhóm Cháy nổ và Tài sản (xem mục Kết quả).")),
+    dict(id="P60", step="B3", name="Khối Trụ sở khai thác rủi ro lớn", value="Tài sản / cháy nổ STBH ≥ 500 tỷ: 60%; sức khỏe nhóm > 800 người: 40%", code="522–528",
+         tags=["ASSUME"], src=["P7", "P11", "P13"], why="Rủi ro rất lớn (nhà máy, chương trình bảo hiểm tập đoàn) thường do trụ sở trực tiếp thu xếp và hay đi kèm đồng bảo hiểm (các hợp đồng công bố trên báo chí). Ngưỡng và tỷ lệ là giả định.",
+         impact=("Vừa", "Quyết định doanh thu Khối Trụ sở.")),
+    dict(id="P61", step="B3", name="Ngày hiệu lực và thời hạn", value="Hiệu lực sau ngày cấp 0–10 ngày (du lịch 0–60); thời hạn 1 năm; du lịch 2–20 ngày", code="530–533",
+         tags=["ASSUME", "LAW", "SAMPLE"], src=["S6", "D2", "D4"], why="TT 67 Đ41 phân biệt ngày cấp với lúc phát sinh trách nhiệm, nên hiệu lực có thể sau ngày cấp. freMTPL2: hợp đồng TNDS phần lớn quan sát trong 1 năm (Exposure tính theo năm). Kaggle du lịch: thời hạn tính theo số ngày chuyến đi (Duration). Khoảng ngày cụ thể là giả định.",
+         impact=("Thấp", "Tạo kịch bản doanh thu chuyển sang năm sau.")),
+    dict(id="P62", step="B3", name="Kênh để trống", value="0,5% hợp đồng", code="541",
+         tags=["ASSUME"], src=[], why="Dữ liệu bẩn có chủ đích, để kiểm thử ETL gán 'Chưa xác định'.", impact=("Thấp", "Dưới 1% doanh thu.")),
+    dict(id="P63", step="B3", name="Đồng bảo hiểm", value="Tài sản / cháy nổ STBH ≥ 300 tỷ: 55%; sức khỏe nhóm > 1.000 người: 30%. Đứng đầu 40% (giữ 40–70%); tham gia giữ 10–40%; 1–3 DN khác", code="548–565",
+         tags=["LAW", "PUB", "STD", "SAMPLE", "ASSUME"], src=["S1", "S11", "P7", "P12", "T4", "D3"], why="Khái niệm và quy tắc 'chỉ ghi nhận phần của mình': Luật KDBH Đ4 k29, TT 232 Đ19. Liên danh thực tế 3–6 DN (Vietnam Airlines 3 DN, Long Thành 6 DN). Lưu cả dòng của chính công ty (OWN) để tổng = 100%, theo mô hình phần tham gia (OMG Policy Amount). CAS Schedule P cũng tách phí toàn bộ (direct & assumed) với phần giữ lại (net) — cùng nguyên tắc tách phần của công ty. Ngưỡng và tỷ lệ là giả định.",
+         impact=("Vừa", "Giảm doanh thu phần công ty của các đơn lớn; đã tính trong hiệu chỉnh.")),
+    dict(id="P64", step="B3", name="Phân bổ doanh thu cho đơn vị", value="Trụ sở hợp tác 60% (giữ 50–70%); KD số chuyển giao 50%; công ty thành viên hợp tác 10% (giữ 50–80%), chuyển giao 1%", code="566–586",
+         tags=["ASSUME", "PUB"], src=["P8"], why="Thông lệ quản trị của DN nhiều đơn vị (xem P19). Các tỷ lệ là giả định.",
+         impact=("Vừa", "Làm doanh thu theo chiều Đơn vị khác với doanh thu theo đơn vị cấp đơn.")),
+
+    # ---------------- B4 Giao dịch gốc ----------------
+    dict(id="P65", step="B4", name="Trạng thái chứng từ", value="APPROVED 98,5% / PENDING 1% / VOID 0,5%", code="624",
+         tags=["ASSUME"], src=[], why="Chỉ chứng từ đã duyệt mới là căn cứ ghi nhận. PENDING và VOID được sinh làm kịch bản kiểm thử để ETL phải lọc đúng. Các tỷ lệ là giả định.",
+         impact=("Thấp", "Chỉ APPROVED được tính doanh thu.")),
+    dict(id="P66", step="B4", name="Ngày ghi nhận doanh thu", value="NEW / RENEW: max(ngày cấp, ngày hiệu lực); SĐBS: ngày chứng từ", code="592",
+         tags=["LAW"], src=["S6", "S11"], why="TT 67/2023 Đ41: ghi nhận khi phát sinh trách nhiệm bảo hiểm; TK 005 'hợp đồng chưa phát sinh trách nhiệm' (TT 232)."),
+    dict(id="P67", step="B4", name="Tỷ giá cho năm chưa có số", value="Năm > 2025 dùng tỷ giá tháng 12/2025", code="296–301",
+         tags=["ASSUME"], src=[], why="Áp cho đơn cấp cuối 2025 nhưng hiệu lực 2026.", impact=("Thấp", "Chỉ vài đơn USD.")),
+
+    # ---------------- B5 Hiệu chỉnh ----------------
+    dict(id="P68", step="B5", name="Thuật toán hiệu chỉnh", value="f = (mục tiêu − cố định) / co giãn; f ≥ 0,05; chạy 1 vòng", code="631–657",
+         tags=["DERIVED"], src=["F1"], why="Đơn lẻ giữ nguyên biểu phí, nên TNDS vẫn đúng 437.000 đ. Chỉ co giãn số lượng của đơn nhóm/lô và STBH của tài sản, cháy nổ. Mục tiêu so trên phần OWN, chỉ tính đơn APPROVED."),
+
+    # ---------------- B6 Tái tục ----------------
+    dict(id="P69", step="B6", name="Tỷ lệ tái tục và điều chỉnh phí", value="55% đơn năm (không phải lô); cấp trước hết hạn 0–10 ngày; phí × 0,95–1,12 (TNDS giữ biểu phí)", code="607–610, 451–455, 507–514",
+         tags=["ASSUME", "LAW", "SAMPLE"], src=["S8", "D6"], why="Quyền lợi bảo hiểm nối tiếp theo năm (Synthea: payer_transitions có Start_Year / End_Year), nên tái tục là một giao dịch riêng nối với hợp đồng cũ. TNDS giữ biểu phí theo luật. Tỷ lệ tái tục và biên độ phí là giả định.",
+         impact=("Vừa", "Quyết định tỷ lệ RENEW / NEW năm 2025.")),
+
+    # ---------------- B7 SĐBS ----------------
+    dict(id="P70", step="B7", name="Tần suất và cơ cấu SĐBS", value="7% hợp đồng (trừ du lịch); tăng 30 / giảm 15 / hoàn 15 / hủy 25 / không đổi 15%", code="659–667",
+         tags=["ASSUME", "LAW", "STD"], src=["S3", "T1"], why="Tập loại SĐBS theo NĐ 46 Đ49 (tăng phí, giảm phí, hoàn phí) và ACORD (PCH / XLC). Tần suất và cơ cấu là giả định.",
+         impact=("Thấp", "Khoản giảm thu chỉ khoảng 1% doanh thu.")),
+    dict(id="P71", step="B7", name="Số tiền SĐBS", value="Tăng 5–30%; giảm 5–20%; hoàn 5–30% phí gốc; hủy hoàn 90% phí thời gian còn lại", code="668–673",
+         tags=["LAW", "SAMPLE", "ASSUME"], src=["S3", "S11", "D2"], why="Dấu âm và tài khoản theo NĐ 46 Đ49 k3 và TT 232; dataset Kaggle du lịch cũng ghi hoàn phí là số âm. Biên độ và mức hoàn 90% là giả định.", impact=("Thấp", "Khoản giảm thu chỉ khoảng 1% doanh thu.")),
+
+    # ---------------- B8 Xuất bảng ----------------
+    dict(id="P72", step="B8", name="Phí nguyên tệ và quy đổi", value="premium_orig = phần thay đổi phí của giao dịch; premium_vnd = premium_orig × fx_rate", code="720–723",
+         tags=["STD"], src=["T1", "T3"], why="ACORD NetChangeAmt; Kimball multiple currencies (lưu cả nguyên tệ và tiền chuẩn)."),
+    dict(id="P73", step="B8", name="Hoa hồng", value="Chỉ kênh trung gian; 50–100% trần; cố định theo hợp đồng × sản phẩm", code="725–729",
+         tags=["LAW", "SAMPLE", "ASSUME"], src=["S6", "D2"], why="Trần theo TT 67/2023 Đ51. Dataset Kaggle du lịch ghi hoa hồng thành cột riêng và có nhiều dòng hoa hồng = 0 — cùng cách v2 để 0 cho bán trực tiếp. Mức 50–100% trần là giả định.", impact=("Thấp", "Không vào công thức doanh thu.")),
+    dict(id="P74", step="B8", name="Seed ngẫu nhiên", value="2026", code="17",
+         tags=["DERIVED"], src=[], why="Chạy lại ra đúng bộ dữ liệu, để mọi con số trong tài liệu tái lập được."),
+]
+
+# Giới hạn đã biết: (vấn đề, chi tiết, cách hiểu / xử lý)
+LIMITS = [
+    ("Số hợp đồng không phải số thật", "Một hợp đồng dummy lô/nhóm đại diện hàng trăm GCN. Số đơn chỉ phục vụ dáng dữ liệu.", "Không trình bày 'số đơn' như số liệu thị trường."),
+    ("Tách trong nhóm là giả định", "Con người 75 / 15 / 5 / 5 và tài sản thuần 50% không có số công bố.", "Trả lời khách: tổng nhóm đúng số công bố; cách tách con là quy ước của dự án."),
+    ("Dataset mẫu là nước ngoài", "CASdatasets (Pháp), Kaggle du lịch (châu Á), CAS / Synthea / CMS (Mỹ), COIL (Hà Lan) chỉ chứng minh cấu trúc và phương pháp.", "Không dùng số của chúng; số chỉ lấy từ nguồn Việt Nam."),
+    ("Không có bồi thường", "POC chỉ sinh doanh thu phí. Các nguồn về bồi thường / dự phòng (freMTPL2sev, RAA, claims của CMS / Synthea) không dùng.", "Nếu mở rộng sang bồi thường, đó là nơi bắt đầu."),
+    ("Tỷ lệ phí cháy nổ dùng bản 2023", "Từ 01/7/2025 NĐ 105/2025 thay Phụ lục II, nhưng chỉ có bản scan.", "Khi có bản text, cập nhật FIRE_RATES rồi chạy lại."),
+    ("Tỷ giá 2024 là ước tính", "Nội suy theo tỷ giá trung tâm NHNN.", "Bổ sung số KBNN 2024 nếu cần chính xác."),
+    ("Mùa vụ theo toàn công ty", "Đích theo quý là số PVI Holdings (mọi nghiệp vụ).", "Chấp nhận lệch vài điểm % theo quý."),
+    ("Dữ liệu trên DB lớn khoảng 3,9 lần PVI", "Để đạt > 50.000 giao dịch/ngày với đơn giá niêm yết, bộ volume nhân mọi ngân sách với cùng hệ số k ≈ 3,93. Cơ cấu doanh thu và đơn giá theo nguồn; doanh thu tuyệt đối thì không.", "Không trình bày doanh thu tuyệt đối trên DB như số của PVI; nói rõ hệ số k."),
+    ("Bộ v2: doanh thu khách cá nhân định danh thấp hơn thực tế", "Bước hiệu chỉnh của v2 chỉ co giãn đơn nhóm / lô, còn đơn lẻ giữ nguyên. Vì vậy doanh thu dồn vào đơn tổ chức, và khách cá nhân định danh chỉ chiếm phần rất nhỏ (xem bảng phân khúc ở mục Kết quả). Chiều hướng (cá nhân nhiều đơn, ít tiền) đúng, nhưng mức chênh rõ hơn thực tế.", "Hướng sửa: thêm tham số tỷ trọng bán lẻ cho từng nhóm và hiệu chỉnh riêng đơn lẻ."),
+    ("Hiệu chỉnh 1 vòng theo sản phẩm chính", "Khi hiệu chỉnh, doanh thu sản phẩm bán kèm được tính vào nhóm của sản phẩm chính; còn khi báo cáo thì tính vào nhóm của chính sản phẩm đó.", "Gây lệch ngược chiều giữa Cháy nổ và Tài sản; tổng vẫn khớp."),
+]
+
+# Tự kiểm tra: (câu hỏi, đáp án)
+QUIZ = [
+    ("Vì sao cháy nổ chiếm khoảng 1/3 doanh thu dummy, còn xe chỉ khoảng 18%?",
+     "Vì mục tiêu lấy theo BCTC PVI 2025 (P20): cháy nổ 3.451 tỷ, xe 1.823 tỷ. Đây là số công bố, không phải giả định."),
+    ("Phần nào của doanh thu mục tiêu 2025 phụ thuộc trực tiếp vào giả định?",
+     "Nhóm Tài sản (≈ 1.891 tỷ, 18%) phụ thuộc tỷ lệ 50% (P21). Ba nhóm còn lại có tổng đúng số công bố; riêng cách tách bên trong Con người (P22) và Xe (P23) là giả định."),
+    ("TNDS ô tô 437.000 đ lấy từ đâu? Có bị bước hiệu chỉnh thay đổi không?",
+     "Từ NĐ 67/2023 Phụ lục I (P40). Không bị thay đổi: hiệu chỉnh chỉ đổi số xe trong đơn lô, đơn lẻ giữ nguyên biểu phí (P68)."),
+    ("Dataset mẫu chứng minh được gì, và không chứng minh được gì?",
+     "Chứng minh cấu trúc: phí tách theo quyền lợi trên cùng hợp đồng (fremotor), hoàn phí là số âm và đại lý hãng bay / du lịch (Kaggle), tách phí toàn bộ với phần công ty (CAS). Không chứng minh bất kỳ con số nào của dữ liệu dummy."),
+    ("Vì sao có doanh thu tháng 01/2026?",
+     "Đơn cấp cuối 12/2025 có hiệu lực từ 2026. Ngày ghi nhận = max(ngày cấp, ngày hiệu lực) theo TT 67 Đ41 (P66)."),
+    ("Vì sao 10% hợp đồng chiếm khoảng 3/4 doanh thu?",
+     "Do phân phối lệch phải của STBH (P58) và bước hiệu chỉnh dồn tiền vào đơn tài sản, cháy nổ, đơn nhóm (P68). Đây là dáng 'ít đơn – nhiều tiền'."),
+    ("Kênh điện tử 2025 trong dummy là 8,4%, còn PVI khoảng 10% — vì sao?",
+     "Trọng số kênh (P33) là giả định định hướng, không được hiệu chỉnh theo kênh. Hướng tăng trưởng (gần gấp đôi) vẫn đúng nhờ P34."),
+    ("Dữ liệu dummy nhìn giống hệ thống thật — vậy có phải dữ liệu thật không?",
+     "Không. Đây là dữ liệu giả lập giữ đúng cấu trúc nghiệp vụ (theo luật và chuẩn ngành) nhưng mọi con số đều sinh từ tham số neo vào nguồn public. Cách làm giống CMS DE-SynPUF và Synthea (P00)."),
+    ("Muốn đổi tỷ lệ chia Con người thành 70 / 15 / 8 / 7 thì làm gì?",
+     "Sửa SUB_SPLIT trong build_v2.py (dòng 194–199), chạy lại build_v2.py, rồi build lại tài liệu. Bước hiệu chỉnh tự kéo doanh thu về mục tiêu mới."),
+]

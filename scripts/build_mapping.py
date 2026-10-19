@@ -1,6 +1,6 @@
-r"""Sinh tài liệu mapping v2 ↔ PIAS dạng HTML trực quan từ docs/mapping_meta.py.
+r"""Sinh tài liệu mapping v2 ↔ PIAS dạng HTML trực quan từ scripts/mapping_meta.py.
 
-Chạy:  python docs/build_mapping.py   →  docs/Mapping_v2_PIAS.html   (TÀI LIỆU NỘI BỘ)
+Chạy:  python scripts/build_mapping.py   →  docs/Mapping_v2_PIAS.html   (TÀI LIỆU NỘI BỘ)
 """
 import datetime as dt
 import html
@@ -9,15 +9,15 @@ from collections import Counter
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from mapping_meta import BA_QUESTIONS, CODE_MAPS, CORRECTIONS, FLOW, SAMPLE, TABLE_MAP  # noqa: E402
+from mapping_meta import CODE_MAPS, CORRECTIONS, DECISIONS, FLOW, SAMPLE, TABLE_MAP  # noqa: E402
 
-OUT = Path(__file__).parent / "Mapping_v2_PIAS.html"
+OUT = Path(__file__).parent.parent / "docs" / "Mapping_v2_PIAS.html"
 STATUS = {  # mã -> (nhãn, mô tả)
     "OK": ("Khớp", "Khớp trực tiếp, đã kiểm chứng trên dữ liệu"),
     "TF": ("Biến đổi", "Biến đổi theo quy tắc, đã kiểm chứng"),
-    "CHK": ("Cần xác nhận", "Cần BA xác nhận"),
+    "STD": ("Quy ước chuẩn", "Dự án chốt khi nguồn mơ hồ — có căn cứ dữ liệu / quy định"),
     "GAP": ("PIAS không có", "v2 sinh mới / suy ra"),
-    "NEW": ("Đề xuất thêm", "PIAS có nhưng v2 chưa có"),
+    "OUT": ("Không dùng", "PIAS có, ngoài phạm vi v2"),
 }
 e = html.escape
 
@@ -46,9 +46,9 @@ def build():
         head = "".join(f"<th>{e(c)}</th>" for c in cols[:-1]) + "<th>Trạng thái</th>"
         body = "".join("<tr>" + "".join(f"<td>{e(v)}</td>" for v in r[:-1]) + f"<td>{pill(r[-1])}</td></tr>" for r in rows)
         codes.append(f'<details class="cm" open><summary>{e(name)}<span>{e(desc)}</span></summary><div class="tw"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div></details>')
-    ba = "".join(f"<li>{e(q)}</li>" for q in BA_QUESTIONS)
+    ba = "".join(f"<tr><td><b>{e(a)}</b></td><td>{e(b)}</td><td>{e(c)}</td></tr>" for a, b, c in DECISIONS)
     nav = "".join(f'<a href="#{i}">{t}</a>' for i, t in [("tong-quan", "Tổng quan"), ("luong", "Luồng dữ liệu"), ("dinh-chinh", "Đính chính"),
-                                                      ("bang", "Mapping theo bảng"), ("ma", "Bảng mã"), ("ba", "Câu hỏi BA")])
+                                                      ("bang", "Mapping theo bảng"), ("ma", "Bảng mã"), ("quy-uoc", "Quy ước chuẩn")])
     return PAGE.format(date=f"{dt.date.today():%d/%m/%Y}", sample=e(SAMPLE), cards=cards, flow=e(FLOW), corr=corr,
                        tables="".join(tables), codes="".join(codes), ba=ba, nav=nav, total=sum(counts.values()))
 
@@ -77,7 +77,7 @@ section{{margin-top:40px}}section>h2{{font-size:22px;margin:0 0 6px;color:var(--
 .card{{text-align:left;font:inherit;color:inherit;cursor:pointer;background:var(--panel);border:1px solid var(--line);border-left:5px solid;border-radius:10px;padding:12px 14px}}
 .card b{{display:block;font-size:26px;font-variant-numeric:tabular-nums}}.card span{{font-weight:600}}.card em{{display:block;font-style:normal;color:var(--muted);font-size:12.5px}}
 .card[aria-pressed=true]{{outline:2px solid var(--accent);outline-offset:1px}}
-.s-OK{{--c:var(--ok);--cb:var(--okb)}}.s-TF{{--c:var(--tf);--cb:var(--tfb)}}.s-CHK{{--c:var(--chk);--cb:var(--chkb)}}.s-GAP{{--c:var(--gap);--cb:var(--gapb)}}.s-NEW{{--c:var(--new);--cb:var(--newb)}}
+.s-OK{{--c:var(--ok);--cb:var(--okb)}}.s-TF{{--c:var(--tf);--cb:var(--tfb)}}.s-STD{{--c:var(--chk);--cb:var(--chkb)}}.s-GAP{{--c:var(--gap);--cb:var(--gapb)}}.s-OUT{{--c:var(--new);--cb:var(--newb)}}
 .card{{border-left-color:var(--c)}}.card b{{color:var(--c)}}
 .pill{{display:inline-block;white-space:nowrap;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:99px;color:var(--c);background:var(--cb)}}
 .tw{{overflow-x:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}}table{{border-collapse:collapse;width:100%;font-size:13.5px}}
@@ -110,7 +110,8 @@ ol.ba li{{margin:6px 0}}.filterinfo{{font-size:13px;color:var(--muted);margin:8p
 <div class="tw"><table><thead><tr><th>Nội dung</th><th>Bản trước</th><th>Đúng là</th><th>Bằng chứng</th></tr></thead><tbody>{corr}</tbody></table></div></section>
 <section id="bang"><h2>Mapping theo bảng</h2><p>Trái: cột v2. Phải: nguồn PIAS và quy tắc. Cột cuối là bằng chứng đo trên dữ liệu.</p>{tables}</section>
 <section id="ma"><h2>Bảng đối chiếu mã</h2><p>Giá trị mã PIAS → giá trị v2, kèm số lượng thực tế.</p>{codes}</section>
-<section id="ba"><h2>Câu hỏi cần BA xác nhận</h2><ol class="ba">{ba}</ol></section>
+<section id="quy-uoc"><h2>Quy ước chuẩn đã chốt</h2><p>Những điểm nguồn PIAS không tự nói rõ. Dự án chốt theo bằng chứng dữ liệu và quy định; các quy ước này là chuẩn cho ETL.</p>
+<div class="tw"><table><thead><tr><th>Vấn đề</th><th>Quy ước chuẩn</th><th>Căn cứ</th></tr></thead><tbody>{ba}</tbody></table></div></section>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
 <script>

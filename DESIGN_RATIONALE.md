@@ -83,7 +83,7 @@ doanh thu = transaction_coverage.premium_vnd  (phí 100% hợp đồng, VND, ch�
 | Ghi nhận khi **phát sinh trách nhiệm bảo hiểm**. Mô hình hóa: `accounting_date` = max(ngày cấp, ngày bắt đầu hiệu lực). Vì vậy hợp đồng cấp tháng 12/2025 có hiệu lực tháng 01/2026 sẽ ghi nhận doanh thu năm 2026 | TT 67/2023 Điều 41 khoản 1 (đã sửa bởi TT 96/2026); TK 005 "hợp đồng chưa phát sinh trách nhiệm" trong TT 232/2012 |
 | Hoàn phí, giảm phí, hủy đơn mang số âm, cộng vào kỳ phát sinh | NĐ 46/2023 Điều 49 khoản 3; TT 232/2012 (TK 531, 532) |
 | Doanh thu tính chưa VAT | Luật GTGT 48/2024 |
-| Chỉ tính chứng từ `APPROVED` | Kiểm soát nội bộ (giả định POC) |
+| Chỉ tính chứng từ `APPROVED` | Quy ước chuẩn: chỉ chứng từ đã duyệt là căn cứ ghi nhận; `PENDING` / `VOID` là kịch bản kiểm thử |
 
 ## 5. Hiệu chỉnh dữ liệu dummy
 
@@ -93,10 +93,10 @@ Chi tiết từng bước nằm ở [GENERATION_LOGIC.md](GENERATION_LOGIC.md). 
 |---|---|---|
 | Quy mô và cơ cấu doanh thu | 2025: 10.378 tỷ trong phạm vi POC. Sức khỏe & tai nạn 3.213, xe 1.823, cháy nổ 3.451, tài sản ≈ 1.891 | BCTC kiểm toán 2025 của Bảo hiểm PVI, thuyết minh 21 (phí gốc theo nghiệp vụ) |
 | Phần tài sản thuần trong "Tài sản & thiệt hại" | 50% | **Ước tính** (BCTC gộp kỹ thuật, năng lượng) |
-| Trong Con người | Sức khỏe 75% / Sinh mạng–tai nạn 15% / Du lịch 5% / Học sinh 5% | **Ước tính** (FPTS: sức khỏe PVI chủ yếu là nhóm doanh nghiệp) |
+| Trong Con người | Sức khỏe 75% / Sinh mạng–tai nạn 15% / Du lịch 5% / Học sinh 5% | **Ước tính** ([FPTS, trang 14](https://file.fpts.com.vn/FileStore2/File/2025/04/14/DuyenNTM14042025Bao_cao_dinh_gia_lan_dau_PVI_0bef673f.pdf): sức khỏe PVI chủ yếu là nhóm doanh nghiệp) |
 | Trong Xe | TNDS bắt buộc 24% / Vật chất xe 76% | IAV 2024 (4.537 / 18.693 tỷ) |
 | Mùa vụ | Theo quý: 29,7 / 24,1 / 24,8 / 21,4%; học sinh đỉnh tháng 8–10 | Phí gốc theo quý PVI 2025; báo chí |
-| Kênh điện tử | ≈ 6% (2024) → ≈ 10% (2025) | BCTN PVI 2024, 2025 |
+| Kênh điện tử | ≈ 6% (2024) → ≈ 10% (2025) | [BCTN PVI 2024, trang 29](https://static2.vietstock.vn/vietstock/2025/3/19/3_pvi_2025_3_19_fb26c59_en_annualreport_2024.pdf) (≈ 800 tỷ); 2025 suy ra từ mức tăng 1,8 lần quý I/2025 ([pvn.vn](https://pvn.vn/khoi-dau-vung-chac-bao-hiem-pvi-huong-toi-moc-doanh-thu-ty-do-la-my-nam-2025-28459)) |
 | Môi giới / bancassurance | ≈ 15–20% / ≈ 5–8% | **Ước tính** (thị trường: môi giới 13,5%) |
 | Phí TNDS bắt buộc | 437.000 / 794.000 / 756.000 / 853.000 … (ô tô); 55.000 / 60.000 (mô tô) | NĐ 67/2023 Phụ lục I |
 | Tỷ lệ phí cháy nổ bắt buộc | 0,05–0,5% theo nhóm cơ sở | NĐ 67/2023 Phụ lục II (bản 2023) |
@@ -151,11 +151,9 @@ Tỷ lệ phân bổ nằm ở `core.revenue_allocation`, loại phân bổ ở 
 
 **"Doanh thu Tổng công ty" là gì?**
 
-Mô hình hỗ trợ cả 2 nghĩa:
-- (a) doanh thu hợp nhất toàn hệ thống;
-- (b) doanh thu do Khối Trụ sở trực tiếp khai thác (`company_type = HEAD_OFFICE`).
+**Quy ước chuẩn:** doanh thu Tổng công ty = tổng doanh thu hợp nhất của mọi đơn vị. Đây là cấp nằm giữa "Tổng doanh thu" và "Công ty" trong đề bài.
 
-Dữ liệu nguồn hỗ trợ cả hai nghĩa. Cần khách hàng chốt nghĩa nào.
+Khối Trụ sở (`company_type = HEAD_OFFICE`, gồm các trung tâm trực thuộc) được tính là **một đơn vị ngang cấp Công ty**. Doanh thu do trụ sở trực tiếp khai thác vẫn xem riêng được qua đơn vị này.
 
 **Tại sao cháy nổ xếp vào "Tài sản"?**
 
@@ -204,14 +202,17 @@ Cơ cấu này lấy theo BCTC kiểm toán 2025 công khai của Bảo hiểm P
 
 Báo cáo dùng đơn vị hành chính **hiện hành** (NQ 202/2025) để so sánh được giữa các năm.
 
-## 7. Giả định và điểm chưa kiểm chứng
+## 7. Quy ước chuẩn của dự án
 
-- **Tỷ lệ phí cháy nổ bắt buộc:** dùng bản 2023 (NĐ 67 Phụ lục II). Từ 01/7/2025 đã thay bằng NĐ 105/2025 Phụ lục VI, nhưng bản này chỉ có PDF scan nên chưa đối chiếu được.
-- **Tỷ giá 2024 và cơ cấu nhóm "Con người":** là ước tính.
-- **Chưa mô hình hóa:**
-  - thu phí nhiều kỳ (TT 67 Điều 41 khoản 1 điểm d);
-  - leading fee (phí quản lý của DN đứng đầu đồng BH);
-  - nhận và nhượng tái bảo hiểm (ngoài phạm vi doanh thu phí gốc).
-- **Ánh xạ Solvency II cho tai nạn/sinh mạng và du lịch** là suy luận theo bản chất rủi ro.
-- **Chia Bắc / Trung / Nam:** là đề xuất của dự án.
-- **`accounting_date`:** giả định phí đã đóng đủ hoặc có thỏa thuận nợ phí.
+Những điểm không có số công bố hoặc nguồn không nói rõ được dự án **tự chốt** theo căn cứ hợp lý nhất. Các quy ước này là chuẩn cho bộ dữ liệu và cho ETL sau này. Quy ước ánh xạ với hệ thống nguồn nằm ở `docs/Mapping_v2_PIAS.html`, mục "Quy ước chuẩn đã chốt".
+
+| Nội dung | Quy ước chuẩn | Căn cứ |
+|---|---|---|
+| Tỷ lệ phí cháy nổ bắt buộc | Dùng biểu tỷ lệ tối thiểu NĐ 67/2023 Phụ lục II | Văn bản đọc được toàn văn. Phụ lục VI của NĐ 105/2025 thay thế chỉ có bản scan |
+| Tỷ giá USD năm 2024 | Nội suy theo tỷ giá trung tâm NHNN | Năm 2025 dùng số công bố của KBNN |
+| Chia trong nhóm Con người | Sức khỏe 75 / sinh mạng–tai nạn 15 / du lịch 5 / học sinh 5% | Mảng sức khỏe PVI chủ yếu là nhóm doanh nghiệp (FPTS) |
+| Tài sản thuần trong "Tài sản & thiệt hại" | 50% | BCTC PVI gộp tài sản với kỹ thuật, năng lượng |
+| Phạm vi | Không gồm thu phí nhiều kỳ, leading fee, nhận / nhượng tái bảo hiểm | Đề bài chỉ yêu cầu doanh thu phí bảo hiểm gốc |
+| Solvency II cho tai nạn, sinh mạng, du lịch | Income protection / Medical expense | Theo bản chất rủi ro chính |
+| Vùng miền | Bắc 15 / Trung 11 / Nam 8 tỉnh | Không có văn bản pháp lý chia 3 miền sau sáp nhập |
+| `accounting_date` | max(ngày cấp, ngày hiệu lực); SĐBS = ngày chứng từ | TT 67/2023 Điều 41: phí đã đóng đủ hoặc có thỏa thuận nợ phí theo Điều 26 |

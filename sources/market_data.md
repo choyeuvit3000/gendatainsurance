@@ -25,16 +25,11 @@ Nguồn: IAV 2024 và MOF 2025, cùng URL như mục 1.
 | Cháy nổ (bắt buộc 9.923 + tự nguyện 6.714) | 16.637 | 21,0% | 13.544 | 15,38% |
 | Tài sản | | | 8.559 | 9,72% |
 
-**Cách áp vào dummy.** Bốn nghiệp vụ thuộc phạm vi POC năm 2025 cộng lại được 74.755 tỷ. Tỷ trọng giữa các nhóm POC được tính lại trên tổng này:
+**Cách áp vào dummy.** Số toàn thị trường **không** dùng làm cơ cấu. Cơ cấu và quy mô lấy theo BCTC PVI (mục 8). Từ số thị trường chỉ dùng:
+- Trong Xe: TNDS bắt buộc ≈ **24%**, vật chất xe ≈ **76%** (theo tỷ lệ 4.537 / 18.693 năm 2024) **[suy ra]**.
+- Để so sánh: thị trường có xe ≈ 28% trong 4 nghiệp vụ POC, còn PVI chỉ ≈ 18% vì thiên về khách hàng công nghiệp.
 
-| Nhóm POC | Gồm | Tỷ trọng |
-|---|---|---:|
-| Con người | Sức khỏe | 42,4% |
-| Xe | Xe cơ giới | 28,1% |
-| Tài sản | Cháy nổ 18,1% + Tài sản 11,4% | 29,5% |
-
-- Trong Xe: TNDS bắt buộc ≈ **24%**, vật chất xe ≈ **76%** (theo tỷ lệ 4.537 / 18.693 năm 2024).
-- Trong Con người: chưa có số public chia theo sản phẩm. **[ƯỚC TÍNH]** sức khỏe 70%, tai nạn/sinh mạng 15%, du lịch 8%, học sinh 7%.
+Trong Con người chưa có số public chia theo sản phẩm. Dự án chốt **[ƯỚC TÍNH]**: sức khỏe 75%, sinh mạng–tai nạn 15%, du lịch 5%, học sinh 5% (xem mục 8 và `docs/Logic_Sinh_Du_Lieu.html`, tham số P22).
 
 ## 3. Thị phần và quy mô doanh nghiệp
 
@@ -50,10 +45,10 @@ Top 5 năm 2025 (MOF Bản tin 01/2026):
 
 Nhóm hạng 6–10 có thị phần khoảng 4–5,5%.
 
-**Cách áp vào dummy.** Doanh nghiệp giả lập "Tổng công ty Bảo hiểm DEMO" có thị phần khoảng **4,5%** trên 4 nghiệp vụ POC, tương đương **~3.360 tỷ năm 2025**. Năm 2024 lấy bằng 2025 / 1,11, theo tăng trưởng thị trường.
+**Cách áp vào dummy.** Doanh nghiệp giả lập "Tổng công ty Bảo hiểm DEMO" lấy **quy mô của PVI** (DN đứng đầu thị trường) trên 4 nghiệp vụ POC: khoảng 10.378 tỷ năm 2025 và 8.958 tỷ năm 2024 (mục 8).
 
 **Mô hình tổ chức "Tổng công ty → công ty thành viên".** Đây là mô hình công khai của các DNBH lớn:
-- Bảo hiểm Bảo Việt: 79 công ty thành viên (BVH Integrated Report 2024: https://static2.vietstock.vn/vietstock/2025/4/22/20250422_bvh_250422_integrated_report_2024.pdf).
+- Bảo hiểm Bảo Việt: 79 công ty thành viên (BVH Integrated Report 2024: https://static2.vietstock.vn/vietstock/2025/4/22/20250422_bvh_250422_integrated_report_2024.pdf, trang 127).
 - PVI Insurance: 47 công ty thành viên (https://www.pvi.com.vn/vi/services/mang-luoi).
 
 ## 4. Kênh phân phối
@@ -62,9 +57,14 @@ Nhóm hạng 6–10 có thị phần khoảng 4–5,5%.
 |---|---|---|
 | Phí qua môi giới 2025 | 11.905 tỷ, ≈13,5% thị trường [suy ra] | MOF Bản tin 01/2026 |
 | Bancassurance của một DNBH (MIC, 2023) | 32% doanh thu. Mục tiêu chung của ngành ≈30% | https://www.pjico.com.vn/bao-hiem-phi-nhan-tho-day-manh-ban-cheo-qua-ngan-hang.html |
-| Kênh TMĐT/API của một DNBH lớn (2024) | ≈800 tỷ, ≈6% phí gốc [suy ra] | PVI Annual Report 2024: https://static2.vietstock.vn/vietstock/2025/3/19/3_pvi_2025_3_19_fb26c59_en_annualreport_2024.pdf |
+| Kênh TMĐT/API của một DNBH lớn (2024) | ≈800 tỷ, ≈6% phí gốc [suy ra] | PVI Annual Report 2024: https://static2.vietstock.vn/vietstock/2025/3/19/3_pvi_2025_3_19_fb26c59_en_annualreport_2024.pdf (trang 29) |
 
-**Cách áp vào dummy [ƯỚC TÍNH]:** trực tiếp + đại lý ≈55%, bancassurance ≈17%, môi giới ≈13%, điện tử ≈7%, đại lý tổ chức khác ≈8%.
+**Cách áp vào dummy [ƯỚC TÍNH].** Trọng số kênh đặt theo định hướng của PVI, không theo số bình quân thị trường:
+- điện tử ≈ 6% (2024) → ≈ 10% (2025);
+- môi giới 15–20%, cao hơn mức 13,5% của thị trường;
+- bancassurance 5–8%, thấp hơn mức 30% của MIC vì PVI mới mở rộng kênh này.
+
+Kết quả đo xem `docs/Logic_Sinh_Du_Lieu.html` (tham số P33).
 
 ## 5. Phí niêm yết công khai, dùng làm mức phí dummy
 
@@ -77,7 +77,7 @@ Nhóm hạng 6–10 có thị phần khoảng 4–5,5%.
 | Du lịch trong nước | từ 17.000 đ/chuyến | baovietonline.com.vn |
 | Du lịch quốc tế | từ 100.000 đ/người | online.pvi.com.vn |
 | Sức khỏe cá nhân | từ 1,4–1,5 triệu/năm; gói cao cấp ≈6,2 triệu | baovietonline.com.vn |
-| Nhà tư nhân / căn hộ | từ 220.000–270.000 đ/năm | baovietonline.com.vn; online.pvi.com.vn |
+| Nhà tư nhân / căn hộ | từ 220.000–270.000 đ/năm | https://baovietonline.com.vn/; https://online.pvi.com.vn/san-pham |
 
 ## 6. Mùa vụ
 
@@ -89,7 +89,7 @@ Nhóm hạng 6–10 có thị phần khoảng 4–5,5%.
 
 ## 7. Tỷ giá hạch toán USD/VND năm 2025
 
-Đây là tỷ giá hạch toán do Kho bạc Nhà nước công bố hằng tháng (thuvienphapluat.vn). Năm 2024: **[ƯỚC TÍNH]** nội suy theo tỷ giá trung tâm của NHNN.
+Đây là tỷ giá hạch toán do Kho bạc Nhà nước công bố hằng tháng, mỗi tháng một thông báo (ví dụ tháng 01/2025: https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Thong-bao-7727-TB-KBNN-2024-ty-gia-hach-toan-ngoai-te-thang-01-nam-2025-641872.aspx). Năm 2024: **[ƯỚC TÍNH]** nội suy theo tỷ giá trung tâm của NHNN.
 
 | T1 | T2 | T3 | T4 | T5 | T6 | T7 | T8 | T9 | T10 | T11 | T12 |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
@@ -97,7 +97,7 @@ Nhóm hạng 6–10 có thị phần khoảng 4–5,5%.
 
 ## 8. Bảo hiểm PVI — số liệu công khai (căn cứ hiệu chỉnh chính)
 
-**Phí bảo hiểm gốc theo nghiệp vụ** (tỷ đồng). Nguồn: BCTC kiểm toán 2025 của Tổng công ty Bảo hiểm PVI, thuyết minh 21 — https://adminweb.pvi.com.vn/wp-content/uploads/2026/05/2025Q4_Audited_FSs_En.pdf
+**Phí bảo hiểm gốc theo nghiệp vụ** (tỷ đồng). Nguồn: BCTC kiểm toán 2025 của Tổng công ty Bảo hiểm PVI, thuyết minh 21 — https://adminweb.pvi.com.vn/wp-content/uploads/2026/05/2025Q4_Audited_FSs_En.pdf (trang 45 của file PDF, bản scan)
 
 | Nghiệp vụ | 2024 | 2025 |
 |---|---:|---:|
@@ -113,19 +113,19 @@ Nhóm hạng 6–10 có thị phần khoảng 4–5,5%.
 | Tín dụng, nông nghiệp | 48,6 | 55,8 |
 | Thuần sau giảm trừ | 13.368,2 | 14.908,3 |
 
-**Phí gốc hợp nhất theo quý** (BCTC quý PVI Holdings, thuyết minh 21): 2024 là 31,5 / 21,5 / 26,6 / 20,5%; 2025 là 29,7 / 24,1 / 24,8 / 21,4%.
+**Phí gốc hợp nhất theo quý** (BCTC quý PVI Holdings, thuyết minh 21 — ví dụ quý 4/2025: https://pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/ce6f18e2-7a79-42f3-b6ab-2b79ea1e4077.pdf, trang 31): 2024 là 31,5 / 21,5 / 26,6 / 20,5%; 2025 là 29,7 / 24,1 / 24,8 / 21,4%.
 
-**Kênh điện tử:** gần 800 tỷ năm 2024 (BCTN 2024), "gần gấp đôi" năm 2025 (BCTN 2025). Đối tác API: Vietnam Airlines, MobiFone, Viettel, Thế Giới Di Động, Shopee.
+**Kênh điện tử:** gần 800 tỷ năm 2024 (BCTN 2024). Quý I/2025 doanh thu kênh TMĐT tăng 1,8 lần so với cùng kỳ (https://pvn.vn/khoi-dau-vung-chac-bao-hiem-pvi-huong-toi-moc-doanh-thu-ty-do-la-my-nam-2025-28459); tỷ trọng ≈ 10% năm 2025 là **[suy ra]**. Đối tác API: Vietnam Airlines, MobiFone, Viettel, Thế Giới Di Động, Shopee.
 
-**Bancassurance:** Nam A Bank, Woori Bank; PVI Link thành lập 2025 (pvi.com.vn). Không có số doanh thu.
+**Bancassurance:** hợp tác với Nam A Bank (https://www.pvi.com.vn/vi/news/bao-hiem-pvi-va-nam-a-bank-khoi-dong-hop-tac-kinh-doanh-tai-khu-vuc-mien-tay). Không có số doanh thu.
 
 **Mốc hợp đồng lớn (ngoài phạm vi POC):**
 
 | Hợp đồng | Phí | Nguồn |
 |---|---|---|
-| Hàng không Vietnam Airlines | 540–617 tỷ/năm | tinnhanhchungkhoan.vn, fireant.vn |
-| Công trình Nhiệt điện Quảng Trạch I | > 365 tỷ | tinnhanhchungkhoan.vn |
-| Công trình nhà ga Long Thành (6 công ty) | 118,9 tỷ | baodauthau.vn |
-| Đội tàu Vinalines | 76 tàu, STBH 565 triệu USD | pvn.vn |
+| Hàng không Vietnam Airlines | 540,2 tỷ (giá trúng thầu, liên danh Bảo Việt – PVI – Bảo Minh); gói mời thầu ≈ 600 tỷ | https://fireant.vn/bai-viet/nha-thau-trung-goi-bao-hiem-hon-500-ty-co-nang-luc-the-nao/29752615; https://vietnambusinessinsider.vn/vietnam-airlines-mo-thau-goi-bao-hiem-lon-nhat-nam-voi-600-ty-dong-nhung-chi-co-mot-nha-thau-tham-gia-nop-ho-so-a49139.html |
+| Công trình Nhiệt điện Quảng Trạch I | > 365 tỷ (STBH gần 28.000 tỷ) | https://www.tinnhanhchungkhoan.vn/bao-hiem-ban-buon-truoc-co-hoi-lon-post368348.html |
+| Công trình nhà ga Long Thành (6 công ty) | 118,9 tỷ (trang chặn tải tự động, chưa kiểm lại được) | https://baodauthau.vn/lien-danh-6-thanh-vien-trung-goi-thau-bao-hiem-cang-hkqt-long-thanh-post136014.html |
+| Đội tàu Vinalines | 76 tàu của 9 DN, STBH hơn 565 triệu USD | https://www.pvn.vn/bao-hiem-pvi-ky-thoa-thuan-khung-voi-vinalines-5860 |
 
-**Mô tả định tính:** sức khỏe PVI chủ yếu là bảo hiểm nhóm doanh nghiệp (FPTS, báo cáo định giá PVI 04/2025).
+**Mô tả định tính:** sức khỏe PVI chủ yếu là bảo hiểm nhóm doanh nghiệp (FPTS, báo cáo định giá PVI 04/2025: https://file.fpts.com.vn/FileStore2/File/2025/04/14/DuyenNTM14042025Bao_cao_dinh_gia_lan_dau_PVI_0bef673f.pdf, trang 14).

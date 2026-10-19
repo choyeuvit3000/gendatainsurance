@@ -32,7 +32,7 @@ Tất cả điều khoản dưới đây được đọc từ toàn văn trên v
 | S6 Điều 51 khoản 3 | Trần hoa hồng: tài sản 5%; xe trừ TNDS 10%; cháy nổ 10% (bắt buộc 5%); sức khỏe 20%; TNDS bắt buộc ô tô 5%, xe máy 20% | `ref.product.max_commission_pct` |
 | S5 Phụ lục VI, Mẫu 1/2/3-PNT | Dòng báo cáo theo nghiệp vụ; 3 nhóm kênh (qua TCTD / qua môi trường mạng / khác) | `ref.regulatory_line`, `ref.channel.report_channel_group` |
 | S8 Phụ lục I | Biểu phí TNDS bắt buộc theo loại xe | Đơn giá `XE_TNDS_*` |
-| S8 Phụ lục II; S9 Điều 44 | Tỷ lệ phí cháy nổ bắt buộc. Bản 2023 đã bị thay từ 01/7/2025; **bản mới chưa kiểm chứng được** | Tỷ lệ phí `CHN_BB` |
+| S8 Phụ lục II; S9 Điều 44 | Tỷ lệ phí cháy nổ bắt buộc. Bản 2023 bị thay từ 01/7/2025 bằng Phụ lục VI NĐ 105/2025 (chỉ có bản scan); **dự án dùng bản 2023 làm chuẩn** | Tỷ lệ phí `CHN_BB` |
 | S11 Điều 2, 12, 19 | TK 5111 / 531 / 532 / 533 / 005; TK 511 chi tiết theo nghiệp vụ; hạch toán đồng bảo hiểm chỉ phần của mình | `ref.transaction_type.gl_account`; công thức doanh thu |
 | S12 | 34 tỉnh/thành từ 01/7/2025 | `ref.province` |
 | S14 Điều 5 khoản 8 | Không chịu thuế GTGT: bảo hiểm sức khỏe, người học, các dịch vụ bảo hiểm liên quan đến con người | `ref.product.vat_rate` |

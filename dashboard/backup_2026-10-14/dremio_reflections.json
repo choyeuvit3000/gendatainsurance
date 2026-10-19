@@ -1,0 +1,117 @@
+{
+  "data": [
+    {
+      "id": "a188fc95-529c-46e7-a35d-c7f789c808d5",
+      "type": "RAW",
+      "name": "Raw Reflection",
+      "tag": "YGpdx3wdR7U=",
+      "createdAt": "2026-10-14T03:11:43.152Z",
+      "updatedAt": "2026-10-14T03:11:43.152Z",
+      "datasetId": "cf39a2cb-e351-43e5-86ef-680cb2b9a87f",
+      "currentSizeBytes": 50458233,
+      "totalSizeBytes": 154999686,
+      "enabled": true,
+      "status": {
+        "config": "OK",
+        "refresh": "SCHEDULED",
+        "availability": "AVAILABLE",
+        "combinedStatus": "CAN_ACCELERATE",
+        "failureCount": 0,
+        "lastDataFetch": "2026-10-14T06:12:09.153Z",
+        "expiresAt": "2026-10-14T09:12:09.153Z"
+      },
+      "displayFields": [
+        {
+          "name": "Ngay"
+        },
+        {
+          "name": "kenh_ban"
+        },
+        {
+          "name": "nhom_kenh_bao_cao"
+        },
+        {
+          "name": "doi_tac"
+        },
+        {
+          "name": "nghiep_vu"
+        },
+        {
+          "name": "nhom_nghiep_vu_poc"
+        },
+        {
+          "name": "nhom_san_pham"
+        },
+        {
+          "name": "ma_san_pham"
+        },
+        {
+          "name": "san_pham"
+        },
+        {
+          "name": "ma_don_vi"
+        },
+        {
+          "name": "don_vi"
+        },
+        {
+          "name": "phan_khuc_kh"
+        },
+        {
+          "name": "ma_khach_hang"
+        },
+        {
+          "name": "khach_hang"
+        },
+        {
+          "name": "doanh_thu_vnd"
+        },
+        {
+          "name": "so_hop_dong"
+        }
+      ],
+      "partitionDistributionStrategy": "CONSOLIDATED",
+      "reflectionMode": "Manual",
+      "entityType": "reflection"
+    },
+    {
+      "id": "f57e98df-6184-4dec-9553-5cfa6583bdac",
+      "type": "AGGREGATION",
+      "name": "Aggregation Reflection",
+      "tag": "xL6uF/YLiGk=",
+      "createdAt": "2026-10-14T03:12:25.679Z",
+      "updatedAt": "2026-10-14T03:12:25.679Z",
+      "datasetId": "cf39a2cb-e351-43e5-86ef-680cb2b9a87f",
+      "currentSizeBytes": 13133,
+      "totalSizeBytes": 39399,
+      "enabled": true,
+      "status": {
+        "config": "OK",
+        "refresh": "SCHEDULED",
+        "availability": "AVAILABLE",
+        "combinedStatus": "CAN_ACCELERATE",
+        "failureCount": 0,
+        "lastDataFetch": "2026-10-14T06:12:49.170Z",
+        "expiresAt": "2026-10-14T09:12:49.170Z"
+      },
+      "dimensionFields": [
+        {
+          "name": "nghiep_vu",
+          "granularity": "DATE"
+        }
+      ],
+      "measureFields": [
+        {
+          "name": "doanh_thu_vnd",
+          "measureTypeList": [
+            "SUM",
+            "COUNT"
+          ]
+        }
+      ],
+      "partitionDistributionStrategy": "CONSOLIDATED",
+      "reflectionMode": "Manual",
+      "entityType": "reflection"
+    }
+  ]
+}

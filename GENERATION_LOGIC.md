@@ -8,6 +8,8 @@ Tài liệu này giải thích cách `build_v2.py` quyết định các tham s�
 
 Mọi tham số đều **neo vào số liệu công khai**. Chỗ nào không có số công khai thì ghi rõ **[ƯỚC TÍNH]** kèm lý do. Kết quả ở các bảng là số **đo thật** trên dữ liệu đã sinh (năm 2025, chỉ giao dịch đã duyệt, phần của công ty).
 
+> **Bản học đầy đủ:** [docs/Logic_Sinh_Du_Lieu.html](docs/Logic_Sinh_Du_Lieu.html) — sổ 74 tham số. Mỗi tham số có nhãn căn cứ (luật / số công bố / thông tin công khai / chuẩn ngành / dataset mẫu public / đề bài / suy ra / **giả định**), nguồn, vị trí code, và mức ảnh hưởng nếu giả định sai. Số liệu trong bản học được đo trực tiếp từ bộ sinh mỗi lần build. Sinh lại bằng lệnh `python scripts/build_learning.py`.
+
 ## 1. Nguyên tắc: doanh thu = tần suất × độ lớn
 
 Mỗi nghiệp vụ bảo hiểm có một "dáng" riêng:
@@ -26,7 +28,7 @@ Vì vậy bộ sinh **không** chia đều tiền cho các đơn. Nó làm theo 
 
 ## 2. Bước 1: quy mô và cơ cấu doanh thu theo PVI
 
-Nguồn: **báo cáo tài chính kiểm toán 2025 của Tổng công ty Bảo hiểm PVI, thuyết minh 21**, phí bảo hiểm gốc theo nghiệp vụ (https://adminweb.pvi.com.vn/wp-content/uploads/2026/05/2025Q4_Audited_FSs_En.pdf).
+Nguồn: **báo cáo tài chính kiểm toán 2025 của Tổng công ty Bảo hiểm PVI, thuyết minh 21**, phí bảo hiểm gốc theo nghiệp vụ (https://adminweb.pvi.com.vn/wp-content/uploads/2026/05/2025Q4_Audited_FSs_En.pdf, trang 45 của file PDF).
 
 | Nghiệp vụ (tỷ đồng) | 2024 | 2025 | % 2025 | Dáng | Trong POC? |
 |---|---:|---:|---:|---|---|
@@ -42,9 +44,9 @@ Nguồn: **báo cáo tài chính kiểm toán 2025 của Tổng công ty Bảo h
 | Tín dụng, nông nghiệp | 48,6 | 55,8 | 0,3% | — | ✖ |
 
 **Mốc độ lớn của các nghiệp vụ ngoài phạm vi** (để so sánh, minh họa ví dụ hàng hải / hàng không):
-- **Hàng không:** bảo hiểm đội bay Vietnam Airlines (PVI tham gia đồng bảo hiểm) 540–617 tỷ/năm, chỉ **1 hợp đồng** (tinnhanhchungkhoan.vn, fireant.vn).
-- **Công trình:** xây dựng Nhiệt điện Quảng Trạch I, phí trên 365 tỷ trên số tiền bảo hiểm khoảng 28.000 tỷ. Nhà ga Long Thành 118,9 tỷ, liên danh 6 công ty do PVI đứng đầu (tinnhanhchungkhoan.vn, baodauthau.vn).
-- **Hàng hải:** đội tàu Vinalines 76 tàu, số tiền bảo hiểm 565 triệu USD. Phí **[ƯỚC TÍNH]** 0,3–0,8%/năm, tức khoảng 0,3–0,8 tỷ mỗi tàu (pvn.vn).
+- **Hàng không:** gói bảo hiểm đội bay Vietnam Airlines: liên danh Bảo Việt – PVI – Bảo Minh trúng thầu 540,2 tỷ, chỉ **1 hợp đồng** ([fireant.vn](https://fireant.vn/bai-viet/nha-thau-trung-goi-bao-hiem-hon-500-ty-co-nang-luc-the-nao/29752615); gói mời thầu khoảng 600 tỷ, [vietnambusinessinsider.vn](https://vietnambusinessinsider.vn/vietnam-airlines-mo-thau-goi-bao-hiem-lon-nhat-nam-voi-600-ty-dong-nhung-chi-co-mot-nha-thau-tham-gia-nop-ho-so-a49139.html)).
+- **Công trình:** xây dựng Nhiệt điện Quảng Trạch I, phí trên 365 tỷ trên số tiền bảo hiểm khoảng 28.000 tỷ. Nhà ga Long Thành 118,9 tỷ, liên danh 6 công ty do PVI đứng đầu ([tinnhanhchungkhoan.vn](https://www.tinnhanhchungkhoan.vn/bao-hiem-ban-buon-truoc-co-hoi-lon-post368348.html); [baodauthau.vn](https://baodauthau.vn/lien-danh-6-thanh-vien-trung-goi-thau-bao-hiem-cang-hkqt-long-thanh-post136014.html) — trang này chặn tải tự động, chưa kiểm lại được số 118,9 tỷ).
+- **Hàng hải:** đội tàu Vinalines 76 tàu, số tiền bảo hiểm 565 triệu USD. Phí **[ƯỚC TÍNH]** 0,3–0,8%/năm, tức khoảng 0,3–0,8 tỷ mỗi tàu ([pvn.vn](https://www.pvn.vn/bao-hiem-pvi-ky-thoa-thuan-khung-voi-vinalines-5860)).
 
 ### Mục tiêu doanh thu trong phạm vi POC
 
@@ -61,7 +63,7 @@ Nguồn: **báo cáo tài chính kiểm toán 2025 của Tổng công ty Bảo h
 | **Tổng** | | **8.957,8** | **10.377,9** |
 
 Căn cứ các tỷ lệ chia:
-- **75 / 15 / 5 / 5 trong Con người — [ƯỚC TÍNH].** PVI không công bố số chia này. Báo cáo định giá PVI của FPTS (04/2025) cho biết mảng sức khỏe của PVI chủ yếu là bảo hiểm nhóm doanh nghiệp, nên sức khỏe chiếm phần lớn. Du lịch và học sinh là sản phẩm bán lẻ phí nhỏ.
+- **75 / 15 / 5 / 5 trong Con người — [ƯỚC TÍNH].** PVI không công bố số chia này. [Báo cáo định giá PVI của FPTS (04/2025), trang 14](https://file.fpts.com.vn/FileStore2/File/2025/04/14/DuyenNTM14042025Bao_cao_dinh_gia_lan_dau_PVI_0bef673f.pdf) cho biết mảng sức khỏe của PVI chủ yếu là bảo hiểm nhóm doanh nghiệp, nên sức khỏe chiếm phần lớn. Du lịch và học sinh là sản phẩm bán lẻ phí nhỏ.
 - **24 / 76 trong Xe.** Theo IAV 2024, TNDS bắt buộc là 4.537 trên tổng xe cơ giới 18.693 tỷ.
 - **50% của Tài sản & thiệt hại — [ƯỚC TÍNH].** BCTC gộp tài sản với kỹ thuật và năng lượng. POC chỉ lấy phần tài sản thuần.
 
@@ -102,7 +104,7 @@ Căn cứ các tỷ lệ chia:
 | Học sinh (tai nạn / sức khỏe) | Phí/người × số học sinh | 100–150 nghìn / 200–520 nghìn; mỗi trường 150–3.000 em | Báo chí: phổ biến 100.000 đ/em |
 | Du lịch trong nước / quốc tế | Phí/người × số khách | 17–80 nghìn đ / 4–45 USD (70% hợp đồng tính bằng USD) | Giá niêm yết Bảo Việt, PVI Digital |
 | Sinh mạng cá nhân, tai nạn 24/24 | % × số tiền bảo hiểm | STBH 20–500 triệu; tỷ lệ 0,1–0,5% | [ƯỚC TÍNH] |
-| Người vay vốn | % × dư nợ; bảng kê 20–400 người vay | Dư nợ 0,1–3 tỷ; tỷ lệ 0,3–1% | Mô hình bancassurance (BIC Bình An); tỷ lệ [ƯỚC TÍNH] |
+| Người vay vốn | % × dư nợ; bảng kê 20–400 người vay | Dư nợ 0,1–3 tỷ; tỷ lệ 0,3–1% | Bán qua ngân hàng ([BIC bancassurance](https://bic.vn/vi/san-pham/bancassurance.html)); tính theo dư nợ và tỷ lệ [ƯỚC TÍNH] |
 | Sức khỏe cá nhân | Phí/người | 1,45–15 triệu | Giá niêm yết (Bảo Việt An Gia từ 1,445 triệu; PVI Care) |
 | Sức khỏe nhóm doanh nghiệp | Phí/người × 20–1.500 người | 2–8 triệu/người | [ƯỚC TÍNH], neo theo giá cá nhân |
 | Nhà tư nhân | % × giá trị nhà | 0,3–5 tỷ; 0,05–0,1% | Giá niêm yết 220–270 nghìn/năm cho căn hộ / nhà |
@@ -130,7 +132,7 @@ Kết quả so với mục tiêu: 2025 đạt 10.237 / 10.378 tỷ (lệch 1,4%)
 
 ## 6. Bước 5: thời gian
 
-**Theo quý.** PVI có quý 1 cao nhất vì các chương trình bảo hiểm doanh nghiệp tái tục đầu năm. Nguồn: phí gốc hợp nhất PVI theo quý trong BCTC quý PVI Holdings.
+**Theo quý.** PVI có quý 1 cao nhất vì các chương trình bảo hiểm doanh nghiệp tái tục đầu năm. Nguồn: phí gốc hợp nhất PVI theo quý trong BCTC quý PVI Holdings, thuyết minh 21 (ví dụ [quý 4/2025, trang 31](https://pviholdings.com.vn/admin/downloadFile?filePath=//pvi.com.vn/data/webho_upload/ce6f18e2-7a79-42f3-b6ab-2b79ea1e4077.pdf)).
 
 | Tỷ trọng theo quý | Q1 | Q2 | Q3 | Q4 |
 |---|---:|---:|---:|---:|
@@ -151,8 +153,8 @@ Kết quả so với mục tiêu: 2025 đạt 10.237 / 10.378 tỷ (lệch 1,4%)
 | Bán trực tiếp | 37,0% | PVI thiên về khách hàng doanh nghiệp, công nghiệp: khoảng 67% doanh thu [suy ra từ BCTC] |
 | Đại lý cá nhân | 18,5% | |
 | Môi giới | 17,5% | Thị trường 13,5% (MOF 2025). PVI thiên DN lớn nên cao hơn [ƯỚC TÍNH 15–20%] |
-| Giao dịch điện tử | 8,4% (2024: 5,7%) | PVI: kênh TMĐT khoảng 800 tỷ ≈ 6% năm 2024, "gần gấp đôi" năm 2025 (BCTN 2024, 2025) |
-| Bancassurance | 8,0% | PVI mới mở rộng (Nam A Bank, Woori Bank, PVI Link 2025) [ƯỚC TÍNH 5–8%] |
+| Giao dịch điện tử | 8,4% (2024: 5,7%) | PVI: kênh TMĐT khoảng 800 tỷ ≈ 6% năm 2024 ([BCTN 2024, trang 29](https://static2.vietstock.vn/vietstock/2025/3/19/3_pvi_2025_3_19_fb26c59_en_annualreport_2024.pdf)); quý I/2025 tăng 1,8 lần ([pvn.vn](https://pvn.vn/khoi-dau-vung-chac-bao-hiem-pvi-huong-toi-moc-doanh-thu-ty-do-la-my-nam-2025-28459)) → ≈ 10% [suy ra] |
+| Bancassurance | 8,0% | PVI mới mở rộng ([hợp tác Nam A Bank](https://www.pvi.com.vn/vi/news/bao-hiem-pvi-va-nam-a-bank-khoi-dong-hop-tac-kinh-doanh-tai-khu-vuc-mien-tay)) [ƯỚC TÍNH 5–8%] |
 | Đại lý tổ chức | 7,8% | |
 | Đấu thầu | 1,9% | Cơ quan nhà nước, dự án |
 | Chưa khai báo | 0,9% | Dữ liệu bẩn có chủ đích |
@@ -170,17 +172,17 @@ Kết quả so với mục tiêu: 2025 đạt 10.237 / 10.378 tỷ (lệch 1,4%)
 
 | Quy tắc | Tham số | Căn cứ |
 |---|---|---|
-| Đồng bảo hiểm | Tài sản / cháy nổ STBH ≥ 300 tỷ: 55% có đồng BH. Sức khỏe nhóm > 1.000 người: 30%. Đứng đầu (40%): công ty giữ 40–70%. Tham gia: 10–40% | Liên danh thực tế: Vietnam Airlines 3–4 DN, Long Thành 6 DN, VinFast 9 DN |
+| Đồng bảo hiểm | Tài sản / cháy nổ STBH ≥ 300 tỷ: 55% có đồng BH. Sức khỏe nhóm > 1.000 người: 30%. Đứng đầu (40%): công ty giữ 40–70%. Tham gia: 10–40% | Liên danh thực tế: [Vietnam Airlines 3 DN](https://fireant.vn/bai-viet/nha-thau-trung-goi-bao-hiem-hon-500-ty-co-nang-luc-the-nao/29752615), [Long Thành 6 DN](https://baodauthau.vn/lien-danh-6-thanh-vien-trung-goi-thau-bao-hiem-cang-hkqt-long-thanh-post136014.html) |
 | Phân bổ doanh thu | Trụ sở: 60% hợp tác với công ty quản lý khách (Trụ sở giữ 50–70%). Kinh doanh số: 50% chuyển giao về công ty địa bàn. Công ty thành viên: 10% hợp tác (50–80%), 1% chuyển giao | Thông lệ quản trị |
 | SĐBS | 7% hợp đồng (trừ du lịch): tăng phí 30%, giảm phí 15%, hoàn phí 15%, hủy 25% (hoàn 90% phí thời gian còn lại), không đổi phí 15% | NĐ 46/2023 Điều 49 |
 | Tái tục | 55% hợp đồng năm 2024 (sản phẩm năm, không phải đơn lô) được tái tục năm 2025, phí điều chỉnh 0,95–1,12 lần | [ƯỚC TÍNH] |
 | Trạng thái | 98,5% APPROVED, 1% PENDING, 0,5% VOID | [ƯỚC TÍNH] |
-| Ngoại tệ | Du lịch quốc tế 70% USD; mọi rủi ro tài sản 20%, công nghiệp 40% USD. Tỷ giá hạch toán KBNN theo tháng | KBNN 2025 |
+| Ngoại tệ | Du lịch quốc tế 70% USD; mọi rủi ro tài sản 20%, công nghiệp 40% USD. Tỷ giá hạch toán KBNN theo tháng | [KBNN 2025](https://thuvienphapluat.vn/van-ban/Tien-te-Ngan-hang/Thong-bao-7727-TB-KBNN-2024-ty-gia-hach-toan-ngoai-te-thang-01-nam-2025-641872.aspx) |
 | Hoa hồng | 50–100% trần theo nghiệp vụ, chỉ cho kênh trung gian | TT 67/2023 Điều 51 |
 | VAT | 0% bảo hiểm con người; 10% xe, tài sản, cháy nổ | Luật GTGT 48/2024 |
 
-## 9. Giới hạn
+## 9. Quy ước chuẩn
 
-- Các số **[ƯỚC TÍNH]** cần thay bằng số thật khi có. Quan trọng nhất là cách chia trong nhóm Con người và phần tài sản thuần trong "Tài sản & thiệt hại".
-- PVI không công bố số hợp đồng, nên số đơn của từng nhóm là giả định. Tổng doanh thu khớp số công khai; còn số đơn và phí mỗi đơn chỉ là hợp lý về dáng, không phải số thật.
-- Tỷ lệ phí cháy nổ bắt buộc dùng bản 2023 (NĐ 67/2023). Bản mới theo NĐ 105/2025 chưa đối chiếu được.
+- Các số **[ƯỚC TÍNH]** ở trên là **giá trị chuẩn** dự án đã chọn, với căn cứ ghi bên cạnh. Quan trọng nhất là cách chia trong nhóm Con người (75 / 15 / 5 / 5) và phần tài sản thuần (50%) trong "Tài sản & thiệt hại".
+- Số hợp đồng của từng nhóm được chuẩn hóa theo nguyên tắc tần suất × độ lớn ở bước 2–3, vì PVI không công bố số hợp đồng. Tổng doanh thu khớp số công khai.
+- Tỷ lệ phí cháy nổ bắt buộc lấy theo NĐ 67/2023 Phụ lục II làm chuẩn.

@@ -1,4 +1,4 @@
-/* COMMENT ON TABLE/COLUMN — sinh bởi docs/build_docs.py từ docs/dictionary_meta.py. Chạy sau 01_ddl.sql */
+/* COMMENT ON TABLE/COLUMN — sinh bởi scripts/build_docs.py từ scripts/dictionary_meta.py. Chạy sau 01_ddl.sql */
 COMMENT ON TABLE ref.region IS 'Vùng miền dùng để nhóm tỉnh/thành. Grain: 1 dòng / vùng. Căn cứ: Đề xuất của dự án (không có văn bản pháp lý chia 3 miền)';
 COMMENT ON TABLE ref.province IS 'Tỉnh/thành phố theo đơn vị hành chính hiện hành (34 đơn vị). Grain: 1 dòng / tỉnh-thành. Căn cứ: NQ 202/2025/QH15';
 COMMENT ON TABLE ref.company IS 'Cơ cấu tổ chức: Tổng công ty → khối trụ sở, công ty thành viên, đơn vị kinh doanh số. Grain: 1 dòng / đơn vị. Căn cứ: Mô hình Tổng công ty – công ty thành viên công khai của các DNBH (BCTN Bảo Việt, PVI)';
@@ -98,8 +98,8 @@ COMMENT ON COLUMN core.policy.policy_id IS 'Khóa hợp đồng';
 COMMENT ON COLUMN core.policy.policy_no IS 'Số hợp đồng: <năm>-<đơn vị>-<nhóm SP>-<số thứ tự>';
 COMMENT ON COLUMN core.policy.issuing_company_code IS 'Đơn vị cấp đơn → ref.company';
 COMMENT ON COLUMN core.policy.customer_code IS 'Bên mua bảo hiểm → ref.customer';
-COMMENT ON COLUMN core.policy.channel_code IS 'Kênh bán → ref.channel. NULL = chưa khai báo (~0,5%, dữ liệu bẩn có chủ đích)';
-COMMENT ON COLUMN core.policy.partner_code IS 'Đối tác phân phối → ref.partner (NULL = không qua đối tác)';
+COMMENT ON COLUMN core.policy.channel_code IS 'Kênh bán → ref.channel. Bắt buộc theo nghiệp vụ; NULL = nguồn không khai báo (~0,5%, dữ liệu bẩn có chủ đích) — lớp phân tích gán ''CHUA_XD'' [TT 67/2023/TT-BTC Mẫu 3-PNT (báo cáo theo kênh)]';
+COMMENT ON COLUMN core.policy.partner_code IS 'Đối tác phân phối → ref.partner. Không bắt buộc: NULL = không qua đối tác (bán trực tiếp, đại lý cá nhân, đấu thầu, website/app công ty) — hợp lệ; lớp phân tích gán ''WEB_APP'' (kênh điện tử) / ''KHONG_QUA_DT'' (kênh khác) [Quy ước dự án 13/10/2026]';
 COMMENT ON COLUMN core.policy.currency_code IS 'Loại tiền của hợp đồng → ref.currency';
 COMMENT ON COLUMN core.policy.issue_date IS 'Ngày cấp đơn / giao kết hợp đồng';
 COMMENT ON COLUMN core.policy.effective_date IS 'Ngày bắt đầu thời hạn bảo hiểm';

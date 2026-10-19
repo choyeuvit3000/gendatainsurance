@@ -1,0 +1,146 @@
+{
+  "entityType": "dataset",
+  "id": "cf39a2cb-e351-43e5-86ef-680cb2b9a87f",
+  "type": "VIRTUAL_DATASET",
+  "path": [
+    "atomic",
+    "pvi_vw_revenue_insurance"
+  ],
+  "datasetVersion": "0000897302635520",
+  "createdAt": "2026-10-13T09:08:25.934Z",
+  "tag": "afJVCGNjBdQ=",
+  "sql": "SELECT\r\n    -- EXTRACT(YEAR FROM t.accounting_date)                                   AS nam,\r\n    -- CONCAT(CAST(EXTRACT(YEAR FROM t.accounting_date) AS VARCHAR), '-Q',\r\n    --        CAST(EXTRACT(QUARTER FROM t.accounting_date) AS VARCHAR))       AS quy,\r\n    -- TO_CHAR(t.accounting_date, 'YYYY-MM')                                  AS thang,\r\n    t.accounting_date as Ngay,\r\n\r\n    COALESCE(ch.channel_name, 'Chưa khai báo')                             AS kenh_ban,\r\n    ch.report_channel_group                                                AS nhom_kenh_bao_cao,\r\n    pt.partner_name                                                        AS doi_tac,\r\n\r\n    lob.lob_name                                                           AS nghiep_vu,\r\n    lob.poc_group_name                                                     AS nhom_nghiep_vu_poc,\r\n\r\n    pg.product_group_name                                                  AS nhom_san_pham,\r\n    pr.product_code                                                        AS ma_san_pham,\r\n    pr.product_name                                                        AS san_pham,\r\n\r\n    co.company_code                                                        AS ma_don_vi,\r\n    co.company_name                                                        AS don_vi,\r\n\r\n    cs.segment_name                                                        AS phan_khuc_kh,\r\n    cu.customer_code                                                       AS ma_khach_hang,\r\n    cu.customer_name                                                       AS khach_hang,\r\n\r\n    SUM(tc.premium_vnd * cin.share_pct / 100.0 * ra.allocation_pct / 100.0) AS doanh_thu_vnd,\r\n    COUNT(DISTINCT p.policy_id)                                            AS so_hop_dong\r\nFROM hive.pvi_staging.\"ins_policy_transaction\"   t\r\nJOIN hive.pvi_staging.\"ins_transaction_coverage\" tc  ON tc.txn_id = t.txn_id\r\nJOIN hive.pvi_staging.\"ins_policy\"               p   ON p.policy_id = t.policy_id\r\nJOIN hive.pvi_staging.\"ins_coinsurance_share\"    cin ON cin.policy_id = p.policy_id\r\n                                              AND cin.insurer_code = 'OWN'\r\nJOIN hive.pvi_staging.\"ins_revenue_allocation\"   ra  ON ra.policy_id = p.policy_id\r\nJOIN hive.pvi_staging.\"ins_company\"               co  ON co.company_code = ra.company_code\r\nJOIN hive.pvi_staging.\"ins_product\"               pr  ON pr.product_code = tc.product_code\r\nJOIN hive.pvi_staging.\"ins_product_group\"         pg  ON pg.product_group_code = pr.product_group_code\r\nJOIN hive.pvi_staging.\"ins_line_of_business\"      lob ON lob.lob_code = pg.lob_code\r\nJOIN hive.pvi_staging.\"ins_customer\"              cu  ON cu.customer_code = p.customer_code\r\nJOIN hive.pvi_staging.\"ins_customer_segment\"      cs  ON cs.segment_code = cu.segment_code\r\nLEFT JOIN hive.pvi_staging.\"ins_channel\"          ch  ON ch.channel_code = p.channel_code\r\nLEFT JOIN hive.pvi_staging.\"ins_partner\"          pt  ON pt.partner_code = p.partner_code\r\nWHERE t.status = 'APPROVED'\r\n  AND t.accounting_date >= '2026-08-01'\r\n  AND t.accounting_date < '2026-09-30'\r\nGROUP BY Ngay, kenh_ban, nhom_kenh_bao_cao, doi_tac, nghiep_vu, nhom_nghiep_vu_poc, nhom_san_pham, ma_san_pham, san_pham, ma_don_vi, don_vi, phan_khuc_kh, ma_khach_hang, khach_hang",
+  "schemaOutdated": false,
+  "fields": [
+    {
+      "name": "Ngay",
+      "type": {
+        "name": "DATE"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "kenh_ban",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "nhom_kenh_bao_cao",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "doi_tac",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "nghiep_vu",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "nhom_nghiep_vu_poc",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "nhom_san_pham",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "ma_san_pham",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "san_pham",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "ma_don_vi",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "don_vi",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "phan_khuc_kh",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "ma_khach_hang",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "khach_hang",
+      "type": {
+        "name": "VARCHAR"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "doanh_thu_vnd",
+      "type": {
+        "name": "DECIMAL",
+        "precision": 38,
+        "scale": 10
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    },
+    {
+      "name": "so_hop_dong",
+      "type": {
+        "name": "BIGINT"
+      },
+      "isPartitioned": false,
+      "isSorted": false
+    }
+  ]
+}
